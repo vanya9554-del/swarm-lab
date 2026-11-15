@@ -81,12 +81,14 @@ class SwarmStore:
             self.conn.close()
 
     def _one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
-        cur = self.conn.execute(sql, params)
-        row = cur.fetchone()
-        return dict(row) if row else None
+        with self.lock:
+            cur = self.conn.execute(sql, params)
+            row = cur.fetchone()
+            return dict(row) if row else None
 
     def _all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
-        return [dict(row) for row in self.conn.execute(sql, params).fetchall()]
+        with self.lock:
+            return [dict(row) for row in self.conn.execute(sql, params).fetchall()]
 
     def event(self, event_type: str, payload: dict[str, Any]) -> int:
         with self.lock:

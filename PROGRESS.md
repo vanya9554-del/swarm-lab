@@ -22,11 +22,12 @@
 - **S15**: release 1.2.0.
 - **S16**: request-id/latency, coverage 80%, 23 tests, release 1.3.0.
 - **S17**: transport tuning, coverage 86%, 26 tests, release 1.4.0.
+- **S18**: SQLite read-lock fix; HTTP 200/200 726 tasks/s; 27 tests; release 1.5.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-1.4: async/reconnect chaos, K8s live, coverage 90%.
+- Post-1.5: coverage 90%, reconnect chaos, K8s live.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

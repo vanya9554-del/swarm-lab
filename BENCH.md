@@ -20,3 +20,7 @@ python scripts/bench.py --backend postgres --dsn postgresql://... --tasks 200 --
 Условия: Python 3.12, Windows, WAL, один процесс; цифры зависят от железа.
 PG-бенчмарк запускается на реальном DSN; embedded PG в тестах проверяет
 multi-replica exactly-once отдельно (`tests/test_load.py`).
+
+## HTTP (8 workers, 200 tasks)
+
+- **200/200**, 726.4 tasks/s, p50 7.47 ms, p95 25.5 ms; 0 errors. См. `HTTP_BENCH.md`.

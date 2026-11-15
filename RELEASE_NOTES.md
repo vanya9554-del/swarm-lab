@@ -1,3 +1,7 @@
+# swarm-lab v1.5.0
+
+SQLite concurrency fix; HTTP 200/200, 726 tasks/s.
+
 # swarm-lab v1.4.0
 
 Transport tuning, request IDs, latency histogram, coverage 86%, 26 tests.

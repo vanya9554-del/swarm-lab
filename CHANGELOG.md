@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [1.5.0] — 2026-11-15
+
+Concurrency fix.
+
+### Исправлено
+- SQLite `_one/_all` без lock → `InterfaceError` под 8 воркерами; все чтения под RLock.
+- HTTP: 200/200, 726 tasks/s, p50 7.47 ms, p95 25.5 ms, 0 errors.
+- Регрессия `SqliteConcurrencyTests`; 27 тестов.
+
 ## [1.4.0] — 2026-11-15
 
 Transport/observability/coverage.

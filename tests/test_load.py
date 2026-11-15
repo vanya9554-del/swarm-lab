@@ -114,3 +114,43 @@ class LoadTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
+class SqliteConcurrencyTests(unittest.TestCase):
+    def test_sqlite_concurrent_store(self) -> None:
+        from swarmlab.store import SwarmStore
+        store = SwarmStore(":memory:")
+        try:
+            for i in range(8):
+                store.register(f"c{i}", ["c"])
+            for i in range(100):
+                store.submit("c", {"n": i})
+            errors: list[BaseException] = []
+            seen: list[str] = []
+            lock = threading.Lock()
+            barrier = threading.Barrier(8)
+
+            def worker(i: int) -> None:
+                try:
+                    barrier.wait(timeout=5)
+                    while True:
+                        task = store.claim(f"c{i}", "c")
+                        if not task:
+                            return
+                        store.complete(task["task_id"], f"c{i}", {}, fence=task["lease_epoch"])
+                        with lock:
+                            seen.append(task["task_id"])
+                except BaseException as exc:  # noqa: BLE001
+                    errors.append(exc)
+
+            threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=20)
+            self.assertFalse(errors, errors)
+            self.assertEqual(len(seen), 100)
+            self.assertEqual(len(set(seen)), 100)
+        finally:
+            store.close()
