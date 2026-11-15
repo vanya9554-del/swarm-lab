@@ -92,6 +92,18 @@ class ExtraApiTests(unittest.TestCase):
             other.shutdown(); other.server_close(); thread.join(timeout=5)
             api.MAX_BODY = old
 
+    def test_lease_env(self) -> None:
+        import os
+        import time
+        os.environ["SWARMLAB_LEASE_S"] = "120"
+        try:
+            _req("POST", self.base + "/v1/agents", {"agent_id": "le", "capabilities": ["le"]})
+            _req("POST", self.base + "/v1/tasks", {"capability": "le"})
+            _, claim, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "le", "capability": "le"})
+            self.assertGreater(claim["data"]["lease_until"], time.time() + 100)
+        finally:
+            os.environ.pop("SWARMLAB_LEASE_S", None)
+
     def test_tokens_invalid(self) -> None:
         import os
 

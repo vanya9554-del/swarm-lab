@@ -295,7 +295,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 task = self.swarm.store.claim(
                     str(body.get("agent_id") or ""),
                     body.get("capability"),
-                    float(body.get("lease_s") or 60),
+                    float(body.get("lease_s") or os.environ.get("SWARMLAB_LEASE_S") or 60),
                 )
                 self._send(200, {"ok": True, "data": task})
             elif path == "/mcp":
@@ -363,7 +363,10 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 name = str(op.get("op") or "")
                 agent = str(op.get("agent_id") or "")
                 if name == "claim":
-                    data = self.swarm.store.claim(agent, op.get("capability"), float(op.get("lease_s") or 60))
+                    data = self.swarm.store.claim(
+                        agent, op.get("capability"),
+                        float(op.get("lease_s") or os.environ.get("SWARMLAB_LEASE_S") or 60),
+                    )
                 elif name == "complete":
                     data = self.swarm.store.complete(
                         str(op.get("task_id") or ""), agent, op.get("result"),

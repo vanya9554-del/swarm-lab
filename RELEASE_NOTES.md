@@ -1,3 +1,7 @@
+# swarm-lab v5.2.0
+
+SWARMLAB_LEASE_S, 96 tests.
+
 # swarm-lab v5.1.0
 
 PG affinity/priority, 95 tests.

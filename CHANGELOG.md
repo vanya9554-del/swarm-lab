@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.2.0] — 2026-11-15
+
+Configurable lease.
+
+### Добавлено
+- `SWARMLAB_LEASE_S` для claim (API/MCP/batch); 96 тестов.
+
 ## [5.1.0] — 2026-11-15
 
 PG affinity/priority.
