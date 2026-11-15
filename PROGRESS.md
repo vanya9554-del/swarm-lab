@@ -26,11 +26,12 @@
 - **S19**: night harness, coverage 90,4%, 31 tests; release 1.6.0.
 - **S20**: `/ready`, public probes, coverage 90,3%, 32 tests; release 1.7.0.
 - **S21**: readiness failure, 36 tests, coverage 91,6%; release 1.8.0.
+- **S22**: batch renew, PG SSE, coverage 92,4%, 39 tests; release 1.9.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-1.8: live K8s, external audit, chaos.
+- Post-1.9: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

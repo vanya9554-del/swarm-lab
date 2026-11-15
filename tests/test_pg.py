@@ -132,6 +132,34 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_pg_http_sse(self) -> None:
+        import threading
+        import urllib.request
+        from swarmlab.api import build_server
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        server = build_server(s, "127.0.0.1", 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            s.register("sse", ["sse"])
+            last = int(s.events(0, 100)[-1]["seq"])
+            req = urllib.request.Request(
+                f"http://127.0.0.1:{server.server_address[1]}/v1/stream?after={last}&limit=1&timeout_s=3",
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                s.submit("sse", {"ping": 1})
+                line = resp.readline().decode().strip()
+                if line.startswith("id:"):
+                    line = resp.readline().decode().strip()
+            self.assertTrue(line.startswith("data:"), line)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+            s.close()
+
     def test_listen_notify(self) -> None:
         from swarmlab.events import PgEventStream
         from swarmlab.pg import PgSwarmStore

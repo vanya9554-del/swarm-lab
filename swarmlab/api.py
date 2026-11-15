@@ -305,6 +305,11 @@ class SwarmHandler(BaseHTTPRequestHandler):
                         str(op.get("task_id") or ""), agent, op.get("result"),
                         fence=int(op["fence"]) if op.get("fence") is not None else None,
                     )
+                elif name == "renew":
+                    data = self.swarm.store.renew(
+                        str(op.get("task_id") or ""), agent, float(op.get("lease_s") or 60),
+                        int(op["fence"]) if op.get("fence") is not None else None,
+                    )
                 elif name == "submit":
                     data = self.swarm.store.submit(str(op.get("capability") or ""), op.get("payload"))
                 elif name == "events":

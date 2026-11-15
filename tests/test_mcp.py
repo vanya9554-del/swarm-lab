@@ -45,6 +45,15 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_renew_complete(self) -> None:
+        self._call("swarm_register", {"agent_id": "m", "capabilities": ["x"]})
+        submitted = self._text(self._call("swarm_submit", {"capability": "x"}))
+        claim = self._text(self._call("swarm_claim", {"agent_id": "m", "capability": "x"}))
+        renewed = self._text(self._call("swarm_renew", {"task_id": submitted["task_id"], "agent_id": "m", "fence": claim["lease_epoch"]}))
+        self.assertIn("lease_until", renewed)
+        done = self._text(self._call("swarm_complete", {"task_id": submitted["task_id"], "agent_id": "m", "fence": claim["lease_epoch"]}))
+        self.assertEqual(done["status"], "completed")
+
     def test_resources_prompts_and_http(self) -> None:
         resources = self._rpc("resources/list")["result"]["resources"]
         self.assertIn("swarm://stats", {r["uri"] for r in resources})

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [1.9.0] — 2026-11-15
+
+Batch renew, PG SSE/failure paths.
+
+### Исправлено
+- `/v1/batch` поддерживает `renew` (был unknown op).
+- PG HTTP SSE test; coverage 92,4%, 39 тестов.
+
 ## [1.8.0] — 2026-11-15
 
 Readiness/coverage.

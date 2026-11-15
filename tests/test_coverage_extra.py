@@ -73,6 +73,25 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_rate_env_and_batch_complete(self) -> None:
+        import os
+        os.environ["SWARMLAB_RATE_RPS"] = "bad"
+        try:
+            self.assertEqual(_req("GET", self.base + "/health")[0], 200)
+        finally:
+            os.environ.pop("SWARMLAB_RATE_RPS", None)
+        _req("POST", self.base + "/v1/agents", {"agent_id": "z", "capabilities": ["x"]})
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "x"})
+        task_id = body["data"]["task_id"]
+        _, body, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "z", "capability": "x"})
+        fence = body["data"]["lease_epoch"]
+        status, body, _ = _req("POST", self.base + "/v1/batch", {"ops": [
+            {"op": "renew", "task_id": task_id, "agent_id": "z", "fence": fence},
+            {"op": "complete", "task_id": task_id, "agent_id": "z", "fence": fence},
+        ]})
+        self.assertEqual(status, 200)
+        self.assertTrue(all(r.get("ok") for r in body["data"]))
+
     def test_auth_and_heartbeat(self) -> None:
         import os
         # legacy token mode с отдельным сервером

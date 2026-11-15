@@ -1,3 +1,7 @@
+# swarm-lab v1.9.0
+
+Batch renew, PG SSE, coverage 92.4%, 39 tests.
+
 # swarm-lab v1.8.0
 
 Readiness failure handling, coverage 91.6%, 36 tests.
