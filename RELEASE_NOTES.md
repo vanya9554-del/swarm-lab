@@ -1,3 +1,7 @@
+# swarm-lab v5.7.0
+
+Coverage 96.0%, 102 tests, API backpressure/PG unavailable.
+
 # swarm-lab v5.6.0
 
 Manifest validator, 100 tests.

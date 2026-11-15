@@ -92,6 +92,16 @@ class ExtraApiTests(unittest.TestCase):
             other.shutdown(); other.server_close(); thread.join(timeout=5)
             api.MAX_BODY = old
 
+    def test_api_backpressure(self) -> None:
+        import os
+        os.environ["SWARMLAB_MAX_PENDING"] = "1"
+        try:
+            _req("POST", self.base + "/v1/tasks", {"capability": "bp"})
+            status, _, _ = _req("POST", self.base + "/v1/tasks", {"capability": "bp"})
+            self.assertIn(status, (409, 429))
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
+
     def test_stream_empty(self) -> None:
         with urllib.request.urlopen(self.base + "/v1/stream?after=999999&limit=1&timeout_s=0.1", timeout=5) as resp:
             self.assertEqual(resp.status, 200)

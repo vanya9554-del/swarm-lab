@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.7.0] — 2026-11-15
+
+Coverage 96%.
+
+### Добавлено
+- API backpressure, PG unavailable; coverage 96,0%, 102 теста.
+
 ## [5.6.0] — 2026-11-15
 
 Manifest validator.
