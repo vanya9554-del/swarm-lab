@@ -75,7 +75,6 @@ class ExtraApiTests(unittest.TestCase):
 
     def test_auth_and_heartbeat(self) -> None:
         import os
-        from unittest.mock import patch
         # legacy token mode с отдельным сервером
         os.environ["SWARMLAB_TOKEN"] = "legacy"
         try:

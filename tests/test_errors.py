@@ -16,6 +16,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_open_store_pg_branch(self) -> None:
         from unittest.mock import patch
+
         import swarmlab
         with patch("swarmlab.pg.PgSwarmStore") as fake:
             fake.return_value = object()
@@ -25,10 +26,10 @@ class ErrorTests(unittest.TestCase):
 
     def test_events_failures(self) -> None:
         from unittest.mock import patch
+
         from swarmlab.events import PgEventStream
-        with patch("swarmlab.events.available", return_value=False):
-            with self.assertRaises(RuntimeError):
-                PgEventStream("x")
+        with patch("swarmlab.events.available", return_value=False), self.assertRaises(RuntimeError):
+            PgEventStream("x")
         class BadConn:
             def notifies(self, timeout=None):
                 raise RuntimeError("bad")
