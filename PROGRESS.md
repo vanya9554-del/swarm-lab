@@ -13,10 +13,11 @@
 - **S5 load/chaos**: `scripts/bench.py`, `BENCH.md`, 50-task PG multi-replica/stale test; **10 tests**; SQLite 5412 tasks/s, p50 1.09ms/p95 2.92ms.
 - **S6 hardening**: bearer token, rate-limit, body limit, security headers, `/metrics`, Dockerfile, CI, pyproject, MIT, SECURITY; **12 tests**.
 - **S7 release 1.0**: ACCEPTANCE, CHANGELOG, RELEASE_NOTES, SBOM/checksums; v1.0.0.
+- **S8 WIP**: PG `pg_notify` + `PgEventStream`; SSE ждёт NOTIFY на PG.
 
 ## В работе
 
-- Пост-1.0 улучшения (SSE/лимиты/наблюдаемость).
+- S8 PG LISTEN/NOTIFY SSE.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

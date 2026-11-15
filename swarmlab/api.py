@@ -274,6 +274,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self.close_connection = True
         deadline = time.time() + min(30.0, max(0.2, timeout_s))
         sent = 0
+        listener = None
+        if getattr(self.swarm.store, "backend", "sqlite") == "postgres" and getattr(self.swarm.store, "dsn", ""):
+            try:
+                from .events import PgEventStream
+                listener = PgEventStream(self.swarm.store.dsn)
+            except Exception:  # noqa: BLE001, S110
+                listener = None
         try:
             while sent < limit and time.time() < deadline:
                 events = self.swarm.store.events(after, min(50, limit - sent))
@@ -282,10 +289,16 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     after = int(event["seq"])
                     sent += 1
                 self.wfile.flush()
-                if not events:
-                    time.sleep(0.05)
+                if not events and sent < limit:
+                    if listener is not None:
+                        listener.wait(0.2)
+                    else:
+                        time.sleep(0.05)
         except (BrokenPipeError, ConnectionResetError):
             pass
+        finally:
+            if listener is not None:
+                listener.close()
 
 
 def build_server(store: SwarmStore, host: str = "127.0.0.1", port: int = 8788, token: str | None = None) -> SwarmHTTPServer:

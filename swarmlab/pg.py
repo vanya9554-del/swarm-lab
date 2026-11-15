@@ -101,6 +101,12 @@ class PgSwarmStore:
                 )
                 seq = int(cur.fetchone()["seq"])
             self.conn.commit()
+            try:
+                with self.conn.cursor() as cur:
+                    cur.execute("SELECT pg_notify(%s, %s)", ("swarmlab_events", str(seq)))
+                self.conn.commit()
+            except Exception:  # noqa: BLE001, S110
+                pass
             return seq
 
     def register(self, agent_id: str, capabilities: list[str], endpoint: str | None = None) -> dict[str, Any]:

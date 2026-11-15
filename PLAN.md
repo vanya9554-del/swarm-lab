@@ -10,6 +10,7 @@
 - **S5 load/chaos** — 2+ replicas, stale workers, latency/throughput отчёт. ✅
 - **S6 hardening** — security, rate-limit, observability, Docker/CI. ✅
 - **S7 release 1.0** — SBOM/checksums/README/ACCEPTANCE. ✅
+- **S8 SSE NOTIFY** — PG LISTEN/NOTIFY вместо polling. ⏳
 
 ## Definition of done
 
