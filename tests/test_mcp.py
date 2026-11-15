@@ -140,6 +140,7 @@ class McpStdioErrorTests(unittest.TestCase):
     def test_stdio_lines(self) -> None:
         import io
         from unittest.mock import patch
+
         from swarmlab.mcp import McpDispatcher, main_stdio
         from swarmlab.store import SwarmError, SwarmStore
         store = SwarmStore(":memory:")
