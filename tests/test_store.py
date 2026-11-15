@@ -64,6 +64,17 @@ class StoreTests(unittest.TestCase):
         self.store.conn.commit()
         self.assertEqual(self.store.get("bad")["payload"], "not-json")
 
+    def test_agent_ttl(self) -> None:
+        import os
+        self.store.register("ttl-agent", ["search"])
+        self.store.conn.execute("UPDATE agents SET last_seen_at=0 WHERE agent_id='ttl-agent'")
+        self.store.conn.commit()
+        os.environ["SWARMLAB_AGENT_TTL"] = "1"
+        try:
+            self.assertNotIn("ttl-agent", {a["agent_id"] for a in self.store.discover("search")})
+        finally:
+            os.environ.pop("SWARMLAB_AGENT_TTL", None)
+
     def test_backpressure(self) -> None:
         import os
 

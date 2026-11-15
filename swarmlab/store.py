@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import threading
 import time
@@ -146,7 +147,7 @@ class SwarmStore:
 
     def discover(self, capability: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         clauses = ["last_seen_at >= ?"]
-        params: list[Any] = [time.time() - 90]
+        params: list[Any] = [time.time() - float(os.environ.get("SWARMLAB_AGENT_TTL") or 90)]
         if capability:
             clauses.append("capabilities LIKE ?")
             params.append(f'%"{capability}"%')

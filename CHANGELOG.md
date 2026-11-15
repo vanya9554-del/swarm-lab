@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.12.0] — 2026-11-16
+
+Configurable agent TTL.
+
+### Добавлено
+- `SWARMLAB_AGENT_TTL` для discover (SQLite/PG); 106 тестов.
+
 ## [5.11.0] — 2026-11-16
 
 SSE listener coverage.

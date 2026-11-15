@@ -1,3 +1,7 @@
+# swarm-lab v5.12.0
+
+SWARMLAB_AGENT_TTL, 106 tests.
+
 # swarm-lab v5.11.0
 
 SSE listener coverage, 105 tests, 96.4%.
