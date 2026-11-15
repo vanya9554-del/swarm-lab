@@ -167,6 +167,23 @@ class PgTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_affinity_priority(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("pa", ["p"])
+            s.register("pb", ["p"])
+            low = s.submit("p", {}, priority=1, affinity_agent_id="pb")
+            high = s.submit("p", {}, priority=9)
+            first = s.claim("pa", "p")
+            self.assertEqual(first["task_id"], high["task_id"])
+            second = s.claim("pa", "p")
+            self.assertIsNone(second)
+            third = s.claim("pb", "p")
+            self.assertEqual(third["task_id"], low["task_id"])
+        finally:
+            s.close()
+
     def test_expire_count(self) -> None:
         import time
 

@@ -1,3 +1,7 @@
+# swarm-lab v5.1.0
+
+PG affinity/priority, 95 tests.
+
 # swarm-lab v5.0.0
 
 Milestone 5.0: ROUTES/OpenAPI contract tests, 94 tests.

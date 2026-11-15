@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.1.0] — 2026-11-15
+
+PG affinity/priority.
+
+### Добавлено
+- affinity/priority claim test; 95 тестов.
+
 ## [5.0.0] — 2026-11-15
 
 Milestone 5.0: API contract.
