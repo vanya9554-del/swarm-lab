@@ -1,5 +1,16 @@
 # Changelog — swarm-lab
 
+## [1.1.0] — 2026-11-15
+
+Post-1.0 hardening.
+
+### Добавлено
+- PG LISTEN/NOTIFY SSE (без 50мс polling на PG).
+- Backpressure `SWARMLAB_MAX_PENDING` → 429; rate limit по токену.
+- Chaos: 3 replica/6 workers/100 tasks exactly-once.
+- Compose (SQLite + PG profile), K8s manifests, DEPLOY.md.
+- 15 тестов.
+
 ## [1.0.0] — 2026-11-15
 
 Первый стабильный релиз.

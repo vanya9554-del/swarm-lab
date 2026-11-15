@@ -1,3 +1,7 @@
+# swarm-lab v1.1.0
+
+Post-1.0: PG NOTIFY SSE, backpressure, chaos, compose/K8s.
+
 # swarm-lab v1.0.0
 
 Agent-native swarm runtime: task market, discovery, lease/fencing, SSE, batch, MCP, PostgreSQL.
