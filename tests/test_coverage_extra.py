@@ -74,7 +74,7 @@ class ExtraApiTests(unittest.TestCase):
             del self.store.stats
 
     def test_body_limit(self) -> None:
-        import swarmlab.api as api
+        from swarmlab import api
         old = api.MAX_BODY
         api.MAX_BODY = 4
         other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0)
