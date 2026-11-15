@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.6.0] — 2026-11-15
+
+Coverage 94%.
+
+### Добавлено
+- batch cancel/requeue/expire, empty body; 72 теста, coverage 94,0%.
+
 ## [3.5.0] — 2026-11-15
 
 PG claim guards.

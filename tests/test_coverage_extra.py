@@ -93,6 +93,25 @@ class ExtraApiTests(unittest.TestCase):
         except urllib.error.HTTPError as exc:
             self.assertEqual(exc.code, 404)
 
+    def test_batch_maintenance(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "bm", "capabilities": ["bm"]})
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "bm"})
+        task_id = body["data"]["task_id"]
+        _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "bm", "capability": "bm"})
+        status, body, _ = _req("POST", self.base + "/v1/batch", {"ops": [
+            {"op": "cancel", "task_id": task_id, "agent_id": "bm"},
+            {"op": "requeue", "task_id": task_id},
+            {"op": "expire"},
+        ]})
+        self.assertEqual(status, 200)
+        self.assertTrue(all(r.get("ok") for r in body["data"]))
+        # пустое тело POST
+        req = urllib.request.Request(self.base + "/v1/batch", data=b"", method="POST")
+        try:
+            urllib.request.urlopen(req, timeout=3)
+        except urllib.error.HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+
     def test_dependencies_api(self) -> None:
         _, first, _ = _req("POST", self.base + "/v1/tasks", {"capability": "dep"})
         first_id = first["data"]["task_id"]

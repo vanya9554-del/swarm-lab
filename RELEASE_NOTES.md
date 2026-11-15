@@ -1,3 +1,7 @@
+# swarm-lab v3.6.0
+
+Coverage 94%, 72 tests, batch maintenance.
+
 # swarm-lab v3.5.0
 
 PG claim guards, coverage 93.6%, 71 tests.
