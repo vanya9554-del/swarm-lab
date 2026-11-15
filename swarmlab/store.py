@@ -360,14 +360,21 @@ class SwarmStore:
             self.conn.execute("UPDATE tasks SET lease_until=? WHERE task_id=?", (until, task_id))
         return {"task_id": task_id, "lease_until": until}
 
-    def tasks(self, status: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+    def tasks(self, status: str | None = None, limit: int = 50, capability: str | None = None) -> list[dict[str, Any]]:
+        clauses: list[str] = []
+        params: list[Any] = []
         if status:
-            rows = self._all(
-                "SELECT * FROM tasks WHERE status=? ORDER BY created_at DESC LIMIT ?", (status, int(limit))
-            )
-        else:
-            rows = self._all("SELECT * FROM tasks ORDER BY created_at DESC LIMIT ?", (int(limit),))
-        return [self._decode(row) for row in rows]
+            clauses.append("status = ?")
+            params.append(status)
+        if capability:
+            clauses.append("capability = ?")
+            params.append(capability)
+        sql = "SELECT * FROM tasks"
+        if clauses:
+            sql += " WHERE " + " AND ".join(clauses)
+        sql += " ORDER BY created_at DESC LIMIT ?"
+        params.append(int(limit))
+        return [self._decode(row) for row in self._all(sql, tuple(params))]
 
     def events(self, after: int = 0, limit: int = 100) -> list[dict[str, Any]]:
         rows = self._all("SELECT * FROM events WHERE seq > ? ORDER BY seq LIMIT ?", (int(after), int(limit)))

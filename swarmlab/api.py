@@ -240,8 +240,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     self._send(200, {"ok": True, "data": agent})
             elif path == "/v1/tasks":
                 status = (query.get("status") or [None])[0]
+                capability = (query.get("capability") or [None])[0]
                 limit = int((query.get("limit") or ["50"])[0])
-                self._send(200, {"ok": True, "data": self.swarm.store.tasks(status, limit)})
+                self._send(200, {"ok": True, "data": self.swarm.store.tasks(status, limit, capability)})
             elif path.startswith("/v1/tasks/"):
                 task = self.swarm.store.get(path.rsplit("/", 1)[-1])
                 if task is None:

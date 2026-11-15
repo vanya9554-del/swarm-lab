@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.20.0] — 2026-11-16
+
+Task capability filter.
+
+### Добавлено
+- `GET /v1/tasks?capability=`; SQLite/PG; 116 тестов.
+
 ## [5.19.0] — 2026-11-16
 
 MCP stdio/error coverage.

@@ -109,6 +109,13 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             resp.close()
 
+    def test_task_capability_filter(self) -> None:
+        _req("POST", self.base + "/v1/tasks", {"capability": "filter"})
+        _, body, _ = _req("GET", self.base + "/v1/tasks?capability=filter")
+        self.assertTrue(body["data"])
+        self.assertTrue(all(t["capability"] == "filter" for t in body["data"]))
+        self.assertEqual(_req("GET", self.base + "/v1/tasks?capability=nope")[1]["data"], [])
+
     def test_agent_api(self) -> None:
         _req("POST", self.base + "/v1/agents", {"agent_id": "prof", "capabilities": ["p"]})
         status, body, _ = _req("GET", self.base + "/v1/agents/prof")

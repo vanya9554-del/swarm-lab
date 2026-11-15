@@ -1,7 +1,7 @@
 """swarm-lab — agent-native swarm runtime."""
 from __future__ import annotations
 
-__version__ = "5.19.0"
+__version__ = "5.20.0"
 
 from .store import SwarmError, SwarmStore
 

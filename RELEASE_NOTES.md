@@ -1,3 +1,7 @@
+# swarm-lab v5.20.0
+
+Task capability filter, 116 tests.
+
 # swarm-lab v5.19.0
 
 MCP stdio/error coverage, 115 tests, 97.3%.
