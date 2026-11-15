@@ -17,10 +17,11 @@
 - **S9**: pending backpressure (`SWARMLAB_MAX_PENDING` → 429), rate-limit per token; **14 tests**.
 - **S10 chaos**: 3 реплики, 6 воркеров, 100 задач, exactly-once; `CHAOS.md`.
 - **S11 deploy**: `docker-compose.yml`, `deploy/k8s.yaml`, `DEPLOY.md`; **15 tests**.
+- **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- S12 release 1.1.
+- Post-1.1: coverage, reconnect, auth scopes.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 
