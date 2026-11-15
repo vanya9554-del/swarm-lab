@@ -102,6 +102,25 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_stream_listener_failure(self) -> None:
+        import threading
+        from unittest.mock import patch
+
+        from swarmlab.api import build_server
+        store = SwarmStore(":memory:")
+        store.dsn = "postgresql://x"
+        other = build_server(store, "127.0.0.1", 0)
+        thread = threading.Thread(target=other.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{other.server_address[1]}"
+        try:
+            with patch("swarmlab.events.PgEventStream", side_effect=RuntimeError("no pg")):
+                with urllib.request.urlopen(base + "/v1/stream?after=0&limit=1&timeout_s=0.1", timeout=5) as resp:
+                    self.assertEqual(resp.status, 200)
+                    resp.read()
+        finally:
+            other.shutdown(); other.server_close(); thread.join(timeout=5)
+
     def test_stream_empty(self) -> None:
         with urllib.request.urlopen(self.base + "/v1/stream?after=999999&limit=1&timeout_s=0.1", timeout=5) as resp:
             self.assertEqual(resp.status, 200)
@@ -357,7 +376,7 @@ class ExtraApiTests(unittest.TestCase):
             urllib.request.urlopen(req, timeout=3)
         except urllib.error.HTTPError as exc:
             self.assertEqual(exc.code, 400)
-        except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+        except (urllib.error.URLError, ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
             pass
 
     def test_renew_and_stream(self) -> None:

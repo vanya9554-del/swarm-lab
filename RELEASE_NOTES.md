@@ -1,3 +1,7 @@
+# swarm-lab v5.9.0
+
+CI broken-pipe fix, SSE failure path, 103 tests.
+
 # swarm-lab v5.8.0
 
 MCP runtime exception, 102 tests.

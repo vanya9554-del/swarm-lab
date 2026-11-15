@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [5.9.0] — 2026-11-15
+
+CI fix + SSE failure path.
+
+### Исправлено
+- CI: `URLError` (broken pipe) в large-body тесте на Linux.
+- SSE listener failure; 103 теста.
+
 ## [5.8.0] — 2026-11-15
 
 MCP runtime exception path.
