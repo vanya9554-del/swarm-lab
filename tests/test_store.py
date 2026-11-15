@@ -44,6 +44,14 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_dependencies(self) -> None:
+        first = self.store.submit("x", {})
+        second = self.store.submit("x", {}, depends_on=first["task_id"])
+        self.assertEqual(self.store.claim("a1", "x")["task_id"], first["task_id"])
+        self.assertIsNone(self.store.claim("a1", "x"))
+        self.store.complete(first["task_id"], "a1", {}, fence=self.store.get(first["task_id"])["lease_epoch"])
+        self.assertEqual(self.store.claim("a1", "x")["task_id"], second["task_id"])
+
     def test_ttl(self) -> None:
         import time
         t = self.store.submit("x", {}, ttl_s=0.01)

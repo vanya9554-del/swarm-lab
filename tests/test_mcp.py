@@ -45,6 +45,16 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_dependency_tool(self) -> None:
+        self._call("swarm_register", {"agent_id": "dep", "capabilities": ["dep"]})
+        first = self._text(self._call("swarm_submit", {"capability": "dep"}))
+        second = self._text(self._call("swarm_submit", {"capability": "dep", "depends_on": first["task_id"]}))
+        claim = self._text(self._call("swarm_claim", {"agent_id": "dep", "capability": "dep"}))
+        self.assertEqual(claim["task_id"], first["task_id"])
+        self._call("swarm_complete", {"task_id": first["task_id"], "agent_id": "dep", "fence": claim["lease_epoch"]})
+        next_claim = self._text(self._call("swarm_claim", {"agent_id": "dep", "capability": "dep"}))
+        self.assertEqual(next_claim["task_id"], second["task_id"])
+
     def test_expire_tool(self) -> None:
         out = self._text(self._call("swarm_expire", {}))
         self.assertIn("expired", out)

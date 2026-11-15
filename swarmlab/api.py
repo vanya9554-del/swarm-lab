@@ -277,6 +277,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     dedup_key=body.get("dedup_key"),
                     affinity_agent_id=body.get("affinity_agent_id"),
                     ttl_s=float(body["ttl_s"]) if body.get("ttl_s") is not None else None,
+                    depends_on=body.get("depends_on"),
                 )
                 self._send(200, {"ok": True, "data": data})
             elif path == "/v1/tasks/claim":
@@ -370,6 +371,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     data = self.swarm.store.submit(
                         str(op.get("capability") or ""), op.get("payload"),
                         ttl_s=float(op["ttl_s"]) if op.get("ttl_s") is not None else None,
+                        depends_on=op.get("depends_on"),
                     )
                 elif name == "events":
                     data = self.swarm.store.events(int(op.get("after") or 0), int(op.get("limit") or 100))

@@ -93,6 +93,20 @@ class ExtraApiTests(unittest.TestCase):
         except urllib.error.HTTPError as exc:
             self.assertEqual(exc.code, 404)
 
+    def test_dependencies_api(self) -> None:
+        _, first, _ = _req("POST", self.base + "/v1/tasks", {"capability": "dep"})
+        first_id = first["data"]["task_id"]
+        _, second, _ = _req("POST", self.base + "/v1/tasks", {"capability": "dep", "depends_on": first_id})
+        second_id = second["data"]["task_id"]
+        _req("POST", self.base + "/v1/agents", {"agent_id": "dep", "capabilities": ["dep"]})
+        _, claim, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "dep", "capability": "dep"})
+        self.assertEqual(claim["data"]["task_id"], first_id)
+        _, claim2, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "dep", "capability": "dep"})
+        self.assertIsNone(claim2["data"])
+        _req("POST", self.base + f"/v1/tasks/{first_id}/complete", {"agent_id": "dep", "fence": claim["data"]["lease_epoch"]})
+        _, claim3, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "dep", "capability": "dep"})
+        self.assertEqual(claim3["data"]["task_id"], second_id)
+
     def test_expire_api(self) -> None:
         import time
         _req("POST", self.base + "/v1/tasks", {"capability": "exp", "ttl_s": 0.01})

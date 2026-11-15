@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     dedup_key      TEXT,
     affinity_agent_id TEXT,
     expires_at     REAL,
+    depends_on     TEXT,
     created_at     REAL NOT NULL,
     claimed_by     TEXT,
     lease_until    REAL,
@@ -79,6 +80,8 @@ class SwarmStore:
             cols = {str(row["name"]) for row in self.conn.execute("PRAGMA table_info(tasks)").fetchall()}
             if "expires_at" not in cols:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN expires_at REAL")
+            if "depends_on" not in cols:
+                self.conn.execute("ALTER TABLE tasks ADD COLUMN depends_on TEXT")
 
     def close(self) -> None:
         with self.lock:
@@ -160,6 +163,7 @@ class SwarmStore:
         dedup_key: str | None = None,
         affinity_agent_id: str | None = None,
         ttl_s: float | None = None,
+        depends_on: str | None = None,
     ) -> dict[str, Any]:
         if not capability:
             raise SwarmError("BAD_REQUEST", "capability is required")
@@ -182,9 +186,10 @@ class SwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, expires_at, created_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)",
+                "affinity_agent_id, expires_at, depends_on, created_at) "
+                "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)",
                 (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
-                 now + max(0.0, ttl_s) if ttl_s is not None else None, now),
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on, now),
             )
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
         return {"task_id": task_id, "capability": capability, "status": "pending", "created_at": now}
@@ -213,7 +218,11 @@ class SwarmStore:
                     "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < ?",
                     (now,),
                 )
-                clauses = ["status='pending'", "(affinity_agent_id IS NULL OR affinity_agent_id = ?)"]
+                clauses = [
+                    "status='pending'",
+                    "(affinity_agent_id IS NULL OR affinity_agent_id = ?)",
+                    "(depends_on IS NULL OR depends_on IN (SELECT task_id FROM tasks WHERE status='completed'))",
+                ]
                 params: list[Any] = [agent_id]
                 if capability:
                     clauses.append("capability = ?")

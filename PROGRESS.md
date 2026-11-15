@@ -39,11 +39,12 @@
 - **S32**: agent deregistration, 61 тест; release 2.9.0.
 - **S33**: maintenance expire, 64 теста; release 3.0.0.
 - **S34**: gzip compression, 65 тестов; release 3.1.0.
+- **S35**: task dependencies, 68 тестов; release 3.2.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-3.1: live K8s, external audit, chaos.
+- Post-3.2: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     dedup_key TEXT,
     affinity_agent_id TEXT,
     expires_at DOUBLE PRECISION,
+    depends_on TEXT,
     created_at DOUBLE PRECISION NOT NULL,
     claimed_by TEXT,
     lease_until DOUBLE PRECISION,
@@ -185,7 +186,7 @@ class PgSwarmStore:
 
     def submit(self, capability: str, payload: Any = None, *, priority: int = 0,
                dedup_key: str | None = None, affinity_agent_id: str | None = None,
-               ttl_s: float | None = None) -> dict[str, Any]:
+               ttl_s: float | None = None, depends_on: str | None = None) -> dict[str, Any]:
         self._ensure()
         if dedup_key:
             existing = self._one("SELECT * FROM tasks WHERE capability=%s AND dedup_key=%s", (capability, dedup_key))
@@ -204,9 +205,10 @@ class PgSwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, expires_at, created_at) VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s)",
+                "affinity_agent_id, expires_at, depends_on, created_at) "
+                "VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s)",
                 (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
-                 now + max(0.0, ttl_s) if ttl_s is not None else None, now),
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on, now),
             )
             self.conn.commit()
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
@@ -235,7 +237,11 @@ class PgSwarmStore:
                     "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < %s",
                     (now,),
                 )
-                clauses = ["status='pending'", "(affinity_agent_id IS NULL OR affinity_agent_id = %s)"]
+                clauses = [
+                    "status='pending'",
+                    "(affinity_agent_id IS NULL OR affinity_agent_id = %s)",
+                    "(depends_on IS NULL OR depends_on IN (SELECT task_id FROM tasks WHERE status='completed'))",
+                ]
                 params: list[Any] = [agent_id]
                 if capability:
                     clauses.append("capability = %s")

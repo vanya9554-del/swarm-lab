@@ -1,3 +1,7 @@
+# swarm-lab v3.2.0
+
+Task dependencies (depends_on), 68 tests.
+
 # swarm-lab v3.1.0
 
 Gzip JSON responses, 65 tests.

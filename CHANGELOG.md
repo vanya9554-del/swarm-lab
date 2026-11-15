@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.2.0] — 2026-11-15
+
+Task dependencies.
+
+### Добавлено
+- `depends_on` на submit; claim только после completed зависимости; SQLite/PG/API/MCP; 68 тестов.
+
 ## [3.1.0] — 2026-11-15
 
 Gzip responses.
