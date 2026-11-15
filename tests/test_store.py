@@ -46,6 +46,7 @@ class StoreTests(unittest.TestCase):
 
     def test_backpressure(self) -> None:
         import os
+
         from swarmlab.store import SwarmStore
         os.environ["SWARMLAB_MAX_PENDING"] = "1"
         try:
