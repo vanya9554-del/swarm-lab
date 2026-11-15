@@ -128,6 +128,13 @@ class SwarmStore:
             raise SwarmError("NOT_FOUND", f"agent {agent_id} not found")
         return {"agent_id": agent_id, "status": status, "last_seen_at": now}
 
+    def deregister(self, agent_id: str) -> dict[str, Any]:
+        with self.lock:
+            deleted = self.conn.execute("DELETE FROM agents WHERE agent_id=?", (agent_id,)).rowcount
+        if deleted:
+            self.event("agent.deregistered", {"agent_id": agent_id})
+        return {"agent_id": agent_id, "deleted": bool(deleted)}
+
     def discover(self, capability: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         clauses = ["last_seen_at >= ?"]
         params: list[Any] = [time.time() - 90]

@@ -45,6 +45,10 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_deregister_tool(self) -> None:
+        self._call("swarm_register", {"agent_id": "d", "capabilities": ["x"]})
+        self.assertTrue(self._text(self._call("swarm_deregister", {"agent_id": "d"}))["deleted"])
+
     def test_requeue_tool(self) -> None:
         submitted = self._text(self._call("swarm_submit", {"capability": "rq"}))
         self._call("swarm_cancel", {"task_id": submitted["task_id"]})

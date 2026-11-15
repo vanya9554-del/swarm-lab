@@ -25,6 +25,7 @@ ROUTES = {
     ("GET", "/v1/version"),
     ("GET", "/v1/capabilities"),
     ("POST", "/v1/agents"),
+    ("DELETE", "/v1/agents/{agent_id}"),
     ("GET", "/v1/agents"),
     ("POST", "/v1/heartbeat"),
     ("POST", "/v1/tasks"),
@@ -315,6 +316,20 @@ class SwarmHandler(BaseHTTPRequestHandler):
             self._error(status, exc.code, exc.message)
         except (ValueError, TypeError) as exc:
             self._error(400, "BAD_REQUEST", str(exc))
+
+    def do_DELETE(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        path = parsed.path
+        if not self._auth():
+            return
+        if not self._rate_ok():
+            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
+            return
+        if not path.startswith("/v1/agents/"):
+            self._error(404, "NOT_FOUND", f"no route {path}")
+            return
+        agent_id = path.rsplit("/", 1)[-1]
+        self._send(200, {"ok": True, "data": self.swarm.store.deregister(agent_id)})
 
     def _batch(self, ops: list[Any]) -> list[dict[str, Any]]:
         results = []

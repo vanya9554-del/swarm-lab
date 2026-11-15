@@ -39,6 +39,11 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_deregister(self) -> None:
+        self.assertTrue(self.store.deregister("a1")["deleted"])
+        self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
+        self.assertFalse(self.store.deregister("nope")["deleted"])
+
     def test_ttl(self) -> None:
         import time
         t = self.store.submit("x", {}, ttl_s=0.01)

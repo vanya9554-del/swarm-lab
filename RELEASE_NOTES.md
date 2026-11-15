@@ -1,3 +1,7 @@
+# swarm-lab v2.9.0
+
+Agent deregistration, 61 tests.
+
 # swarm-lab v2.8.0
 
 Task TTL/expiry, 58 tests.

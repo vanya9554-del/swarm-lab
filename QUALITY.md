@@ -4,8 +4,8 @@
 
 | Метрика | Значение |
 |---|---|
-| unittest | **58/58 OK** |
-| coverage (source=swarmlab) | **92,1%** |
+| unittest | **61/61 OK** |
+| coverage (source=swarmlab) | **91,3%** |
 | ruff | **0 errors** |
 | PG/chaos tests | 4 (embedded, skip без psycopg) |
 | benchmark | 5412 tasks/s SQLite, p50 1.09 ms |

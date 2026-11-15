@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [2.9.0] — 2026-11-15
+
+Agent deregistration.
+
+### Добавлено
+- `DELETE /v1/agents/{agent_id}`, MCP `swarm_deregister`, batch deregister; 61 тест.
+
 ## [2.8.0] — 2026-11-15
 
 Task TTL/expiry.

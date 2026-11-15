@@ -36,11 +36,12 @@
 - **S29**: Retry-After/rate headers; release 2.6.0.
 - **S30**: requeue cancelled/failed, 55 тестов; release 2.7.0.
 - **S31**: task TTL/expiry, 58 тестов; release 2.8.0.
+- **S32**: agent deregistration, 61 тест; release 2.9.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-2.8: live K8s, external audit, chaos.
+- Post-2.9: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

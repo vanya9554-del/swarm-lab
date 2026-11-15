@@ -81,6 +81,18 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("batch", body["data"]["features"])
 
+    def test_deregister_api(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "del", "capabilities": ["x"]})
+        req = urllib.request.Request(self.base + "/v1/agents/del", method="DELETE")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            self.assertEqual(resp.status, 200)
+        self.assertEqual(_req("GET", self.base + "/v1/agents?capability=x")[1]["data"], [])
+        req = urllib.request.Request(self.base + "/nope", method="DELETE")
+        try:
+            urllib.request.urlopen(req, timeout=3)
+        except urllib.error.HTTPError as exc:
+            self.assertEqual(exc.code, 404)
+
     def test_ttl_api(self) -> None:
         import time
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ttl", "ttl_s": 0.01})
