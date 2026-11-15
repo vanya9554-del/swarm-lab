@@ -55,3 +55,5 @@ python -m swarmlab serve --port 8788
 
 - Store fence проверяется до claimed_by → stale worker получает `STALE_LEASE` (не FORBIDDEN).
 - Heartbeat выделен в `SwarmStore.heartbeat` (не upsert через discover).
+
+- **Night harness**: `scripts/night_harness.py` запущен detached; JSONL `data/night_harness.jsonl`; health/soak каждые 5с, тесты каждые 15мин.

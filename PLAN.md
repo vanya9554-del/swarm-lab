@@ -23,3 +23,5 @@
 - Бенчмарк p50/p95 и throughput.
 - Docker/CI/README/ACCEPTANCE.
 - Внешние блокеры (GitHub push, K8s) — в `../NIGHT_SHIFT.md`.
+
+- **Night harness** — `scripts/night_harness.py`, непрерывный soak/health/tests. ✅
