@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.6.0] — 2026-11-15
+
+Manifest validator.
+
+### Добавлено
+- `scripts/validate_manifests.py` + test; 100 тестов.
+
 ## [5.5.0] — 2026-11-15
 
 Stream/PG decode coverage.

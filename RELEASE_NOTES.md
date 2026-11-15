@@ -1,3 +1,7 @@
+# swarm-lab v5.6.0
+
+Manifest validator, 100 tests.
+
 # swarm-lab v5.5.0
 
 SSE/PG decode coverage, 99 tests, 95.7%.

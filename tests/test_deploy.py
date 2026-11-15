@@ -12,5 +12,14 @@ class DeployTests(unittest.TestCase):
             self.assertIn(expected, pg)
 
 
+    def test_validator(self) -> None:
+        import importlib.util
+        path = Path(__file__).resolve().parents[1] / "scripts" / "validate_manifests.py"
+        spec = importlib.util.spec_from_file_location("validate_manifests", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertEqual(module.check(), [])
+
+
 if __name__ == "__main__":
     unittest.main()
