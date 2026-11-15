@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.5.0] — 2026-11-15
+
+PG claim guards.
+
+### Добавлено
+- cancel/renew/complete guard tests; coverage 93,6%, 71 тест.
+
 ## [3.4.0] — 2026-11-15
 
 PG edge paths.

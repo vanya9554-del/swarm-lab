@@ -14,6 +14,8 @@
 - **S9 backpressure/auth** — pending limit, per-token rate key. ✅
 - **S10 chaos/load** — 3 реплики/6 воркеров/100 задач. ✅
 - **S11 deploy** — compose + K8s manifests. ✅
+- **S12–S31** — PG reconnect, TTL, cancel/requeue, dependencies, deregistration, gzip, readiness, coverage 92–93%. ✅
+- **S32–S38** — agents/MCP maintenance, PG guards, coverage 93,6%. ✅
 
 ## Definition of done
 

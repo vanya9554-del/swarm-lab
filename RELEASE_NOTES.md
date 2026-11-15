@@ -1,3 +1,7 @@
+# swarm-lab v3.5.0
+
+PG claim guards, coverage 93.6%, 71 tests.
+
 # swarm-lab v3.4.0
 
 PG edge paths, coverage 93.4%, 70 tests.

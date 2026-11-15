@@ -118,6 +118,24 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_claim_guards(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("g1", ["g"])
+            s.register("g2", ["g"])
+            t = s.submit("g", {})
+            first = s.claim("g1", "g")
+            self.assertEqual(first["task_id"], t["task_id"])
+            with self.assertRaises(RuntimeError):
+                s.cancel(t["task_id"], "g2")
+            with self.assertRaises(RuntimeError):
+                s.renew(t["task_id"], "g1", fence=999)
+            with self.assertRaises(RuntimeError):
+                s.complete(t["task_id"], "g1", {}, fence=999)
+        finally:
+            s.close()
+
     def test_edge_paths(self) -> None:
         import time
 
