@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.9.0] — 2026-11-15
+
+Auth/rate edge coverage.
+
+### Добавлено
+- invalid `SWARMLAB_TOKENS`, DELETE 429; coverage 95,4%, 92 теста.
+
 ## [4.8.0] — 2026-11-15
 
 README/current docs.

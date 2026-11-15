@@ -1,3 +1,7 @@
+# swarm-lab v4.9.0
+
+Auth/rate edge coverage, 92 tests, 95.4%.
+
 # swarm-lab v4.8.0
 
 README sync + store decode tests, 90 tests.

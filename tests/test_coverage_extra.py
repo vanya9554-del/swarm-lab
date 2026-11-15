@@ -92,6 +92,31 @@ class ExtraApiTests(unittest.TestCase):
             other.shutdown(); other.server_close(); thread.join(timeout=5)
             api.MAX_BODY = old
 
+    def test_tokens_invalid(self) -> None:
+        import os
+        from swarmlab.api import build_server
+        os.environ["SWARMLAB_TOKENS"] = "not-json"
+        try:
+            other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0)
+        finally:
+            os.environ.pop("SWARMLAB_TOKENS", None)
+        other.server_close()
+
+    def test_delete_rate(self) -> None:
+        import os
+        os.environ["SWARMLAB_RATE_RPS"] = "1"
+        try:
+            req = urllib.request.Request(self.base + "/v1/agents/x", method="DELETE")
+            codes = []
+            for _ in range(2):
+                try:
+                    urllib.request.urlopen(req, timeout=3)
+                except urllib.error.HTTPError as exc:
+                    codes.append(exc.code)
+            self.assertIn(429, codes)
+        finally:
+            os.environ.pop("SWARMLAB_RATE_RPS", None)
+
     def test_delete_auth(self) -> None:
         from swarmlab.api import build_server
         other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "tok")
