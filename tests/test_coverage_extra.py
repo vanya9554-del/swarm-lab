@@ -105,6 +105,7 @@ class ExtraApiTests(unittest.TestCase):
     def test_stream_listener_success(self) -> None:
         import threading
         from unittest.mock import patch
+
         from swarmlab.api import build_server
         store = SwarmStore(":memory:")
         store.dsn = "postgresql://x"

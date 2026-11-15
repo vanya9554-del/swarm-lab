@@ -47,6 +47,7 @@ class HardeningTests(unittest.TestCase):
     def test_tcp_nodelay_error(self) -> None:
         import socket
         from unittest.mock import patch
+
         from swarmlab.api import build_server
         from swarmlab.store import SwarmStore
         original = socket.socket.setsockopt
