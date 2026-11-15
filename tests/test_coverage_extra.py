@@ -115,9 +115,12 @@ class ExtraApiTests(unittest.TestCase):
         base = f"http://127.0.0.1:{other.server_address[1]}"
         try:
             with patch("swarmlab.events.PgEventStream", side_effect=RuntimeError("no pg")):
-                with urllib.request.urlopen(base + "/v1/stream?after=0&limit=1&timeout_s=0.1", timeout=5) as resp:
+                resp = urllib.request.urlopen(base + "/v1/stream?after=0&limit=1&timeout_s=0.1", timeout=5)
+                try:
                     self.assertEqual(resp.status, 200)
                     resp.read()
+                finally:
+                    resp.close()
         finally:
             other.shutdown(); other.server_close(); thread.join(timeout=5)
 
