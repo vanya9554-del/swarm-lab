@@ -1,3 +1,7 @@
+# swarm-lab v3.7.0
+
+Dead-letter attempts, 74 tests.
+
 # swarm-lab v3.6.0
 
 Coverage 94%, 72 tests, batch maintenance.

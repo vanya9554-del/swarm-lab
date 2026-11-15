@@ -278,6 +278,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     affinity_agent_id=body.get("affinity_agent_id"),
                     ttl_s=float(body["ttl_s"]) if body.get("ttl_s") is not None else None,
                     depends_on=body.get("depends_on"),
+                    max_attempts=int(body.get("max_attempts") or 3),
                 )
                 self._send(200, {"ok": True, "data": data})
             elif path == "/v1/tasks/claim":
@@ -372,6 +373,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                         str(op.get("capability") or ""), op.get("payload"),
                         ttl_s=float(op["ttl_s"]) if op.get("ttl_s") is not None else None,
                         depends_on=op.get("depends_on"),
+                        max_attempts=int(op.get("max_attempts") or 3),
                     )
                 elif name == "events":
                     data = self.swarm.store.events(int(op.get("after") or 0), int(op.get("limit") or 100))

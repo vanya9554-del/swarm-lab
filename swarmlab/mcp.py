@@ -123,6 +123,7 @@ class McpDispatcher:
                     affinity_agent_id=args.get("affinity_agent_id"),
                     ttl_s=float(args["ttl_s"]) if args.get("ttl_s") is not None else None,
                     depends_on=args.get("depends_on"),
+                    max_attempts=int(args.get("max_attempts") or 3),
                 ))
             if name == "swarm_claim":
                 return _text(self.store.claim(

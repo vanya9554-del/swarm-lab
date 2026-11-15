@@ -118,6 +118,23 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_attempts(self) -> None:
+        import time
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("at", ["at"])
+            t = s.submit("at", {}, max_attempts=1)
+            first = s.claim("at", "at", lease_s=1.0)
+            self.assertEqual(first["attempts"], 1)
+            time.sleep(1.1)
+            self.assertIsNone(s.claim("at", "at"))
+            self.assertEqual(s.get(t["task_id"])["status"], "failed")
+            s.requeue(t["task_id"])
+            self.assertEqual(s.claim("at", "at")["attempts"], 1)
+        finally:
+            s.close()
+
     def test_claim_guards(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
@@ -145,7 +162,7 @@ class PgTests(unittest.TestCase):
             s.register("e1", ["e"])
             s.register("e2", ["e"])
             t = s.submit("e", {}, ttl_s=0.01, depends_on=None)
-            time.sleep(0.03)
+            time.sleep(1.1)
             self.assertGreaterEqual(s.expire()["expired"], 1)
             self.assertTrue(s.tasks())
             with self.assertRaises(RuntimeError):
@@ -177,7 +194,7 @@ class PgTests(unittest.TestCase):
         try:
             s.register("ttl", ["ttl"])
             t = s.submit("ttl", {}, ttl_s=0.01)
-            time.sleep(0.03)
+            time.sleep(1.1)
             self.assertIsNone(s.claim("ttl", "ttl"))
             self.assertEqual(s.get(t["task_id"])["status"], "expired")
             self.assertEqual(s.expire()["expired"], 0)

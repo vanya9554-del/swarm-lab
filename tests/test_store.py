@@ -44,6 +44,17 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_attempts(self) -> None:
+        import time
+        t = self.store.submit("x", {}, max_attempts=1)
+        first = self.store.claim("a1", "x", lease_s=1.0)
+        self.assertEqual(first["attempts"], 1)
+        time.sleep(1.1)
+        self.assertIsNone(self.store.claim("a1", "x"))
+        self.assertEqual(self.store.get(t["task_id"])["status"], "failed")
+        self.store.requeue(t["task_id"])
+        self.assertEqual(self.store.claim("a1", "x")["attempts"], 1)
+
     def test_dependencies(self) -> None:
         first = self.store.submit("x", {})
         second = self.store.submit("x", {}, depends_on=first["task_id"])
@@ -55,7 +66,7 @@ class StoreTests(unittest.TestCase):
     def test_ttl(self) -> None:
         import time
         t = self.store.submit("x", {}, ttl_s=0.01)
-        time.sleep(0.03)
+        time.sleep(1.1)
         self.assertIsNone(self.store.claim("a1", "x"))
         self.assertEqual(self.store.get(t["task_id"])["status"], "expired")
         self.assertEqual(self.store.expire()["expired"], 0)

@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     affinity_agent_id TEXT,
     expires_at DOUBLE PRECISION,
     depends_on TEXT,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 3,
     created_at DOUBLE PRECISION NOT NULL,
     claimed_by TEXT,
     lease_until DOUBLE PRECISION,
@@ -186,7 +188,8 @@ class PgSwarmStore:
 
     def submit(self, capability: str, payload: Any = None, *, priority: int = 0,
                dedup_key: str | None = None, affinity_agent_id: str | None = None,
-               ttl_s: float | None = None, depends_on: str | None = None) -> dict[str, Any]:
+               ttl_s: float | None = None, depends_on: str | None = None,
+               max_attempts: int = 3) -> dict[str, Any]:
         self._ensure()
         if dedup_key:
             existing = self._one("SELECT * FROM tasks WHERE capability=%s AND dedup_key=%s", (capability, dedup_key))
@@ -205,10 +208,11 @@ class PgSwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, expires_at, depends_on, created_at) "
-                "VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s)",
+                "affinity_agent_id, expires_at, depends_on, max_attempts, created_at) "
+                "VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s)",
                 (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
-                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on, now),
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on,
+                 max(1, int(max_attempts)), now),
             )
             self.conn.commit()
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
@@ -230,8 +234,13 @@ class PgSwarmStore:
         with self.lock:
             with self.conn.cursor() as cur:
                 cur.execute(
+                    "UPDATE tasks SET status='failed' WHERE status='claimed' "
+                    "AND lease_until IS NOT NULL AND lease_until < %s AND attempts >= max_attempts", (now,)
+                )
+                cur.execute(
                     "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL "
-                    "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < %s", (now,)
+                    "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < %s "
+                    "AND attempts < max_attempts", (now,)
                 )
                 cur.execute(
                     "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < %s",
@@ -239,6 +248,7 @@ class PgSwarmStore:
                 )
                 clauses = [
                     "status='pending'",
+                    "attempts < max_attempts",
                     "(affinity_agent_id IS NULL OR affinity_agent_id = %s)",
                     "(depends_on IS NULL OR depends_on IN (SELECT task_id FROM tasks WHERE status='completed'))",
                 ]
@@ -258,7 +268,7 @@ class PgSwarmStore:
                 task_id = row["task_id"]
                 cur.execute(
                     "UPDATE tasks SET status='claimed', claimed_by=%s, lease_until=%s, "
-                    "lease_epoch=lease_epoch+1 WHERE task_id=%s",
+                    "lease_epoch=lease_epoch+1, attempts=attempts+1 WHERE task_id=%s",
                     (agent_id, now + max(1.0, lease_s), task_id),
                 )
                 cur.execute("UPDATE agents SET status='working', last_seen_at=%s WHERE agent_id=%s", (now, agent_id))
@@ -329,7 +339,8 @@ class PgSwarmStore:
             raise RuntimeError(f"CONFLICT: {task.get('status')}")
         with self.lock:
             self.conn.execute(
-                "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL, result=NULL, completed_at=NULL WHERE task_id=%s",
+                "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL, attempts=0, "
+                "result=NULL, completed_at=NULL WHERE task_id=%s",
                 (task_id,),
             )
             self.conn.commit()

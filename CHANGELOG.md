@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.7.0] — 2026-11-15
+
+Dead-letter attempts.
+
+### Добавлено
+- `max_attempts` на submit; lease expiry → failed после лимита; requeue сбрасывает attempts; SQLite/PG/API/MCP; 74 теста.
+
 ## [3.6.0] — 2026-11-15
 
 Coverage 94%.

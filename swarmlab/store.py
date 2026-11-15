@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     affinity_agent_id TEXT,
     expires_at     REAL,
     depends_on     TEXT,
+    attempts       INTEGER NOT NULL DEFAULT 0,
+    max_attempts   INTEGER NOT NULL DEFAULT 3,
     created_at     REAL NOT NULL,
     claimed_by     TEXT,
     lease_until    REAL,
@@ -82,6 +84,10 @@ class SwarmStore:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN expires_at REAL")
             if "depends_on" not in cols:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN depends_on TEXT")
+            if "attempts" not in cols:
+                self.conn.execute("ALTER TABLE tasks ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
+            if "max_attempts" not in cols:
+                self.conn.execute("ALTER TABLE tasks ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3")
 
     def close(self) -> None:
         with self.lock:
@@ -164,6 +170,7 @@ class SwarmStore:
         affinity_agent_id: str | None = None,
         ttl_s: float | None = None,
         depends_on: str | None = None,
+        max_attempts: int = 3,
     ) -> dict[str, Any]:
         if not capability:
             raise SwarmError("BAD_REQUEST", "capability is required")
@@ -186,10 +193,11 @@ class SwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, expires_at, depends_on, created_at) "
-                "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)",
+                "affinity_agent_id, expires_at, depends_on, max_attempts, created_at) "
+                "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)",
                 (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
-                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on, now),
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, depends_on,
+                 max(1, int(max_attempts)), now),
             )
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
         return {"task_id": task_id, "capability": capability, "status": "pending", "created_at": now}
@@ -210,8 +218,14 @@ class SwarmStore:
             self.conn.execute("BEGIN IMMEDIATE")
             try:
                 self.conn.execute(
+                    "UPDATE tasks SET status='failed' WHERE status='claimed' "
+                    "AND lease_until IS NOT NULL AND lease_until < ? AND attempts >= max_attempts",
+                    (now,),
+                )
+                self.conn.execute(
                     "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL "
-                    "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < ?",
+                    "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < ? "
+                    "AND attempts < max_attempts",
                     (now,),
                 )
                 self.conn.execute(
@@ -220,6 +234,7 @@ class SwarmStore:
                 )
                 clauses = [
                     "status='pending'",
+                    "attempts < max_attempts",
                     "(affinity_agent_id IS NULL OR affinity_agent_id = ?)",
                     "(depends_on IS NULL OR depends_on IN (SELECT task_id FROM tasks WHERE status='completed'))",
                 ]
@@ -237,7 +252,7 @@ class SwarmStore:
                     return None
                 self.conn.execute(
                     "UPDATE tasks SET status='claimed', claimed_by=?, lease_until=?, "
-                    "lease_epoch=lease_epoch+1 WHERE task_id=?",
+                    "lease_epoch=lease_epoch+1, attempts=attempts+1 WHERE task_id=?",
                     (agent_id, now + max(1.0, lease_s), row["task_id"]),
                 )
                 self.conn.execute(
@@ -317,7 +332,7 @@ class SwarmStore:
             raise SwarmError("CONFLICT", f"cannot requeue status {task.get('status')}")
         with self.lock:
             self.conn.execute(
-                "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL, "
+                "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL, attempts=0, "
                 "result=NULL, completed_at=NULL WHERE task_id=?",
                 (task_id,),
             )
