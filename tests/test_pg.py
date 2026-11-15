@@ -130,7 +130,6 @@ class PgTests(unittest.TestCase):
             time.sleep(0.03)
             self.assertGreaterEqual(s.expire()["expired"], 1)
             self.assertTrue(s.tasks())
-            claimed = s.claim("e1", "e")
             with self.assertRaises(RuntimeError):
                 s.renew(t["task_id"], "e1", fence=999)
             with self.assertRaises(RuntimeError):
