@@ -26,6 +26,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_events_import_error(self) -> None:
         from unittest.mock import patch
+
         import swarmlab.events as ev
         with patch("builtins.__import__", side_effect=ImportError("no psycopg")):
             self.assertFalse(ev.available())
