@@ -1,3 +1,7 @@
+# swarm-lab v3.3.0
+
+PG edge coverage 93.1%, 69 tests.
+
 # swarm-lab v3.2.0
 
 Task dependencies (depends_on), 68 tests.

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.3.0] — 2026-11-15
+
+PG edges/coverage.
+
+### Добавлено
+- PG heartbeat/complete/renew/requeue errors; coverage 93,1%, 69 тестов.
+
 ## [3.2.0] — 2026-11-15
 
 Task dependencies.

@@ -99,6 +99,25 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_edges(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            with self.assertRaises(RuntimeError):
+                s.heartbeat("missing")
+            t = s.submit("edge", {"n": 1}, ttl_s=30, depends_on=None)
+            s.cancel(t["task_id"])
+            self.assertEqual(s.requeue(t["task_id"])["status"], "pending")
+            with self.assertRaises(RuntimeError):
+                s.requeue(t["task_id"])
+            with self.assertRaises(RuntimeError):
+                s.complete("missing", "x")
+            with self.assertRaises(RuntimeError):
+                s.renew(t["task_id"], "nobody")
+            self.assertEqual(s.expire()["expired"], 0)
+        finally:
+            s.close()
+
     def test_deregister(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
