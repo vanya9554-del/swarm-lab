@@ -69,6 +69,12 @@ class HardeningTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_health_info(self) -> None:
+        status, _, body = _get(self.base + "/health")
+        self.assertEqual(status, 200)
+        self.assertIn(b'"version"', body)
+        self.assertIn(b'"uptime_s"', body)
+
     def test_ready(self) -> None:
         status, headers, body = _get(self.base + "/ready")
         self.assertEqual(status, 200)

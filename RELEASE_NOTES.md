@@ -1,3 +1,7 @@
+# swarm-lab v3.9.0
+
+Health version/uptime, 77 tests.
+
 # swarm-lab v3.8.0
 
 HTTP bench 300/300, 586.7 tasks/s; 76 tests.

@@ -74,6 +74,7 @@ class SwarmHTTPServer(ThreadingHTTPServer):
                 self.tokens = {}
         self.mcp = McpDispatcher(store)
         self.metrics = SwarmMetrics()
+        self.started_at = time.time()
         self.rate: dict[str, list[float]] = {}
         self.rate_lock = threading.Lock()
         super().__init__(addr, SwarmHandler)
@@ -206,7 +207,12 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(body)
             elif path == "/health":
-                self._send(200, {"ok": True, "service": "swarm-lab"})
+                self._send(200, {
+                    "ok": True,
+                    "service": "swarm-lab",
+                    "version": __version__,
+                    "uptime_s": round(time.time() - self.swarm.started_at, 1),
+                })
             elif path == "/v1/version":
                 self._send(200, {"ok": True, "data": {"version": __version__, "name": "swarm-lab"}})
             elif path == "/v1/capabilities":

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarm-lab"
-version = "3.8.0"
+version = "3.9.0"
 description = "Agent-native swarm runtime: task market, discovery, SSE, MCP, PostgreSQL"
 requires-python = ">=3.11"
 license = {text = "MIT"}

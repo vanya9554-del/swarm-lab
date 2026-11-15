@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.9.0] — 2026-11-15
+
+Health observability.
+
+### Добавлено
+- `/health`: version + uptime; 77 тестов.
+
 ## [3.8.0] — 2026-11-15
 
 Bench re-validation.
