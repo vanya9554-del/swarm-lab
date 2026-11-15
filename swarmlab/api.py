@@ -1,6 +1,7 @@
 """Minimal agent-native HTTP API: JSON, batch, SSE. No UI."""
 from __future__ import annotations
 
+import gzip
 import json
 import os
 import re
@@ -102,9 +103,16 @@ class SwarmHandler(BaseHTTPRequestHandler):
             time.perf_counter() - getattr(self, "_started", time.perf_counter()),
         )
         body = _json(payload)
+        encoding = ""
+        if len(body) >= 512 and "gzip" in self.headers.get("Accept-Encoding", ""):
+            body = gzip.compress(body, 6)
+            encoding = "gzip"
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        if encoding:
+            self.send_header("Content-Encoding", encoding)
+            self.send_header("Vary", "Accept-Encoding")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Request-Id", getattr(self, "request_id", ""))

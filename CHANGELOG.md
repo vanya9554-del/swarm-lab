@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.1.0] — 2026-11-15
+
+Gzip responses.
+
+### Добавлено
+- Gzip для JSON-ответов ≥512 байт при `Accept-Encoding: gzip`; 65 тестов.
+
 ## [3.0.0] — 2026-11-15
 
 Milestone 3.0: maintenance expiry.

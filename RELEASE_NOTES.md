@@ -1,3 +1,7 @@
+# swarm-lab v3.1.0
+
+Gzip JSON responses, 65 tests.
+
 # swarm-lab v3.0.0
 
 Maintenance expiry, MCP swarm_expire, 64 tests.

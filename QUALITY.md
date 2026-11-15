@@ -4,7 +4,7 @@
 
 | Метрика | Значение |
 |---|---|
-| unittest | **64/64 OK** |
+| unittest | **65/65 OK** |
 | coverage (source=swarmlab) | **92,1%** |
 | ruff | **0 errors** |
 | PG/chaos tests | 4 (embedded, skip без psycopg) |

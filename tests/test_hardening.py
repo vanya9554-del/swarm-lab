@@ -44,6 +44,20 @@ class HardeningTests(unittest.TestCase):
         self.store.close()
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
+    def test_gzip(self) -> None:
+        import gzip
+        # создаём достаточно большой ответ
+        for i in range(20):
+            _req = urllib.request.Request(self.base + "/v1/tasks", data=b'{"capability":"gz"}', method="POST")
+            _req.add_header("Content-Type", "application/json")
+            urllib.request.urlopen(_req, timeout=3).read()
+        req = urllib.request.Request(self.base + "/v1/tasks")
+        req.add_header("Accept-Encoding", "gzip")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            self.assertEqual(resp.headers.get("Content-Encoding"), "gzip")
+            data = gzip.decompress(resp.read())
+            self.assertIn(b"ok", data)
+
     def test_metrics_broken_stats(self) -> None:
         def boom():
             raise RuntimeError("db down")
