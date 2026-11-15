@@ -1,3 +1,7 @@
+# swarm-lab v5.10.1
+
+CI green: SQLite coverage >=90 + manifest validation.
+
 # swarm-lab v5.10.0
 
 CI gates: coverage >=90, manifest validation.

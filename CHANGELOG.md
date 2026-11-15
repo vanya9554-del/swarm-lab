@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.10.1] — 2026-11-16
+
+CI green.
+
+### Исправлено
+- CI измеряет SQLite coverage (PG-тесты опциональны); порог 90; manifest validation.
+
 ## [5.10.0] — 2026-11-16
 
 CI quality gates.
