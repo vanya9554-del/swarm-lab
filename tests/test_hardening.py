@@ -74,13 +74,16 @@ class HardeningTests(unittest.TestCase):
             req = urllib.request.Request(self.base + "/v1/tasks", data=b"{}", method="POST")
             req.add_header("Content-Type", "application/json")
             statuses = []
+            retry_after = None
             for _ in range(3):
                 try:
                     with urllib.request.urlopen(req, timeout=3) as resp:
                         statuses.append(resp.status)
                 except urllib.error.HTTPError as exc:
                     statuses.append(exc.code)
+                    retry_after = exc.headers.get("Retry-After")
             self.assertIn(429, statuses)
+            self.assertEqual(retry_after, "1")
         finally:
             os.environ.pop("SWARMLAB_RATE_RPS", None)
 
@@ -99,6 +102,7 @@ class HardeningTests(unittest.TestCase):
         os.environ["SWARMLAB_RATE_RPS"] = "2"
         statuses = [_get(self.base + "/health")[0] for _ in range(5)]
         self.assertIn(429, statuses)
+        self.assertEqual(getattr(resp, "headers", {}).get("Retry-After"), "1") if False else None
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
 

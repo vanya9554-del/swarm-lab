@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [2.6.0] — 2026-11-15
+
+HTTP rate-limit headers.
+
+### Добавлено
+- `Retry-After: 1` и request-id на 429; 52 теста.
+
 ## [2.5.0] — 2026-11-15
 
 Version/capabilities discovery.

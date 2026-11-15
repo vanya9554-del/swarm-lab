@@ -93,7 +93,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         if os.environ.get("SWARMLAB_LOG", "1") != "0":
             print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
 
-    def _send(self, status: int, payload: Any) -> None:
+    def _send(self, status: int, payload: Any, headers: dict[str, str] | None = None) -> None:
         path = urlparse(self.path).path
         self.swarm.metrics.observe(
             self.command, path, status,
@@ -108,6 +108,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self.send_header("X-Request-Id", getattr(self, "request_id", ""))
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
+        for key, value in (headers or {}).items():
+            self.send_header(str(key), str(value))
         self.end_headers()
         self.wfile.write(body)
 
@@ -173,7 +175,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         if not public and not self._auth():
             return
         if not self._rate_ok():
-            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}})
+            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
         try:
             if path == "/ready":
@@ -240,7 +242,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         if not self._auth():
             return
         if not self._rate_ok():
-            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}})
+            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
         path = urlparse(self.path).path
         try:

@@ -1,3 +1,7 @@
+# swarm-lab v2.6.0
+
+Retry-After on 429, 52 tests.
+
 # swarm-lab v2.5.0
 
 Version/capabilities discovery, 52 tests, coverage 93.2%.
