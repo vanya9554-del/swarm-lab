@@ -73,6 +73,15 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_query_filters(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "q", "capabilities": ["q"]})
+        _req("POST", self.base + "/v1/tasks", {"capability": "q"})
+        self.assertEqual(_req("GET", self.base + "/v1/agents?capability=q&limit=1")[0], 200)
+        self.assertEqual(_req("GET", self.base + "/v1/tasks?status=pending&limit=1")[0], 200)
+        self.assertEqual(_req("GET", self.base + "/v1/events?after=0&limit=1")[0], 200)
+        self.assertEqual(_req("GET", self.base + "/v1/tasks?limit=bad")[0], 400)
+        self.assertEqual(_req("GET", self.base + "/v1/agents?limit=bad")[0], 400)
+
     def test_openapi(self) -> None:
         status, body, _ = _req("GET", self.base + "/v1/openapi")
         self.assertEqual(status, 200)

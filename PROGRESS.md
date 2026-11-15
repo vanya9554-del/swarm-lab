@@ -48,11 +48,12 @@
 - **S41**: HTTP bench 300/300, 76 тестов; release 3.8.0.
 - **S42**: health version/uptime, 77 тестов; release 3.9.0.
 - **S43**: OpenAPI 3.1, 78 тестов; release 4.0.0.
+- **S44**: query coverage, 80 тестов; release 4.1.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-4.0: live K8s, external audit, chaos.
+- Post-4.1: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

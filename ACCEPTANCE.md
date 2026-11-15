@@ -1,12 +1,12 @@
 # ACCEPTANCE — swarm-lab 1.0
 
-**Дата:** 15.11.2026 · **Версия:** 4.0.0 · **Проект:** agent-native swarm runtime (без UI).
+**Дата:** 15.11.2026 · **Версия:** 4.1.0 · **Проект:** agent-native swarm runtime (без UI).
 
 ## Матрикс
 
 | Проверка | Результат |
 |---|---|
-| unittest | **78/78 OK** (store, API, MCP, PG, load, hardening) |
+| unittest | **80/80 OK** (store, API, MCP, PG, load, hardening) |
 | SQLite engine | task market, priority, affinity, dedup, lease/fence |
 | HTTP API | register/discover/submit/claim/complete/renew/events/stream/batch/stats |
 | SSE | event stream, `after=seq`; PG LISTEN/NOTIFY |

@@ -136,6 +136,20 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_queries(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("q1", ["q"])
+            s.submit("q", {})
+            self.assertTrue(s.discover("q", 5))
+            self.assertTrue(s.tasks("pending", 5))
+            self.assertTrue(s.tasks(None, 5))
+            self.assertTrue(s.events(0, 10))
+            self.assertIn("tasks", s.stats())
+        finally:
+            s.close()
+
     def test_claim_guards(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

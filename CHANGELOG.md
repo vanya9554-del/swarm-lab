@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.1.0] — 2026-11-15
+
+Query coverage.
+
+### Добавлено
+- API filters + PG queries; 80 тестов.
+
 ## [4.0.0] — 2026-11-15
 
 Milestone 4.0: OpenAPI discovery.

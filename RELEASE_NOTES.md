@@ -1,3 +1,7 @@
+# swarm-lab v4.1.0
+
+Query coverage, 80 tests.
+
 # swarm-lab v4.0.0
 
 Milestone 4.0: OpenAPI 3.1 discovery, 78 tests.
