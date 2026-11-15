@@ -231,6 +231,7 @@ class PgTests(unittest.TestCase):
 
     def test_tasks_filter(self) -> None:
         import os
+
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
