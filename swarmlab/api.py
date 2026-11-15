@@ -317,7 +317,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         except (ValueError, TypeError) as exc:
             self._error(400, "BAD_REQUEST", str(exc))
 
-    def do_DELETE(self) -> None:  # noqa: N802
+    def do_DELETE(self) -> None:
         parsed = urlparse(self.path)
         path = parsed.path
         if not self._auth():
