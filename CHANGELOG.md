@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.4.0] — 2026-11-15
+
+DELETE auth coverage.
+
+### Добавлено
+- DELETE 401/404; 84 теста, coverage 94,6%.
+
 ## [4.3.0] — 2026-11-15
 
 Schema migration coverage.

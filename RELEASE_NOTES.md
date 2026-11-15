@@ -1,3 +1,7 @@
+# swarm-lab v4.4.0
+
+DELETE auth coverage, 84 tests.
+
 # swarm-lab v4.3.0
 
 Schema migration test, coverage 94.5%, 82 tests.

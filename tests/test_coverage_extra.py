@@ -73,6 +73,27 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_delete_auth(self) -> None:
+        from swarmlab.api import build_server
+        other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "tok")
+        thread = threading.Thread(target=other.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{other.server_address[1]}"
+        try:
+            req = urllib.request.Request(base + "/v1/agents/x", method="DELETE")
+            try:
+                urllib.request.urlopen(req, timeout=3)
+            except urllib.error.HTTPError as exc:
+                self.assertEqual(exc.code, 401)
+            req = urllib.request.Request(base + "/nope", method="DELETE")
+            req.add_header("Authorization", "Bearer tok")
+            try:
+                urllib.request.urlopen(req, timeout=3)
+            except urllib.error.HTTPError as exc:
+                self.assertEqual(exc.code, 404)
+        finally:
+            other.shutdown(); other.server_close(); thread.join(timeout=5)
+
     def test_query_filters(self) -> None:
         _req("POST", self.base + "/v1/agents", {"agent_id": "q", "capabilities": ["q"]})
         _req("POST", self.base + "/v1/tasks", {"capability": "q"})

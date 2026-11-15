@@ -44,6 +44,21 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_backpressure(self) -> None:
+        import os
+        from swarmlab.store import SwarmStore
+        os.environ["SWARMLAB_MAX_PENDING"] = "1"
+        try:
+            s = SwarmStore(":memory:")
+            try:
+                s.submit("x", {})
+                with self.assertRaises(SwarmError):
+                    s.submit("x", {})
+            finally:
+                s.close()
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
+
     def test_migration(self) -> None:
         import sqlite3
         import tempfile
