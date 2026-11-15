@@ -27,7 +27,8 @@ class ErrorTests(unittest.TestCase):
     def test_pg_unavailable(self) -> None:
         import sys
         from unittest.mock import patch
-        import swarmlab.pg as pg
+
+        from swarmlab import pg
         with patch.dict(sys.modules, {"psycopg": None}):
             with self.assertRaises(RuntimeError):
                 pg.PgSwarmStore("postgresql://x")
