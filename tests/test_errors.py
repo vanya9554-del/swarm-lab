@@ -29,9 +29,8 @@ class ErrorTests(unittest.TestCase):
         from unittest.mock import patch
 
         from swarmlab import pg
-        with patch.dict(sys.modules, {"psycopg": None}):
-            with self.assertRaises(RuntimeError):
-                pg.PgSwarmStore("postgresql://x")
+        with patch.dict(sys.modules, {"psycopg": None}), self.assertRaises(RuntimeError):
+            pg.PgSwarmStore("postgresql://x")
 
     def test_events_import_error(self) -> None:
         from unittest.mock import patch
