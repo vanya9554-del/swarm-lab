@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.19.0] — 2026-11-16
+
+MCP stdio/error coverage.
+
+### Добавлено
+- dispatch/stdio edge; coverage 97,3%, 115 тестов.
+
 ## [5.18.0] — 2026-11-16
 
 PG agent profile.

@@ -133,3 +133,29 @@ class McpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
+class McpStdioErrorTests(unittest.TestCase):
+    def test_stdio_lines(self) -> None:
+        import io
+        from unittest.mock import patch
+        from swarmlab.mcp import McpDispatcher, main_stdio
+        from swarmlab.store import SwarmError, SwarmStore
+        store = SwarmStore(":memory:")
+        dispatcher = McpDispatcher(store)
+        try:
+            with patch.object(dispatcher, "_dispatch", side_effect=SwarmError("BAD_REQUEST", "sw")):
+                response = dispatcher.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+            self.assertIn("error", response)
+            with patch.object(dispatcher, "_dispatch", side_effect=RuntimeError("boom")):
+                response = dispatcher.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+            self.assertIn("error", response)
+            self.assertIsNone(dispatcher.handle({"jsonrpc": "2.0", "method": "tools/list"}))
+            out = io.StringIO()
+            main_stdio(store, stdin=io.StringIO("\nnot-json\n{\"id\":1,\"method\":\"ping\"}\n"), stdout=out)
+            text = out.getvalue()
+            self.assertIn("parse error", text)
+            self.assertIn("result", text)
+        finally:
+            store.close()

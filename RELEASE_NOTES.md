@@ -1,3 +1,7 @@
+# swarm-lab v5.19.0
+
+MCP stdio/error coverage, 115 tests, 97.3%.
+
 # swarm-lab v5.18.0
 
 PG agent profile/guards, 114 tests, 96.6%.
