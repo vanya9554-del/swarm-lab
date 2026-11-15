@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [2.2.0] — 2026-11-15
+
+Deploy/K8s + reconnect chaos.
+
+### Добавлено
+- PDB, NetworkPolicy, deploy README, `test_deploy`.
+- `test_reconnect_under_load` (40 задач, connection close); 47 тестов.
+
 ## [2.1.0] — 2026-11-15
 
 Coverage/edge paths.

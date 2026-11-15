@@ -65,6 +65,43 @@ class LoadTests(unittest.TestCase):
             pass
         cls.tmp.cleanup()
 
+    def test_reconnect_under_load(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        stores = [PgSwarmStore(self.dsn) for _ in range(2)]
+        try:
+            for i, store in enumerate(stores):
+                store.register(f"r{i}", ["reconnect"])
+            for i in range(40):
+                stores[0].submit("reconnect", {"n": i})
+            seen: list[str] = []
+            lock = threading.Lock()
+            barrier = threading.Barrier(2)
+
+            def worker(idx: int) -> None:
+                store = stores[idx]
+                barrier.wait(timeout=5)
+                count = 0
+                while True:
+                    task = store.claim(f"r{idx}", "reconnect")
+                    if not task:
+                        return
+                    store.complete(task["task_id"], f"r{idx}", {}, fence=task["lease_epoch"])
+                    count += 1
+                    with lock:
+                        seen.append(task["task_id"])
+                    if count == 5 and idx == 0:
+                        store.conn.close()  # следующий claim должен reconnect
+            threads = [threading.Thread(target=worker, args=(i,)) for i in range(2)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=20)
+            self.assertEqual(len(seen), 40)
+            self.assertEqual(len(set(seen)), 40)
+        finally:
+            for s in stores:
+                s.close()
+
     def test_parallel_exactly_once_and_stale(self) -> None:
         from swarmlab.pg import PgSwarmStore
         stores = [PgSwarmStore(self.dsn) for _ in range(2)]

@@ -67,3 +67,30 @@ spec:
   selector: {app: swarmlab}
   ports:
     - {name: http, port: 80, targetPort: http}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: swarmlab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: swarmlab}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: swarmlab
+spec:
+  podSelector:
+    matchLabels: {app: swarmlab}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - ports:
+        - {protocol: TCP, port: 8788}
+  egress:
+    - ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+# HPA для SQLite не добавляется: один writer, PVC RWO. Для PG — отдельный деплой.

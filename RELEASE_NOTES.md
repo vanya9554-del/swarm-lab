@@ -1,3 +1,7 @@
+# swarm-lab v2.2.0
+
+K8s PDB/NetworkPolicy, reconnect under load, 47 tests.
+
 # swarm-lab v2.1.0
 
 Coverage 93.2%, 45 tests, rate-limit/metrics edge paths.
