@@ -90,11 +90,12 @@ class SwarmStore:
         return [dict(row) for row in self.conn.execute(sql, params).fetchall()]
 
     def event(self, event_type: str, payload: dict[str, Any]) -> int:
-        cur = self.conn.execute(
-            "INSERT INTO events(type, payload, created_at) VALUES (?, ?, ?)",
-            (event_type, _json(payload), time.time()),
-        )
-        return int(cur.lastrowid or 0)
+        with self.lock:
+            cur = self.conn.execute(
+                "INSERT INTO events(type, payload, created_at) VALUES (?, ?, ?)",
+                (event_type, _json(payload), time.time()),
+            )
+            return int(cur.lastrowid or 0)
 
     # -- agents ------------------------------------------------------------
     def register(self, agent_id: str, capabilities: list[str], endpoint: str | None = None) -> dict[str, Any]:
@@ -111,6 +112,16 @@ class SwarmStore:
             )
         self.event("agent.registered", {"agent_id": agent_id, "capabilities": caps})
         return {"agent_id": agent_id, "capabilities": caps, "endpoint": endpoint, "last_seen_at": now}
+
+    def heartbeat(self, agent_id: str, status: str = "idle") -> dict[str, Any]:
+        now = time.time()
+        with self.lock:
+            changed = self.conn.execute(
+                "UPDATE agents SET last_seen_at=?, status=? WHERE agent_id=?", (now, status, agent_id)
+            ).rowcount
+        if not changed:
+            raise SwarmError("NOT_FOUND", f"agent {agent_id} not found")
+        return {"agent_id": agent_id, "status": status, "last_seen_at": now}
 
     def discover(self, capability: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
         clauses = ["last_seen_at >= ?"]

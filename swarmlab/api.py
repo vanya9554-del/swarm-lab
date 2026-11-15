@@ -1,0 +1,240 @@
+# -*- coding: utf-8 -*-
+"""Minimal agent-native HTTP API: JSON, batch, SSE. No UI."""
+from __future__ import annotations
+
+import json
+import os
+import re
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+from .store import SwarmError, SwarmStore
+
+MAX_BODY = 1 << 20
+ROUTES = {
+    ("GET", "/health"),
+    ("GET", "/v1/stats"),
+    ("POST", "/v1/agents"),
+    ("GET", "/v1/agents"),
+    ("POST", "/v1/heartbeat"),
+    ("POST", "/v1/tasks"),
+    ("GET", "/v1/tasks"),
+    ("POST", "/v1/tasks/claim"),
+    ("GET", "/v1/events"),
+    ("GET", "/v1/stream"),
+    ("POST", "/v1/batch"),
+}
+TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew)$")
+
+
+def _json(data: Any) -> bytes:
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+class SwarmHTTPServer(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self, addr: tuple[str, int], store: SwarmStore, token: str | None = None) -> None:
+        self.store = store
+        self.token = token
+        super().__init__(addr, SwarmHandler)
+
+
+class SwarmHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+    server_version = "swarm-lab/0.1"
+
+    @property
+    def swarm(self) -> SwarmHTTPServer:  # type: ignore[override]
+        return self.server  # type: ignore[return-value]
+
+    def log_message(self, fmt: str, *args: Any) -> None:
+        if os.environ.get("SWARMLAB_LOG", "1") != "0":
+            print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
+
+    def _send(self, status: int, payload: Any) -> None:
+        body = _json(payload)
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _error(self, status: int, code: str, message: str) -> None:
+        self._send(status, {"ok": False, "error": {"code": code, "message": message}})
+
+    def _auth(self) -> bool:
+        token = self.swarm.token
+        if not token:
+            return True
+        header = self.headers.get("Authorization", "")
+        if header == f"Bearer {token}":
+            return True
+        self._error(401, "UNAUTHORIZED", "invalid bearer token")
+        return False
+
+    def _body(self) -> dict[str, Any]:
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0:
+            return {}
+        if length > MAX_BODY:
+            raise SwarmError("PAYLOAD_TOO_LARGE", "body > 1 MiB")
+        raw = self.rfile.read(length)
+        try:
+            value = json.loads(raw)
+        except ValueError as exc:
+            raise SwarmError("BAD_JSON", "invalid JSON") from exc
+        if not isinstance(value, dict):
+            raise SwarmError("BAD_REQUEST", "body must be object")
+        return value
+
+    def do_GET(self) -> None:  # noqa: N802
+        if not self._auth():
+            return
+        parsed = urlparse(self.path)
+        path, query = parsed.path, parse_qs(parsed.query)
+        try:
+            if path == "/health":
+                self._send(200, {"ok": True, "service": "swarm-lab"})
+            elif path == "/v1/stats":
+                self._send(200, {"ok": True, "data": self.swarm.store.stats()})
+            elif path == "/v1/agents":
+                cap = (query.get("capability") or [None])[0]
+                limit = int((query.get("limit") or ["20"])[0])
+                self._send(200, {"ok": True, "data": self.swarm.store.discover(cap, limit)})
+            elif path == "/v1/tasks":
+                status = (query.get("status") or [None])[0]
+                limit = int((query.get("limit") or ["50"])[0])
+                self._send(200, {"ok": True, "data": self.swarm.store.tasks(status, limit)})
+            elif path == "/v1/events":
+                after = int((query.get("after") or ["0"])[0])
+                limit = int((query.get("limit") or ["100"])[0])
+                self._send(200, {"ok": True, "data": self.swarm.store.events(after, limit)})
+            elif path == "/v1/stream":
+                self._stream(
+                    int((query.get("after") or ["0"])[0]),
+                    int((query.get("limit") or ["50"])[0]),
+                    float((query.get("timeout_s") or ["5"])[0]),
+                )
+            else:
+                self._error(404, "NOT_FOUND", f"no route {path}")
+        except SwarmError as exc:
+            self._error(400 if exc.code in ("BAD_REQUEST", "BAD_JSON", "PAYLOAD_TOO_LARGE") else 409, exc.code, exc.message)
+
+    def do_POST(self) -> None:  # noqa: N802
+        if not self._auth():
+            return
+        path = urlparse(self.path).path
+        try:
+            body = self._body()
+            if path == "/v1/agents":
+                caps = body.get("capabilities") or []
+                if not isinstance(caps, list):
+                    raise SwarmError("BAD_REQUEST", "capabilities must be array")
+                data = self.swarm.store.register(str(body.get("agent_id") or ""), caps, body.get("endpoint"))
+                self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/heartbeat":
+                agent_id = str(body.get("agent_id") or "")
+                if not agent_id:
+                    raise SwarmError("BAD_REQUEST", "agent_id required")
+                data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
+                self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/tasks":
+                data = self.swarm.store.submit(
+                    str(body.get("capability") or ""),
+                    body.get("payload"),
+                    priority=int(body.get("priority") or 0),
+                    dedup_key=body.get("dedup_key"),
+                    affinity_agent_id=body.get("affinity_agent_id"),
+                )
+                self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/tasks/claim":
+                task = self.swarm.store.claim(
+                    str(body.get("agent_id") or ""),
+                    body.get("capability"),
+                    float(body.get("lease_s") or 60),
+                )
+                self._send(200, {"ok": True, "data": task})
+            elif path == "/v1/batch":
+                ops = body.get("ops")
+                if not isinstance(ops, list):
+                    raise SwarmError("BAD_REQUEST", "ops must be array")
+                self._send(200, {"ok": True, "data": self._batch(ops)})
+            else:
+                match = TASK_RE.match(path)
+                if not match:
+                    self._error(404, "NOT_FOUND", f"no route {path}")
+                    return
+                task_id, action = match.group(1), match.group(2)
+                agent_id = str(body.get("agent_id") or "")
+                fence = int(body["fence"]) if body.get("fence") is not None else None
+                if action == "complete":
+                    data = self.swarm.store.complete(
+                        task_id, agent_id, body.get("result"), success=bool(body.get("success", True)), fence=fence
+                    )
+                else:
+                    data = self.swarm.store.renew(task_id, agent_id, float(body.get("lease_s") or 60), fence)
+                self._send(200, {"ok": True, "data": data})
+        except SwarmError as exc:
+            status = 404 if exc.code == "NOT_FOUND" else 403 if exc.code == "FORBIDDEN" else 409 if exc.code == "STALE_LEASE" else 400
+            self._error(status, exc.code, exc.message)
+        except (ValueError, TypeError) as exc:
+            self._error(400, "BAD_REQUEST", str(exc))
+
+    def _batch(self, ops: list[Any]) -> list[dict[str, Any]]:
+        results = []
+        for index, op in enumerate(ops[:100]):
+            try:
+                if not isinstance(op, dict):
+                    raise SwarmError("BAD_REQUEST", "op must be object")
+                name = str(op.get("op") or "")
+                agent = str(op.get("agent_id") or "")
+                if name == "claim":
+                    data = self.swarm.store.claim(agent, op.get("capability"), float(op.get("lease_s") or 60))
+                elif name == "complete":
+                    data = self.swarm.store.complete(
+                        str(op.get("task_id") or ""), agent, op.get("result"),
+                        fence=int(op["fence"]) if op.get("fence") is not None else None,
+                    )
+                elif name == "submit":
+                    data = self.swarm.store.submit(str(op.get("capability") or ""), op.get("payload"))
+                elif name == "events":
+                    data = self.swarm.store.events(int(op.get("after") or 0), int(op.get("limit") or 100))
+                elif name == "stats":
+                    data = self.swarm.store.stats()
+                else:
+                    raise SwarmError("BAD_REQUEST", f"unknown op {name}")
+                results.append({"index": index, "ok": True, "data": data})
+            except SwarmError as exc:
+                results.append({"index": index, "ok": False, "code": exc.code, "message": exc.message})
+        return results
+
+    def _stream(self, after: int, limit: int, timeout_s: float) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        self.close_connection = True
+        deadline = time.time() + min(30.0, max(0.2, timeout_s))
+        sent = 0
+        try:
+            while sent < limit and time.time() < deadline:
+                events = self.swarm.store.events(after, min(50, limit - sent))
+                for event in events:
+                    self.wfile.write(f"id: {event['seq']}\ndata: {json.dumps(event, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                    after = int(event["seq"])
+                    sent += 1
+                self.wfile.flush()
+                if not events:
+                    time.sleep(0.05)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+
+def build_server(store: SwarmStore, host: str = "127.0.0.1", port: int = 8788, token: str | None = None) -> SwarmHTTPServer:
+    return SwarmHTTPServer((host, port), store, token)

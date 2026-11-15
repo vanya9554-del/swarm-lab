@@ -16,8 +16,13 @@ Agent-native swarm runtime и benchmark. **Без UI**: только HTTP/JSON, 
 ```bash
 python -m unittest discover -s tests
 python -m swarmlab --help
+python -m swarmlab serve --port 8788
+curl -sS -X POST localhost:8788/v1/agents -H 'Content-Type: application/json' \
+  -d '{"agent_id":"a1","capabilities":["search"]}'
+curl -sS -X POST localhost:8788/v1/tasks -H 'Content-Type: application/json' \
+  -d '{"capability":"search","payload":{"q":"x"}}'
 ```
 
 ## Статус
 
-Каркас v0.1.0. План — `PLAN.md`, протокол — `SPEC.md`, автономный runbook — `../NIGHT_SHIFT.md`.
+Статус: v0.1.0, работает store + HTTP API/SSE/batch. S3 MCP — следующий шаг. План — `PLAN.md`, протокол — `SPEC.md`, автономный runbook — `../NIGHT_SHIFT.md`.
