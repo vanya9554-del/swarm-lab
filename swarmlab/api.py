@@ -14,9 +14,9 @@ from urllib.parse import parse_qs, urlparse
 
 from . import __version__
 from .mcp import McpDispatcher
-from .openapi import spec as openapi_spec
 from .metrics import CONTENT_TYPE as METRICS_TYPE
 from .metrics import SwarmMetrics
+from .openapi import spec as openapi_spec
 from .store import SwarmError, SwarmStore
 
 MAX_BODY = 1 << 20
