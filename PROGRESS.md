@@ -20,11 +20,12 @@
 - **S13**: `SWARMLAB_TOKENS` scopes read/write (403/401), PG reconnect/retry; **17 tests**.
 - **S14**: coverage 76%, ruff 0, CI quality, 20 tests.
 - **S15**: release 1.2.0.
+- **S16**: request-id/latency, coverage 80%, 23 tests, release 1.3.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-1.2 hardening / coverage target 80%.
+- Post-1.3: async/transport, K8s live, coverage 85%.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

@@ -6,6 +6,7 @@ import os
 import re
 import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -67,19 +68,28 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def swarm(self) -> SwarmHTTPServer:  # type: ignore[override]
         return self.server  # type: ignore[return-value]
 
+    def handle_one_request(self) -> None:
+        self.request_id = uuid.uuid4().hex[:12]
+        self._started = time.perf_counter()
+        super().handle_one_request()
+
     def log_message(self, fmt: str, *args: Any) -> None:
         if os.environ.get("SWARMLAB_LOG", "1") != "0":
             print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
 
     def _send(self, status: int, payload: Any) -> None:
         path = urlparse(self.path).path
-        self.swarm.metrics.observe(self.command, path, status)
+        self.swarm.metrics.observe(
+            self.command, path, status,
+            time.perf_counter() - getattr(self, "_started", time.perf_counter()),
+        )
         body = _json(payload)
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Request-Id", getattr(self, "request_id", ""))
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         self.end_headers()
@@ -156,6 +166,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", METRICS_TYPE)
                 self.send_header("Content-Length", str(len(body)))
                 self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Request-Id", getattr(self, "request_id", ""))
                 self.send_header("X-Content-Type-Options", "nosniff")
                 self.end_headers()
                 self.wfile.write(body)

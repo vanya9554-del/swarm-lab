@@ -1,3 +1,7 @@
+# swarm-lab v1.3.0
+
+Request IDs, latency histogram, coverage 80%, 23 tests.
+
 # swarm-lab v1.2.0
 
 Scopes/RBAC, PG reconnect, quality gate (20 tests, 76% coverage, ruff 0).

@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [1.3.0] — 2026-11-15
+
+Observability/coverage.
+
+### Добавлено
+- `X-Request-Id`, latency histogram в `/metrics`.
+- Coverage **80%**, 23 теста; API/MCP/PG edge paths.
+- Reconnect/chaos подтверждены.
+
 ## [1.2.0] — 2026-11-15
 
 Post-1.1 quality.

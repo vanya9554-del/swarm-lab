@@ -6,6 +6,7 @@ import time
 from collections import defaultdict
 
 CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
+BUCKETS = (0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5)
 
 
 class SwarmMetrics:
@@ -14,11 +15,20 @@ class SwarmMetrics:
         self._counters: dict[tuple[str, str, int], int] = defaultdict(int)
         self._started = time.time()
         self._total = 0
+        self._lat_count = 0
+        self._lat_sum = 0.0
+        self._lat_buckets = [0] * len(BUCKETS)
 
-    def observe(self, method: str, path: str, status: int) -> None:
+    def observe(self, method: str, path: str, status: int, duration_s: float | None = None) -> None:
         with self._lock:
             self._counters[(str(method).upper(), str(path), int(status))] += 1
             self._total += 1
+            if duration_s is not None:
+                self._lat_count += 1
+                self._lat_sum += max(0.0, float(duration_s))
+                for i, bound in enumerate(BUCKETS):
+                    if duration_s <= bound:
+                        self._lat_buckets[i] += 1
 
     def render(self, store) -> str:
         lines = [
