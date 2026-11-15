@@ -1,3 +1,7 @@
+# swarm-lab v3.4.0
+
+PG edge paths, coverage 93.4%, 70 tests.
+
 # swarm-lab v3.3.0
 
 PG edge coverage 93.1%, 69 tests.

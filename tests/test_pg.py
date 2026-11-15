@@ -118,6 +118,29 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_edge_paths(self) -> None:
+        import time
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("e1", ["e"])
+            s.register("e2", ["e"])
+            t = s.submit("e", {}, ttl_s=0.01, depends_on=None)
+            time.sleep(0.03)
+            self.assertGreaterEqual(s.expire()["expired"], 1)
+            self.assertTrue(s.tasks())
+            claimed = s.claim("e1", "e")
+            with self.assertRaises(RuntimeError):
+                s.renew(t["task_id"], "e1", fence=999)
+            with self.assertRaises(RuntimeError):
+                s.requeue("missing")
+            with self.assertRaises(RuntimeError):
+                s.complete("missing", "e1")
+            with self.assertRaises(RuntimeError):
+                s.renew("missing", "e1")
+        finally:
+            s.close()
+
     def test_deregister(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

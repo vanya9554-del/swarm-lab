@@ -41,11 +41,12 @@
 - **S34**: gzip compression, 65 тестов; release 3.1.0.
 - **S35**: task dependencies, 68 тестов; release 3.2.0.
 - **S36**: PG edge coverage, 69 тестов; release 3.3.0.
+- **S37**: PG edge paths, coverage 93,4%, 70 тестов; release 3.4.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-3.3: live K8s, external audit, chaos.
+- Post-3.4: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.4.0] — 2026-11-15
+
+PG edge paths.
+
+### Добавлено
+- expire/tasks/renew errors; coverage 93,4%, 70 тестов.
+
 ## [3.3.0] — 2026-11-15
 
 PG edges/coverage.
