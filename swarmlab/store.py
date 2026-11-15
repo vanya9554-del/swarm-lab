@@ -156,6 +156,14 @@ class SwarmStore:
             )
             if existing:
                 return {**self._decode(existing), "duplicate": True}
+        try:
+            limit = int(__import__("os").environ.get("SWARMLAB_MAX_PENDING", "0"))
+        except ValueError:
+            limit = 0
+        if limit > 0:
+            row = self._one("SELECT COUNT(*) AS n FROM tasks WHERE status = 'pending'") or {}
+            if int(row.get("n") or 0) >= limit:
+                raise SwarmError("BACKPRESSURE", "pending tasks limit exceeded")
         task_id = _id("task")
         now = time.time()
         with self.lock:

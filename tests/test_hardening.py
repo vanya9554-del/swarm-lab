@@ -11,6 +11,16 @@ from swarmlab.api import build_server
 from swarmlab.store import SwarmStore
 
 
+def _post(url: str, body: bytes):
+    req = urllib.request.Request(url, data=body, method="POST")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.status, dict(r.headers), r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, dict(e.headers), e.read()
+
+
 def _get(url: str):
     try:
         with urllib.request.urlopen(url, timeout=5) as r:
@@ -41,6 +51,17 @@ class HardeningTests(unittest.TestCase):
         self.assertIn("swarmlab_http_requests_total", body.decode())
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
         self.assertIn("swarmlab_http_requests_total_all", body.decode())
+
+    def test_backpressure(self) -> None:
+        os.environ["SWARMLAB_MAX_PENDING"] = "1"
+        try:
+            body = b'{"capability":"bp"}'
+            status1, _, _ = _post(self.base + "/v1/tasks", body)
+            status2, _, _ = _post(self.base + "/v1/tasks", body)
+            self.assertIn(status1, (200, 400))
+            self.assertEqual(status2, 429)
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
     def test_rate_limit(self) -> None:
         os.environ["SWARMLAB_RATE_RPS"] = "2"

@@ -86,7 +86,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         if rps <= 0:
             return True
         now = time.time()
-        key = self.client_address[0]
+        key = self.headers.get("Authorization") or self.client_address[0]
         with self.swarm.rate_lock:
             bucket = [t for t in self.swarm.rate.get(key, []) if now - t < 1.0]
             if len(bucket) >= max(1, int(rps)):
@@ -232,7 +232,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     data = self.swarm.store.renew(task_id, agent_id, float(body.get("lease_s") or 60), fence)
                 self._send(200, {"ok": True, "data": data})
         except SwarmError as exc:
-            status = 404 if exc.code == "NOT_FOUND" else 403 if exc.code == "FORBIDDEN" else 409 if exc.code == "STALE_LEASE" else 400
+            status = (
+                404 if exc.code == "NOT_FOUND"
+                else 403 if exc.code == "FORBIDDEN"
+                else 429 if exc.code == "BACKPRESSURE"
+                else 409 if exc.code == "STALE_LEASE"
+                else 400
+            )
             self._error(status, exc.code, exc.message)
         except (ValueError, TypeError) as exc:
             self._error(400, "BAD_REQUEST", str(exc))
