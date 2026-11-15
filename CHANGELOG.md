@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [2.5.0] — 2026-11-15
+
+Version/capabilities discovery.
+
+### Добавлено
+- `GET /v1/version`, `GET /v1/capabilities`; 52 теста.
+
 ## [2.4.0] — 2026-11-15
 
 PG K8s HPA/cancel.

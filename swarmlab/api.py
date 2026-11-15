@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from . import __version__
 from .mcp import McpDispatcher
 from .metrics import CONTENT_TYPE as METRICS_TYPE
 from .metrics import SwarmMetrics
@@ -21,6 +22,8 @@ ROUTES = {
     ("GET", "/health"),
     ("GET", "/ready"),
     ("GET", "/v1/stats"),
+    ("GET", "/v1/version"),
+    ("GET", "/v1/capabilities"),
     ("POST", "/v1/agents"),
     ("GET", "/v1/agents"),
     ("POST", "/v1/heartbeat"),
@@ -192,6 +195,14 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self.wfile.write(body)
             elif path == "/health":
                 self._send(200, {"ok": True, "service": "swarm-lab"})
+            elif path == "/v1/version":
+                self._send(200, {"ok": True, "data": {"version": __version__, "name": "swarm-lab"}})
+            elif path == "/v1/capabilities":
+                self._send(200, {"ok": True, "data": {
+                    "version": __version__,
+                    "features": ["batch", "sse", "mcp", "postgres", "fencing", "cancel", "backpressure", "scopes"],
+                    "protocol": "2024-11-05",
+                }})
             elif path == "/v1/stats":
                 self._send(200, {"ok": True, "data": self.swarm.store.stats()})
             elif path == "/v1/agents":

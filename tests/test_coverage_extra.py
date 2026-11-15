@@ -73,6 +73,14 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_version_capabilities(self) -> None:
+        status, body, _ = _req("GET", self.base + "/v1/version")
+        self.assertEqual(status, 200)
+        self.assertIn("version", body["data"])
+        status, body, _ = _req("GET", self.base + "/v1/capabilities")
+        self.assertEqual(status, 200)
+        self.assertIn("batch", body["data"]["features"])
+
     def test_cancel_api(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "c"})
         task_id = body["data"]["task_id"]

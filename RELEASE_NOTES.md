@@ -1,3 +1,7 @@
+# swarm-lab v2.5.0
+
+Version/capabilities discovery, 52 tests, coverage 93.2%.
+
 # swarm-lab v2.4.0
 
 PG K8s HPA/PDB, PG cancel, 51 tests, coverage 93.1%.
