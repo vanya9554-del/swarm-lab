@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .pytest_cache/
 .mypy_cache/
@@ -9,3 +9,8 @@
 .venv/
 dist/
 build/
+data/night_harness.jsonl
+data/night_server.log
+data/bench_server.log
+data/race_server.log
+data/race_server.log.err
