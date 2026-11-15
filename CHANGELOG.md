@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.16.0] — 2026-11-16
+
+API error branches.
+
+### Добавлено
+- task renew ValueError, GET SwarmError; coverage 96,9%, 110 тестов.
+
 ## [5.15.0] — 2026-11-16
 
 SSE disconnect coverage.

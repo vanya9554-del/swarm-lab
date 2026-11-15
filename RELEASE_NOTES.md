@@ -1,3 +1,7 @@
+# swarm-lab v5.16.0
+
+API error branches, 110 tests, 96.9%.
+
 # swarm-lab v5.15.0
 
 SSE disconnect coverage, 109 tests, 96.6%.

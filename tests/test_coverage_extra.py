@@ -109,6 +109,18 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             resp.close()
 
+    def test_api_error_branches(self) -> None:
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "err"})
+        task_id = body["data"]["task_id"]
+        status, _, _ = _req("POST", self.base + f"/v1/tasks/{task_id}/renew", {"agent_id": "x", "lease_s": "bad"})
+        self.assertEqual(status, 400)
+        from swarmlab.store import SwarmError
+        self.store.tasks = lambda *a, **k: (_ for _ in ()).throw(SwarmError("BAD_REQUEST", "boom"))
+        try:
+            self.assertEqual(_req("GET", self.base + "/v1/tasks")[0], 400)
+        finally:
+            del self.store.tasks
+
     def test_stream_disconnect(self) -> None:
         import socket
         import time
