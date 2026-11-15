@@ -45,6 +45,14 @@ class SwarmHTTPServer(ThreadingHTTPServer):
     def __init__(self, addr: tuple[str, int], store: SwarmStore, token: str | None = None) -> None:
         self.store = store
         self.token = token
+        raw_tokens = os.environ.get("SWARMLAB_TOKENS", "").strip()
+        self.tokens: dict[str, set[str]] = {}
+        if raw_tokens:
+            try:
+                parsed = json.loads(raw_tokens)
+                self.tokens = {str(k): set(v if isinstance(v, list) else [v]) for k, v in parsed.items()}
+            except (ValueError, TypeError):
+                self.tokens = {}
         self.mcp = McpDispatcher(store)
         self.metrics = SwarmMetrics()
         self.rate: dict[str, list[float]] = {}
@@ -100,14 +108,24 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self._send(status, {"ok": False, "error": {"code": code, "message": message}})
 
     def _auth(self) -> bool:
-        token = self.swarm.token
-        if not token:
-            return True
         header = self.headers.get("Authorization", "")
-        if header == f"Bearer {token}":
-            return True
-        self._error(401, "UNAUTHORIZED", "invalid bearer token")
-        return False
+        scopes = {"read", "write"}
+        if self.swarm.tokens:
+            token = header[7:] if header.startswith("Bearer ") else ""
+            scopes = set(self.swarm.tokens.get(token, set()))
+            if not scopes:
+                self._error(401, "UNAUTHORIZED", "invalid bearer token")
+                return False
+        elif self.swarm.token:
+            if header != f"Bearer {self.swarm.token}":
+                self._error(401, "UNAUTHORIZED", "invalid bearer token")
+                return False
+        needed = "write" if self.command == "POST" else "read"
+        if needed not in scopes:
+            self._error(403, "FORBIDDEN", f"scope '{needed}' required")
+            return False
+        self.scopes = scopes
+        return True
 
     def _body(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length") or 0)

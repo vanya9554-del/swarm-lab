@@ -70,16 +70,41 @@ class PgSwarmStore:
         from psycopg.rows import dict_row
 
         self.dsn = str(dsn)
-        self.conn = psycopg.connect(self.dsn, row_factory=dict_row)
+        self._row_factory = dict_row
         self.lock = threading.RLock()
-        self.conn.execute(SCHEMA)
-        self.conn.commit()
+        self._connect()
+
+    def _connect(self) -> None:
+        import os
+        import psycopg
+
+        attempts = max(1, int(os.environ.get("SWARMLAB_PG_ATTEMPTS", "2")))
+        last: Exception | None = None
+        for attempt in range(attempts):
+            try:
+                self.conn = psycopg.connect(self.dsn, row_factory=self._row_factory)
+                self.conn.execute(SCHEMA)
+                self.conn.commit()
+                return
+            except Exception as exc:  # noqa: BLE001
+                last = exc
+                if attempt + 1 < attempts:
+                    import time
+                    time.sleep(0.1 * (attempt + 1))
+        raise RuntimeError(f"PG connect failed: {last}")
+
+    def _ensure(self) -> None:
+        if getattr(self.conn, "closed", False):
+            with self.lock:
+                if getattr(self.conn, "closed", False):
+                    self._connect()
 
     def close(self) -> None:
         with self.lock:
             self.conn.close()
 
     def _one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
+        self._ensure()
         with self.lock:
             with self.conn.cursor() as cur:
                 cur.execute(sql, params)
@@ -87,12 +112,14 @@ class PgSwarmStore:
                 return dict(row) if row else None
 
     def _all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+        self._ensure()
         with self.lock:
             with self.conn.cursor() as cur:
                 cur.execute(sql, params)
                 return [dict(row) for row in cur.fetchall()]
 
     def event(self, event_type: str, payload: dict[str, Any]) -> int:
+        self._ensure()
         with self.lock:
             with self.conn.cursor() as cur:
                 cur.execute(
@@ -110,6 +137,7 @@ class PgSwarmStore:
             return seq
 
     def register(self, agent_id: str, capabilities: list[str], endpoint: str | None = None) -> dict[str, Any]:
+        self._ensure()
         caps = sorted({str(c).strip() for c in capabilities if str(c).strip()})
         now = time.time()
         with self.lock:
@@ -149,6 +177,7 @@ class PgSwarmStore:
 
     def submit(self, capability: str, payload: Any = None, *, priority: int = 0,
                dedup_key: str | None = None, affinity_agent_id: str | None = None) -> dict[str, Any]:
+        self._ensure()
         if dedup_key:
             existing = self._one("SELECT * FROM tasks WHERE capability=%s AND dedup_key=%s", (capability, dedup_key))
             if existing:
@@ -184,6 +213,7 @@ class PgSwarmStore:
         return row
 
     def claim(self, agent_id: str, capability: str | None = None, lease_s: float = 60.0) -> dict[str, Any] | None:
+        self._ensure()
         now = time.time()
         with self.lock:
             with self.conn.cursor() as cur:

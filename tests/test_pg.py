@@ -100,6 +100,16 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_reconnect_after_connection_close(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.conn.close()
+            s.register("reconnect", ["x"])
+            self.assertIn("agents", s.stats())
+        finally:
+            s.close()
+
     def test_listen_notify(self) -> None:
         from swarmlab.events import PgEventStream
         from swarmlab.pg import PgSwarmStore
