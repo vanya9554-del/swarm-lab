@@ -1,3 +1,7 @@
+# swarm-lab v5.13.0
+
+SSE keepalive, 107 tests, 96.5%.
+
 # swarm-lab v5.12.0
 
 SWARMLAB_AGENT_TTL, 106 tests.

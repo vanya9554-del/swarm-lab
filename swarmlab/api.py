@@ -410,6 +410,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self.close_connection = True
         deadline = time.time() + min(30.0, max(0.2, timeout_s))
         sent = 0
+        last_ping = time.time()
         listener = None
         if getattr(self.swarm.store, "backend", "sqlite") == "postgres" and getattr(self.swarm.store, "dsn", ""):
             try:
@@ -430,6 +431,10 @@ class SwarmHandler(BaseHTTPRequestHandler):
                         listener.wait(0.2)
                     else:
                         time.sleep(0.05)
+                    if time.time() - last_ping >= 1.0:
+                        self.wfile.write(b": keepalive\n\n")
+                        self.wfile.flush()
+                        last_ping = time.time()
         except (BrokenPipeError, ConnectionResetError):
             pass
         finally:

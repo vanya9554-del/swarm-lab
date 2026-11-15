@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.13.0] — 2026-11-16
+
+SSE keepalive.
+
+### Добавлено
+- `: keepalive` каждую секунду простоя; coverage 96,5%, 107 тестов.
+
 ## [5.12.0] — 2026-11-16
 
 Configurable agent TTL.
