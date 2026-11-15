@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from typing import Any, TextIO
 
@@ -127,7 +128,8 @@ class McpDispatcher:
                 ))
             if name == "swarm_claim":
                 return _text(self.store.claim(
-                    str(args.get("agent_id") or ""), args.get("capability"), float(args.get("lease_s") or 60)
+                    str(args.get("agent_id") or ""), args.get("capability"),
+                    float(args.get("lease_s") or os.environ.get("SWARMLAB_LEASE_S") or 60),
                 ))
             if name == "swarm_complete":
                 fence = int(args["fence"]) if args.get("fence") is not None else None
