@@ -167,6 +167,38 @@ class PgTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_cancel_requeue_guards(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("cg1", ["cg"])
+            s.register("cg2", ["cg"])
+            t = s.submit("cg", {})
+            s.claim("cg1", "cg")
+            with self.assertRaises(RuntimeError):
+                s.cancel(t["task_id"], "cg2")
+            with self.assertRaises(RuntimeError):
+                s.requeue("missing")
+        finally:
+            s.close()
+
+    def test_decode(self) -> None:
+        import time
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.conn.execute(
+                "INSERT INTO tasks(task_id, capability, payload, priority, status, lease_epoch, result, created_at) "
+                "VALUES ('bad', 'x', 'not-json', 0, 'completed', 1, 'not-json', %s)",
+                (time.time(),),
+            )
+            s.conn.commit()
+            task = s.get("bad")
+            self.assertEqual(task["payload"], "not-json")
+            self.assertEqual(task["result"], "not-json")
+        finally:
+            s.close()
+
     def test_affinity_priority(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

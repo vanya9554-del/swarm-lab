@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.5.0] — 2026-11-15
+
+Stream/PG decode coverage.
+
+### Добавлено
+- SSE empty stream, PG invalid payload/result, guards; coverage 95,7%, 99 тестов.
+
 ## [5.4.0] — 2026-11-15
 
 Harness isolation.

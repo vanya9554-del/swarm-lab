@@ -92,6 +92,11 @@ class ExtraApiTests(unittest.TestCase):
             other.shutdown(); other.server_close(); thread.join(timeout=5)
             api.MAX_BODY = old
 
+    def test_stream_empty(self) -> None:
+        with urllib.request.urlopen(self.base + "/v1/stream?after=999999&limit=1&timeout_s=0.1", timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            resp.read()
+
     def test_lease_env(self) -> None:
         import os
         import time

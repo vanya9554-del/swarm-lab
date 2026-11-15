@@ -1,3 +1,7 @@
+# swarm-lab v5.5.0
+
+SSE/PG decode coverage, 99 tests, 95.7%.
+
 # swarm-lab v5.4.0
 
 Harness smoke-only tests, 96 tests.
