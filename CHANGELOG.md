@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.15.0] — 2026-11-16
+
+SSE disconnect coverage.
+
+### Добавлено
+- client disconnect path; coverage 96,6%, 109 тестов.
+
 ## [5.14.0] — 2026-11-16
 
 Configurable SSE keepalive.

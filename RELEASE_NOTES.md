@@ -1,3 +1,7 @@
+# swarm-lab v5.15.0
+
+SSE disconnect coverage, 109 tests, 96.6%.
+
 # swarm-lab v5.14.0
 
 SWARMLAB_STREAM_KEEPALIVE_S, 108 tests.

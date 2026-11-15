@@ -109,6 +109,18 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             resp.close()
 
+    def test_stream_disconnect(self) -> None:
+        import socket
+        import time
+        from urllib.parse import urlparse
+        parsed = urlparse(self.base)
+        sock = socket.create_connection((parsed.hostname, parsed.port), timeout=3)
+        sock.sendall(b"GET /v1/stream?after=999999&limit=1&timeout_s=2 HTTP/1.1\r\nHost: x\r\n\r\n")
+        sock.recv(64)
+        sock.close()
+        time.sleep(1.2)
+        self.assertEqual(_req("GET", self.base + "/health")[0], 200)
+
     def test_stream_keepalive_env(self) -> None:
         import os
         os.environ["SWARMLAB_STREAM_KEEPALIVE_S"] = "0.1"
