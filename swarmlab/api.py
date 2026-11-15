@@ -19,7 +19,7 @@ from .metrics import SwarmMetrics
 from .openapi import spec as openapi_spec
 from .store import SwarmError, SwarmStore
 
-MAX_BODY = 1 << 20
+MAX_BODY = int(os.environ.get("SWARMLAB_MAX_BODY", 1 << 20))
 ROUTES = {
     ("GET", "/health"),
     ("GET", "/ready"),

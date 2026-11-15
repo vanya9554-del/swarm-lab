@@ -1,3 +1,7 @@
+# swarm-lab v4.6.0
+
+SWARMLAB_MAX_BODY, 87 tests.
+
 # swarm-lab v4.5.0
 
 PG guards/backpressure, 86 tests.

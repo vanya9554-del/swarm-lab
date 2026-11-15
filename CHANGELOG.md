@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.6.0] — 2026-11-15
+
+Configurable body limit.
+
+### Добавлено
+- `SWARMLAB_MAX_BODY`; body-limit test; 87 тестов.
+
 ## [4.5.0] — 2026-11-15
 
 PG guards/backpressure.

@@ -73,6 +73,25 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_body_limit(self) -> None:
+        import swarmlab.api as api
+        old = api.MAX_BODY
+        api.MAX_BODY = 4
+        other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0)
+        thread = threading.Thread(target=other.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{other.server_address[1]}"
+        try:
+            req = urllib.request.Request(base + "/v1/tasks", data=b'{"capability":"long"}', method="POST")
+            req.add_header("Content-Type", "application/json")
+            try:
+                urllib.request.urlopen(req, timeout=3)
+            except urllib.error.HTTPError as exc:
+                self.assertEqual(exc.code, 400)
+        finally:
+            other.shutdown(); other.server_close(); thread.join(timeout=5)
+            api.MAX_BODY = old
+
     def test_delete_auth(self) -> None:
         from swarmlab.api import build_server
         other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "tok")
