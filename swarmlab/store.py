@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     status         TEXT NOT NULL DEFAULT 'pending',
     dedup_key      TEXT,
     affinity_agent_id TEXT,
+    expires_at     REAL,
     created_at     REAL NOT NULL,
     claimed_by     TEXT,
     lease_until    REAL,
@@ -75,6 +76,9 @@ class SwarmStore:
         self.lock = threading.RLock()
         with self.lock:
             self.conn.executescript(SCHEMA)
+            cols = {str(row["name"]) for row in self.conn.execute("PRAGMA table_info(tasks)").fetchall()}
+            if "expires_at" not in cols:
+                self.conn.execute("ALTER TABLE tasks ADD COLUMN expires_at REAL")
 
     def close(self) -> None:
         with self.lock:
@@ -148,6 +152,7 @@ class SwarmStore:
         priority: int = 0,
         dedup_key: str | None = None,
         affinity_agent_id: str | None = None,
+        ttl_s: float | None = None,
     ) -> dict[str, Any]:
         if not capability:
             raise SwarmError("BAD_REQUEST", "capability is required")
@@ -170,8 +175,9 @@ class SwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, created_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)",
-                (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id, now),
+                "affinity_agent_id, expires_at, created_at) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)",
+                (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, now),
             )
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
         return {"task_id": task_id, "capability": capability, "status": "pending", "created_at": now}
@@ -194,6 +200,10 @@ class SwarmStore:
                 self.conn.execute(
                     "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL "
                     "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < ?",
+                    (now,),
+                )
+                self.conn.execute(
+                    "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < ?",
                     (now,),
                 )
                 clauses = ["status='pending'", "(affinity_agent_id IS NULL OR affinity_agent_id = ?)"]
@@ -271,6 +281,17 @@ class SwarmStore:
             self.conn.execute("UPDATE tasks SET status='cancelled' WHERE task_id=?", (task_id,))
         self.event("task.cancelled", {"task_id": task_id, "agent_id": agent_id})
         return self.get(task_id) or {"task_id": task_id, "status": "cancelled"}
+
+    def expire(self) -> dict[str, Any]:
+        now = time.time()
+        with self.lock:
+            count = self.conn.execute(
+                "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < ?",
+                (now,),
+            ).rowcount
+        if count:
+            self.event("task.expired", {"count": int(count)})
+        return {"expired": int(count or 0)}
 
     def requeue(self, task_id: str) -> dict[str, Any]:
         task = self.get(task_id)

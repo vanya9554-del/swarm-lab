@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [2.8.0] — 2026-11-15
+
+Task TTL/expiry.
+
+### Добавлено
+- `ttl_s` на submit; pending → expired при claim; `expire()`; SQLite ALTER/PG column.
+- 58 тестов.
+
 ## [2.7.0] — 2026-11-15
 
 Requeue cancelled/failed tasks.

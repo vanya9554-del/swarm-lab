@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'pending',
     dedup_key TEXT,
     affinity_agent_id TEXT,
+    expires_at DOUBLE PRECISION,
     created_at DOUBLE PRECISION NOT NULL,
     claimed_by TEXT,
     lease_until DOUBLE PRECISION,
@@ -173,7 +174,8 @@ class PgSwarmStore:
         return rows
 
     def submit(self, capability: str, payload: Any = None, *, priority: int = 0,
-               dedup_key: str | None = None, affinity_agent_id: str | None = None) -> dict[str, Any]:
+               dedup_key: str | None = None, affinity_agent_id: str | None = None,
+               ttl_s: float | None = None) -> dict[str, Any]:
         self._ensure()
         if dedup_key:
             existing = self._one("SELECT * FROM tasks WHERE capability=%s AND dedup_key=%s", (capability, dedup_key))
@@ -192,8 +194,9 @@ class PgSwarmStore:
         with self.lock:
             self.conn.execute(
                 "INSERT INTO tasks(task_id, capability, payload, priority, status, dedup_key, "
-                "affinity_agent_id, created_at) VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s)",
-                (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id, now),
+                "affinity_agent_id, expires_at, created_at) VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s)",
+                (task_id, capability, _json(payload), int(priority), dedup_key, affinity_agent_id,
+                 now + max(0.0, ttl_s) if ttl_s is not None else None, now),
             )
             self.conn.commit()
         self.event("task.submitted", {"task_id": task_id, "capability": capability})
@@ -217,6 +220,10 @@ class PgSwarmStore:
                 cur.execute(
                     "UPDATE tasks SET status='pending', claimed_by=NULL, lease_until=NULL "
                     "WHERE status='claimed' AND lease_until IS NOT NULL AND lease_until < %s", (now,)
+                )
+                cur.execute(
+                    "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < %s",
+                    (now,),
                 )
                 clauses = ["status='pending'", "(affinity_agent_id IS NULL OR affinity_agent_id = %s)"]
                 params: list[Any] = [agent_id]
@@ -283,6 +290,20 @@ class PgSwarmStore:
             self.conn.commit()
         self.event("task.cancelled", {"task_id": task_id, "agent_id": agent_id})
         return self.get(task_id) or {"task_id": task_id, "status": "cancelled"}
+
+    def expire(self) -> dict[str, Any]:
+        now = time.time()
+        with self.lock:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE tasks SET status='expired' WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < %s",
+                    (now,),
+                )
+                count = cur.rowcount
+            self.conn.commit()
+        if count:
+            self.event("task.expired", {"count": int(count)})
+        return {"expired": int(count or 0)}
 
     def requeue(self, task_id: str) -> dict[str, Any]:
         task = self.get(task_id)

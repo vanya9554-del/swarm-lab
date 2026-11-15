@@ -1,3 +1,7 @@
+# swarm-lab v2.8.0
+
+Task TTL/expiry, 58 tests.
+
 # swarm-lab v2.7.0
 
 Requeue API/MCP, 55 tests.

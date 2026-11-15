@@ -121,6 +121,7 @@ class McpDispatcher:
                     priority=int(args.get("priority") or 0),
                     dedup_key=args.get("dedup_key"),
                     affinity_agent_id=args.get("affinity_agent_id"),
+                    ttl_s=float(args["ttl_s"]) if args.get("ttl_s") is not None else None,
                 ))
             if name == "swarm_claim":
                 return _text(self.store.claim(

@@ -39,6 +39,14 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_ttl(self) -> None:
+        import time
+        t = self.store.submit("x", {}, ttl_s=0.01)
+        time.sleep(0.03)
+        self.assertIsNone(self.store.claim("a1", "x"))
+        self.assertEqual(self.store.get(t["task_id"])["status"], "expired")
+        self.assertEqual(self.store.expire()["expired"], 0)
+
     def test_requeue(self) -> None:
         t = self.store.submit("x", {})
         self.store.cancel(t["task_id"])

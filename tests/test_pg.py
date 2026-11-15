@@ -99,6 +99,20 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_ttl(self) -> None:
+        import time
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("ttl", ["ttl"])
+            t = s.submit("ttl", {}, ttl_s=0.01)
+            time.sleep(0.03)
+            self.assertIsNone(s.claim("ttl", "ttl"))
+            self.assertEqual(s.get(t["task_id"])["status"], "expired")
+            self.assertEqual(s.expire()["expired"], 0)
+        finally:
+            s.close()
+
     def test_cancel(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

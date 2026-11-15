@@ -81,6 +81,17 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("batch", body["data"]["features"])
 
+    def test_ttl_api(self) -> None:
+        import time
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ttl", "ttl_s": 0.01})
+        task_id = body["data"]["task_id"]
+        time.sleep(0.03)
+        _req("POST", self.base + "/v1/agents", {"agent_id": "ttl", "capabilities": ["ttl"]})
+        _, claim, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "ttl", "capability": "ttl"})
+        self.assertIsNone(claim["data"])
+        _, task, _ = _req("GET", self.base + f"/v1/tasks/{task_id}")
+        self.assertEqual(task["data"]["status"], "expired")
+
     def test_requeue_api(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "rq"})
         task_id = body["data"]["task_id"]
