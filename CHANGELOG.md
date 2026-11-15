@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.0.0] — 2026-11-15
+
+Milestone 5.0: API contract.
+
+### Добавлено
+- ROUTES ↔ OpenAPI contract tests; 94 теста.
+
 ## [4.9.0] — 2026-11-15
 
 Auth/rate edge coverage.

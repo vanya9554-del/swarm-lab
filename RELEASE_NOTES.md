@@ -1,3 +1,7 @@
+# swarm-lab v5.0.0
+
+Milestone 5.0: ROUTES/OpenAPI contract tests, 94 tests.
+
 # swarm-lab v4.9.0
 
 Auth/rate edge coverage, 92 tests, 95.4%.
