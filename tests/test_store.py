@@ -44,6 +44,28 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_migration(self) -> None:
+        import sqlite3
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "old.db"
+            conn = sqlite3.connect(path)
+            conn.execute(
+                "CREATE TABLE tasks (task_id TEXT PRIMARY KEY, capability TEXT NOT NULL, payload TEXT NOT NULL, "
+                "priority INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL, dedup_key TEXT, claimed_by TEXT, "
+                "lease_until REAL, lease_epoch INTEGER NOT NULL DEFAULT 1, result TEXT, affinity_agent_id TEXT, "
+                "created_at REAL NOT NULL)"
+            )
+            conn.commit(); conn.close()
+            store = SwarmStore(str(path))
+            try:
+                store.register("a1", ["x"])
+                t = store.submit("x", {})
+                self.assertEqual(store.get(t["task_id"])["attempts"], 0)
+            finally:
+                store.close()
+
     def test_guards(self) -> None:
         t = self.store.submit("x", {})
         claimed = self.store.claim("a1", "x")

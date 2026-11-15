@@ -50,11 +50,12 @@
 - **S43**: OpenAPI 3.1, 78 тестов; release 4.0.0.
 - **S44**: query coverage, 80 тестов; release 4.1.0.
 - **S45**: store guards, coverage 94,1%, 81 тест; release 4.2.0.
+- **S46**: schema migration, coverage 94,5%, 82 теста; release 4.3.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-4.2: live K8s, external audit, chaos.
+- Post-4.3: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

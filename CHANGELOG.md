@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.3.0] — 2026-11-15
+
+Schema migration coverage.
+
+### Добавлено
+- SQLite old-schema migration test; coverage 94,5%, 82 теста.
+
 ## [4.2.0] — 2026-11-15
 
 Store guard coverage.

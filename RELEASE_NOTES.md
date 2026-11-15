@@ -1,3 +1,7 @@
+# swarm-lab v4.3.0
+
+Schema migration test, coverage 94.5%, 82 tests.
+
 # swarm-lab v4.2.0
 
 Store guards, coverage 94.1%, 81 tests.
