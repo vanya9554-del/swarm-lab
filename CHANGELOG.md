@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [2.4.0] — 2026-11-15
+
+PG K8s HPA/cancel.
+
+### Добавлено
+- `deploy/k8s-postgres.yaml`: 2 replicas + HPA/PDB/Service, PG DSN.
+- PG cancel test; 51 тест, coverage 93,1%.
+
 ## [2.3.0] — 2026-11-15
 
 Task cancellation.

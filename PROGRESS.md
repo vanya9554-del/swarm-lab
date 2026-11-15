@@ -31,11 +31,12 @@
 - **S24**: edges/rate/metrics, 45 tests, coverage 93,2%; release 2.1.0.
 - **S25**: PDB/NetworkPolicy, reconnect load, 47 tests; release 2.2.0.
 - **S26**: task cancel, 50 tests; release 2.3.0.
+- **S27**: PG K8s HPA/PDB, PG cancel, 51 тест; release 2.4.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-2.3: live K8s, external audit, chaos.
+- Post-2.4: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

@@ -99,6 +99,17 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_cancel(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("c1", ["c"])
+            t = s.submit("c", {})
+            self.assertEqual(s.cancel(t["task_id"])["status"], "cancelled")
+            self.assertTrue(s.cancel(t["task_id"]).get("idempotent"))
+        finally:
+            s.close()
+
     def test_more_methods(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

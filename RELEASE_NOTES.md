@@ -1,3 +1,7 @@
+# swarm-lab v2.4.0
+
+PG K8s HPA/PDB, PG cancel, 51 tests, coverage 93.1%.
+
 # swarm-lab v2.3.0
 
 Task cancellation API/MCP/batch, 50 tests.

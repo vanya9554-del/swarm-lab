@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: swarmlab-pg
+type: Opaque
+stringData:
+  dsn: "postgresql://swarm:swarm@postgres:5432/swarm"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swarmlab-pg
+  labels: {app: swarmlab-pg}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: swarmlab-pg}
+  template:
+    metadata:
+      labels: {app: swarmlab-pg}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: swarmlab
+          image: swarmlab:2.3.0
+          args: ["python", "-m", "swarmlab", "serve", "--db", "$(MVP_DSN)", "--host", "0.0.0.0", "--port", "8788"]
+          ports: [{containerPort: 8788, name: http}]
+          env:
+            - name: MVP_DSN
+              valueFrom:
+                secretKeyRef: {name: swarmlab-pg, key: dsn}
+          readinessProbe:
+            httpGet: {path: /ready, port: http}
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet: {path: /ready, port: http}
+            initialDelaySeconds: 10
+          resources:
+            requests: {cpu: 100m, memory: 64Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: swarmlab-pg
+spec:
+  selector: {app: swarmlab-pg}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: swarmlab-pg
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: swarmlab-pg}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: swarmlab-pg
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: swarmlab-pg
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
