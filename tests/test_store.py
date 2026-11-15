@@ -44,6 +44,19 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_guards(self) -> None:
+        t = self.store.submit("x", {})
+        claimed = self.store.claim("a1", "x")
+        with self.assertRaises(SwarmError):
+            self.store.renew(t["task_id"], "a2")
+        with self.assertRaises(SwarmError):
+            self.store.complete(t["task_id"], "a2", {})
+        with self.assertRaises(SwarmError):
+            self.store.complete(t["task_id"], "a1", {}, fence=999)
+        with self.assertRaises(SwarmError):
+            self.store.requeue("missing")
+        self.store.complete(t["task_id"], "a1", {}, fence=claimed["lease_epoch"])
+
     def test_attempts(self) -> None:
         import time
         t = self.store.submit("x", {}, max_attempts=1)

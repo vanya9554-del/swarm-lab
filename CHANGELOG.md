@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.2.0] — 2026-11-15
+
+Store guard coverage.
+
+### Добавлено
+- renew/complete/requeue guards; coverage 94,1%, 81 тест.
+
 ## [4.1.0] — 2026-11-15
 
 Query coverage.

@@ -1,3 +1,7 @@
+# swarm-lab v4.2.0
+
+Store guards, coverage 94.1%, 81 tests.
+
 # swarm-lab v4.1.0
 
 Query coverage, 80 tests.
