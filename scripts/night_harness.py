@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
                         })
                         if status2 == 200:
                             tasks += 1
-                            if tasks % 12 == 0:
+                            if tasks <= 3 or tasks % 12 == 0:
                                 log({"event": "tick", "tasks": tasks, "latency_ms": round(submit_ms + claim_ms + complete_ms, 3), "errors": errors})
                         else:
                             errors += 1
