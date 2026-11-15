@@ -15,10 +15,12 @@
 - **S7 release 1.0**: ACCEPTANCE, CHANGELOG, RELEASE_NOTES, SBOM/checksums; v1.0.0.
 - **S8**: PG `pg_notify` + `PgEventStream`; SSE ждёт NOTIFY на PG.
 - **S9**: pending backpressure (`SWARMLAB_MAX_PENDING` → 429), rate-limit per token; **14 tests**.
+- **S10 chaos**: 3 реплики, 6 воркеров, 100 задач, exactly-once; `CHAOS.md`.
+- **S11 deploy**: `docker-compose.yml`, `deploy/k8s.yaml`, `DEPLOY.md`; **15 tests**.
 
 ## В работе
 
-- S10 chaos/reconnect; S11 compose/K8s; S12 release 1.1.
+- S12 release 1.1.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 
