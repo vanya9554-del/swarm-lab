@@ -58,7 +58,7 @@
 
 ## В работе
 
-- Post-4.6: live K8s, external audit, chaos.
+- Post-4.7: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

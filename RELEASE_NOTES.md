@@ -1,3 +1,7 @@
+# swarm-lab v4.7.0
+
+Coverage 95.0%, 88 tests, invalid payload decode.
+
 # swarm-lab v4.6.0
 
 SWARMLAB_MAX_BODY, 87 tests.

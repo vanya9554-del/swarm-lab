@@ -44,6 +44,16 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_invalid_payload(self) -> None:
+        import time
+        self.store.conn.execute(
+            "INSERT INTO tasks(task_id, capability, payload, priority, status, lease_epoch, created_at) "
+            "VALUES ('bad', 'x', 'not-json', 0, 'pending', 1, ?)",
+            (time.time(),),
+        )
+        self.store.conn.commit()
+        self.assertEqual(self.store.get("bad")["payload"], "not-json")
+
     def test_backpressure(self) -> None:
         import os
 

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.7.0] — 2026-11-15
+
+Coverage 95%.
+
+### Добавлено
+- invalid payload decode test; coverage 95,0%, 88 тестов.
+
 ## [4.6.0] — 2026-11-15
 
 Configurable body limit.
