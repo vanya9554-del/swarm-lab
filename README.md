@@ -16,7 +16,8 @@ Agent-native swarm runtime и benchmark. **Без UI**: только HTTP/JSON, 
 ```bash
 python -m unittest discover -s tests
 python -m swarmlab --help
-python -m swarmlab serve --port 8788
+python -m swarmlab serve --port 8788              # SQLite
+python -m swarmlab serve --db postgresql://...   # PG multi-replica
 python -m swarmlab mcp            # MCP stdio
 # MCP HTTP: POST /mcp (initialize/tools/list/tools/call/resources/prompts)
 curl -sS -X POST localhost:8788/v1/agents -H 'Content-Type: application/json' \

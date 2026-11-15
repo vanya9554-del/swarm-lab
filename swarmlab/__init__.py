@@ -6,4 +6,13 @@ __version__ = "0.1.0"
 
 from .store import SwarmError, SwarmStore
 
-__all__ = ["SwarmError", "SwarmStore", "__version__"]
+
+def open_store(target: str = ":memory:"):
+    """SQLite path или postgresql:// DSN."""
+    if str(target).startswith(("postgresql://", "postgres://")):
+        from .pg import PgSwarmStore
+        return PgSwarmStore(str(target))
+    return SwarmStore(str(target))
+
+
+__all__ = ["SwarmError", "SwarmStore", "__version__", "open_store"]

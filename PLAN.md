@@ -6,8 +6,8 @@
 - **S1 engine** — task market, discovery, lease/fencing, event log; SQLite. 
 - **S2 API** — stdlib HTTP, batch, SSE, idempotency; CLI `python -m swarmlab`. ✅ базовый
 - **S3 MCP** — tools/resources/prompts для агентов. ✅
-- **S4 PostgreSQL** — multi-replica claim (`FOR UPDATE SKIP LOCKED`), migrations.
-- **S5 load/chaos** — 2+ replicas, stale workers, latency/throughput отчёт.
+- **S4 PostgreSQL** — multi-replica claim (`FOR UPDATE SKIP LOCKED`), migrations. ✅
+- **S5 load/chaos** — 2+ replicas, stale workers, latency/throughput отчёт. ⏳
 - **S6 hardening** — security, rate-limit, observability, Docker/CI.
 - **S7 release 1.0** — SBOM/checksums/README/ACCEPTANCE.
 

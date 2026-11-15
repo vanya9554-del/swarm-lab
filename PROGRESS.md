@@ -9,10 +9,11 @@
   `/v1/tasks/{id}/complete|renew`, `/v1/events`, `/v1/stream`, `/v1/batch`, `/v1/stats`),
   SSE, batch, bearer token, CLI `serve`; 5 tests.
 - **S3 MCP**: tools/resources/prompts, HTTP `/mcp`, stdio `python -m swarmlab mcp`; 7 tests total.
+- **S4 PostgreSQL**: `swarmlab/pg.py`, `open_store(dsn)`, multi-replica claim, tests 9 total.
 
 ## В работе
 
-- S4 PostgreSQL multi-replica.
+- S5 load/chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

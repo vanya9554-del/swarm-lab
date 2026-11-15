@@ -1,0 +1,124 @@
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
+import os
+import subprocess
+import tempfile
+import threading
+import unittest
+from pathlib import Path
+
+try:
+    import pgserver  # noqa: F401
+    import psycopg
+    PG = True
+except Exception:  # noqa: BLE001
+    PG = False
+
+
+def _init(work: Path) -> Path:
+    pgdata = work / "pgdata"
+    if (pgdata / "PG_VERSION").exists():
+        return pgdata
+    import pgserver
+    bin_dir = Path(pgserver.__file__).resolve().parent / "pginstall" / "bin"
+    initdb = bin_dir / ("initdb.exe" if os.name == "nt" else "initdb")
+    pgdata.mkdir(parents=True)
+    proc = subprocess.run(
+        [str(initdb), "-D", str(pgdata), "--auth=trust", "--auth-local=trust",
+         "--encoding=SQL_ASCII", "--locale=C", "-U", "postgres"],
+        text=True, capture_output=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-500:])
+    return pgdata
+
+
+class PgTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not PG:
+            raise unittest.SkipTest("psycopg/pgserver not installed")
+        cls.tmp = tempfile.TemporaryDirectory(prefix="swarmlab-pg-", ignore_cleanup_errors=True)
+        cls.work = Path(cls.tmp.name)
+        pgdata = _init(cls.work)
+        import pgserver
+        cls.srv = pgserver.get_server(str(pgdata), cleanup_mode=None)
+        uri = cls.srv.get_uri()
+        base = uri.rsplit("/", 1)[0] + "/postgres"
+        with psycopg.connect(base, connect_timeout=15) as conn:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute("DROP DATABASE IF EXISTS swarmlab")
+                cur.execute("CREATE DATABASE swarmlab WITH ENCODING 'UTF8' TEMPLATE template0")
+        cls.dsn = uri.rsplit("/", 1)[0] + "/swarmlab"
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if not PG:
+            return
+        try:
+            cls.srv.cleanup()
+        except Exception:  # noqa: BLE001, S110
+            pass
+        cls.tmp.cleanup()
+
+    def test_multi_replica_claim(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        a = PgSwarmStore(self.dsn)
+        b = PgSwarmStore(self.dsn)
+        try:
+            a.register("a1", ["x"])
+            b.register("a2", ["x"])
+            for i in range(20):
+                a.submit("x", {"n": i})
+            results: list[str] = []
+            barrier = threading.Barrier(2)
+            lock = threading.Lock()
+
+            def worker(store, agent):
+                barrier.wait(timeout=5)
+                while True:
+                    task = store.claim(agent, "x")
+                    if not task:
+                        return
+                    store.complete(task["task_id"], agent, {"ok": 1}, fence=task["lease_epoch"])
+                    with lock:
+                        results.append(task["task_id"])
+
+            threads = [
+                threading.Thread(target=worker, args=(a, "a1")),
+                threading.Thread(target=worker, args=(b, "a2")),
+            ]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=20)
+            self.assertEqual(len(results), 20)
+            self.assertEqual(len(set(results)), 20)
+        finally:
+            a.close()
+            b.close()
+
+    def test_dedup_and_fence(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("a1", ["y"])
+            first = s.submit("y", {}, dedup_key="k")
+            second = s.submit("y", {}, dedup_key="k")
+            self.assertEqual(first["task_id"], second["task_id"])
+            claimed = s.claim("a1", "y")
+            s.conn.execute("UPDATE tasks SET lease_until=0 WHERE task_id=%s", (first["task_id"],))
+            s.conn.commit()
+            other = s.claim("a1", "y")
+            with self.assertRaises(RuntimeError):
+                s.complete(first["task_id"], "a1", {}, fence=claimed["lease_epoch"])
+            done = s.complete(first["task_id"], "a1", {}, fence=other["lease_epoch"])
+            self.assertEqual(done["status"], "completed")
+        finally:
+            s.close()
+
+
+if __name__ == "__main__":
+    unittest.main()
