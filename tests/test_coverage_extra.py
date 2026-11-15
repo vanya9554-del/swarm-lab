@@ -73,6 +73,14 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_get_task(self) -> None:
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "g"})
+        task_id = body["data"]["task_id"]
+        status, payload, _ = _req("GET", self.base + f"/v1/tasks/{task_id}")
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["data"]["task_id"], task_id)
+        self.assertEqual(_req("GET", self.base + "/v1/tasks/nope")[0], 404)
+
     def test_rate_env_and_batch_complete(self) -> None:
         import os
         os.environ["SWARMLAB_RATE_RPS"] = "bad"

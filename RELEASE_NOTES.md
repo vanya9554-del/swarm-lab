@@ -1,3 +1,7 @@
+# swarm-lab v2.0.0
+
+Milestone 2.0: GET task by id, MCP get_task, 41 tests, coverage 92.4%.
+
 # swarm-lab v1.9.0
 
 Batch renew, PG SSE, coverage 92.4%, 39 tests.

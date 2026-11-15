@@ -45,6 +45,13 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_get_task_tool(self) -> None:
+        submitted = self._text(self._call("swarm_submit", {"capability": "g"}))
+        got = self._text(self._call("swarm_get_task", {"task_id": submitted["task_id"]}))
+        self.assertEqual(got["task_id"], submitted["task_id"])
+        missing = self._call("swarm_get_task", {"task_id": "nope"})
+        self.assertTrue(missing["isError"])
+
     def test_renew_complete(self) -> None:
         self._call("swarm_register", {"agent_id": "m", "capabilities": ["x"]})
         submitted = self._text(self._call("swarm_submit", {"capability": "x"}))

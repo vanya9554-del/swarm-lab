@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [2.0.0] — 2026-11-15
+
+Milestone 2.0: task read API.
+
+### Добавлено
+- `GET /v1/tasks/{task_id}`; MCP `swarm_get_task`; 41 тест, coverage 92,4%.
+- Batch renew, PG SSE, readiness — в 1.9.
+
 ## [1.9.0] — 2026-11-15
 
 Batch renew, PG SSE/failure paths.

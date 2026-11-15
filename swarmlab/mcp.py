@@ -105,6 +105,9 @@ class McpDispatcher:
                 return _text(self.store.stats())
             if name == "swarm_discover":
                 return _text(self.store.discover(args.get("capability"), int(args.get("limit") or 20)))
+            if name == "swarm_get_task":
+                task = self.store.get(str(args.get("task_id") or ""))
+                return _text(task) if task is not None else _err("NOT_FOUND", "task not found")
             if name == "swarm_events":
                 return _text(self.store.events(int(args.get("after") or 0), int(args.get("limit") or 100)))
             if name == "swarm_register":
@@ -186,6 +189,7 @@ class McpDispatcher:
 TOOLS: tuple[dict[str, Any], ...] = (
     {"name": "swarm_stats", "description": "Swarm stats", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
     {"name": "swarm_discover", "description": "Discover agents", "inputSchema": {"type": "object", "properties": {"capability": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
+    {"name": "swarm_get_task", "description": "Get task by id", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},
     {"name": "swarm_events", "description": "Events after seq", "inputSchema": {"type": "object", "properties": {"after": {"type": "integer"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "swarm_register", "description": "Register agent", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "capabilities": {"type": "array", "items": {"type": "string"}}, "endpoint": {"type": "string"}}, "required": ["agent_id", "capabilities"], "additionalProperties": False}},
     {"name": "swarm_submit", "description": "Submit task", "inputSchema": {"type": "object", "properties": {"capability": {"type": "string"}, "payload": {}, "priority": {"type": "integer"}, "dedup_key": {"type": "string"}, "affinity_agent_id": {"type": "string"}}, "required": ["capability"], "additionalProperties": False}},
