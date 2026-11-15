@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from .mcp import McpDispatcher
 from .store import SwarmError, SwarmStore
 
 MAX_BODY = 1 << 20
@@ -26,6 +27,7 @@ ROUTES = {
     ("GET", "/v1/events"),
     ("GET", "/v1/stream"),
     ("POST", "/v1/batch"),
+    ("POST", "/mcp"),
 }
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew)$")
 
@@ -40,6 +42,7 @@ class SwarmHTTPServer(ThreadingHTTPServer):
     def __init__(self, addr: tuple[str, int], store: SwarmStore, token: str | None = None) -> None:
         self.store = store
         self.token = token
+        self.mcp = McpDispatcher(store)
         super().__init__(addr, SwarmHandler)
 
 
@@ -159,6 +162,10 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     float(body.get("lease_s") or 60),
                 )
                 self._send(200, {"ok": True, "data": task})
+            elif path == "/mcp":
+                message = body
+                response = self.swarm.mcp.handle(message)
+                self._send(200, response or {})
             elif path == "/v1/batch":
                 ops = body.get("ops")
                 if not isinstance(ops, list):

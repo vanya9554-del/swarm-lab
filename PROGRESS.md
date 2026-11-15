@@ -8,10 +8,11 @@
 - **S2 API**: stdlib HTTP (`/v1/agents`, `/v1/heartbeat`, `/v1/tasks`, `/v1/tasks/claim`,
   `/v1/tasks/{id}/complete|renew`, `/v1/events`, `/v1/stream`, `/v1/batch`, `/v1/stats`),
   SSE, batch, bearer token, CLI `serve`; 5 tests.
+- **S3 MCP**: tools/resources/prompts, HTTP `/mcp`, stdio `python -m swarmlab mcp`; 7 tests total.
 
 ## В работе
 
-- S3 MCP tools/resources/prompts.
+- S4 PostgreSQL multi-replica.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

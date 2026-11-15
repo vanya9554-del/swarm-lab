@@ -21,9 +21,19 @@ def main(argv: list[str] | None = None) -> int:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8788)
     serve.add_argument("--token", default=None)
+    mcp = sub.add_parser("mcp", help="MCP stdio server")
+    mcp.add_argument("--db", default="swarm.db")
     args = ap.parse_args(argv)
     if args.version:
         print(__version__)
+        return 0
+    if args.cmd == "mcp":
+        from .mcp import main_stdio
+        store = SwarmStore(args.db)
+        try:
+            main_stdio(store)
+        finally:
+            store.close()
         return 0
     if args.cmd == "serve":
         from .api import build_server
