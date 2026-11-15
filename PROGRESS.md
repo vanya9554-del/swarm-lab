@@ -11,10 +11,11 @@
 - **S3 MCP**: tools/resources/prompts, HTTP `/mcp`, stdio `python -m swarmlab mcp`; 7 tests total.
 - **S4 PostgreSQL**: `swarmlab/pg.py`, `open_store(dsn)`, multi-replica claim, tests 9 total.
 - **S5 load/chaos**: `scripts/bench.py`, `BENCH.md`, 50-task PG multi-replica/stale test; **10 tests**; SQLite 5412 tasks/s, p50 1.09ms/p95 2.92ms.
+- **S6 hardening**: bearer token, rate-limit, body limit, security headers, `/metrics`, Dockerfile, CI, pyproject, MIT, SECURITY; **12 tests**.
 
 ## В работе
 
-- S6 hardening Docker/CI.
+- S7 release 1.0.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
+import os
+import threading
+import unittest
+import urllib.error
+import urllib.request
+
+from swarmlab.api import build_server
+from swarmlab.store import SwarmStore
+
+
+def _get(url: str):
+    try:
+        with urllib.request.urlopen(url, timeout=5) as r:
+            return r.status, dict(r.headers), r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, dict(e.headers), e.read()
+
+
+class HardeningTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.store = SwarmStore(":memory:")
+        self.server = build_server(self.store, "127.0.0.1", 0)
+        self.port = int(self.server.server_address[1])
+        self.base = f"http://127.0.0.1:{self.port}"
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=5)
+        self.store.close()
+        os.environ.pop("SWARMLAB_RATE_RPS", None)
+
+    def test_metrics_and_headers(self) -> None:
+        status, headers, body = _get(self.base + "/metrics")
+        self.assertEqual(status, 200)
+        self.assertIn("swarmlab_http_requests_total", body.decode())
+        self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertIn("swarmlab_http_requests_total_all", body.decode())
+
+    def test_rate_limit(self) -> None:
+        os.environ["SWARMLAB_RATE_RPS"] = "2"
+        statuses = [_get(self.base + "/health")[0] for _ in range(5)]
+        self.assertIn(429, statuses)
+        os.environ.pop("SWARMLAB_RATE_RPS", None)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -12,6 +12,8 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from .mcp import McpDispatcher
+from .metrics import CONTENT_TYPE as METRICS_TYPE
+from .metrics import SwarmMetrics
 from .store import SwarmError, SwarmStore
 
 MAX_BODY = 1 << 20
@@ -28,6 +30,7 @@ ROUTES = {
     ("GET", "/v1/stream"),
     ("POST", "/v1/batch"),
     ("POST", "/mcp"),
+    ("GET", "/metrics"),
 }
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew)$")
 
@@ -43,6 +46,9 @@ class SwarmHTTPServer(ThreadingHTTPServer):
         self.store = store
         self.token = token
         self.mcp = McpDispatcher(store)
+        self.metrics = SwarmMetrics()
+        self.rate: dict[str, list[float]] = {}
+        self.rate_lock = threading.Lock()
         super().__init__(addr, SwarmHandler)
 
 
@@ -59,13 +65,36 @@ class SwarmHandler(BaseHTTPRequestHandler):
             print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
 
     def _send(self, status: int, payload: Any) -> None:
+        path = urlparse(self.path).path
+        self.swarm.metrics.observe(self.command, path, status)
         body = _json(payload)
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
         self.end_headers()
         self.wfile.write(body)
+
+    def _rate_ok(self) -> bool:
+        try:
+            rps = float(os.environ.get("SWARMLAB_RATE_RPS", "0"))
+        except ValueError:
+            rps = 0.0
+        if rps <= 0:
+            return True
+        now = time.time()
+        key = self.client_address[0]
+        with self.swarm.rate_lock:
+            bucket = [t for t in self.swarm.rate.get(key, []) if now - t < 1.0]
+            if len(bucket) >= max(1, int(rps)):
+                self.swarm.rate[key] = bucket
+                return False
+            bucket.append(now)
+            self.swarm.rate[key] = bucket
+        return True
 
     def _error(self, status: int, code: str, message: str) -> None:
         self._send(status, {"ok": False, "error": {"code": code, "message": message}})
@@ -98,10 +127,23 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         if not self._auth():
             return
+        if not self._rate_ok():
+            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}})
+            return
         parsed = urlparse(self.path)
         path, query = parsed.path, parse_qs(parsed.query)
         try:
-            if path == "/health":
+            if path == "/metrics":
+                body = self.swarm.metrics.render(self.swarm.store).encode("utf-8")
+                self.swarm.metrics.observe("GET", path, 200)
+                self.send_response(200)
+                self.send_header("Content-Type", METRICS_TYPE)
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                self.wfile.write(body)
+            elif path == "/health":
                 self._send(200, {"ok": True, "service": "swarm-lab"})
             elif path == "/v1/stats":
                 self._send(200, {"ok": True, "data": self.swarm.store.stats()})
@@ -130,6 +172,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         if not self._auth():
+            return
+        if not self._rate_ok():
+            self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}})
             return
         path = urlparse(self.path).path
         try:

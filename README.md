@@ -34,6 +34,13 @@ python scripts/bench.py --backend sqlite --tasks 200 --workers 8
 
 См. `BENCH.md`: 5412 tasks/s, p50 1.09 ms (SQLite, локально).
 
+## Docker
+
+```bash
+docker build -t swarm-lab .
+docker run -p 8788:8788 -e SWARMLAB_TOKEN=secret swarm-lab
+```
+
 ## Статус
 
 Статус: v0.1.0, работает store + HTTP API/SSE/batch. S3 MCP — следующий шаг. План — `PLAN.md`, протокол — `SPEC.md`, автономный runbook — `../NIGHT_SHIFT.md`.
