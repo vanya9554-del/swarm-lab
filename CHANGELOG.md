@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [1.6.0] — 2026-11-15
+
+Continuous harness + coverage 90%.
+
+### Добавлено
+- `scripts/night_harness.py`: health/soak каждые 5с, tests каждые 15мин, server watchdog.
+- Coverage **90,4%**, 31 тест; MCP/CLI/API edge paths.
+- Query/body validation errors.
+
 ## [1.5.0] — 2026-11-15
 
 Concurrency fix.

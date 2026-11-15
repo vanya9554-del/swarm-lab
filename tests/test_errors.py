@@ -14,6 +14,17 @@ class ErrorTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.store.close()
 
+    def test_error_branches(self) -> None:
+        self.mcp.handle("bad")
+        self.mcp.handle({"jsonrpc": "2.0", "id": 1})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": "bad"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "swarm_register", "arguments": "bad"}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "swarm_register", "arguments": {"agent_id": "x", "capabilities": "bad"}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "swarm_batch", "arguments": {"ops": "bad"}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 6, "method": "prompts/get", "params": "bad"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 7, "method": "resources/read", "params": "bad"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "swarm_batch", "arguments": {"ops": [1]}}})
+
     def test_stdio_and_more_tools(self) -> None:
         import io
 

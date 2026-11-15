@@ -61,6 +61,41 @@ class ExtraApiTests(unittest.TestCase):
         self.thread.join(timeout=5)
         self.store.close()
 
+    def test_batch_ops(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "b", "capabilities": ["x"]})
+        _req("POST", self.base + "/v1/tasks", {"capability": "x"})
+        status, body, _ = _req("POST", self.base + "/v1/batch", {"ops": [
+            {"op": "submit", "capability": "x"},
+            {"op": "claim", "agent_id": "b", "capability": "x"},
+            {"op": "events"},
+            {"op": "stats"},
+            {"op": "bad"},
+            1,
+        ]})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(body["data"]), 6)
+        self.assertEqual(_req("GET", self.base + "/v1/tasks?limit=bad")[0], 400)
+
+    def test_post_errors(self) -> None:
+        self.assertEqual(_req("POST", self.base + "/v1/agents", {"agent_id": "x", "capabilities": "bad"})[0], 400)
+        self.assertEqual(_req("POST", self.base + "/v1/heartbeat", {})[0], 400)
+        self.assertEqual(_req("POST", self.base + "/v1/batch", {"ops": "bad"})[0], 400)
+        self.assertEqual(_req("POST", self.base + "/nope", {})[0], 404)
+        req = urllib.request.Request(self.base + "/v1/tasks", data=b"[]", method="POST")
+        req.add_header("Content-Type", "application/json")
+        try:
+            urllib.request.urlopen(req, timeout=3)
+        except urllib.error.HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+        req = urllib.request.Request(self.base + "/v1/tasks", data=b"x" * (1 << 20 + 10), method="POST")
+        req.add_header("Content-Type", "application/json")
+        try:
+            urllib.request.urlopen(req, timeout=3)
+        except urllib.error.HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+        except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+            pass
+
     def test_renew_and_stream(self) -> None:
         _req("POST", self.base + "/v1/agents", {"agent_id": "r", "capabilities": ["x"]})
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "x"})

@@ -1,3 +1,7 @@
+# swarm-lab v1.6.0
+
+Continuous night harness, coverage 90.4%, 31 tests.
+
 # swarm-lab v1.5.0
 
 SQLite concurrency fix; HTTP 200/200, 726 tasks/s.

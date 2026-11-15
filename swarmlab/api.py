@@ -206,6 +206,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self._error(404, "NOT_FOUND", f"no route {path}")
         except SwarmError as exc:
             self._error(400 if exc.code in ("BAD_REQUEST", "BAD_JSON", "PAYLOAD_TOO_LARGE") else 409, exc.code, exc.message)
+        except (ValueError, TypeError) as exc:
+            self._error(400, "BAD_REQUEST", str(exc))
 
     def do_POST(self) -> None:
         if not self._auth():

@@ -136,17 +136,16 @@ class PgTests(unittest.TestCase):
         from swarmlab.events import PgEventStream
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
-        listener = PgEventStream(self.dsn)
-        try:
-            s.register("n1", ["notify"])
-            task = s.submit("notify", {})
-            payload = listener.wait(3.0)
-            self.assertIsNotNone(payload)
-            self.assertGreater(int(payload), 0)
-            self.assertEqual(s.get(task["task_id"])["status"], "pending")
-        finally:
-            listener.close()
-            s.close()
+        with PgEventStream(self.dsn) as listener:
+            try:
+                s.register("n1", ["notify"])
+                task = s.submit("notify", {})
+                payload = listener.wait(3.0)
+                self.assertIsNotNone(payload)
+                self.assertGreater(int(payload), 0)
+                self.assertEqual(s.get(task["task_id"])["status"], "pending")
+            finally:
+                s.close()
 
     def test_dedup_and_fence(self) -> None:
         from swarmlab.pg import PgSwarmStore
