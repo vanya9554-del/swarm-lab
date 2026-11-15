@@ -1,3 +1,7 @@
+# swarm-lab v1.8.0
+
+Readiness failure handling, coverage 91.6%, 36 tests.
+
 # swarm-lab v1.7.0
 
 Readiness probes, public health/metrics, coverage 90.3%, 32 tests.

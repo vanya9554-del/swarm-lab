@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [1.8.0] — 2026-11-15
+
+Readiness/coverage.
+
+### Добавлено
+- `/ready` failure path, public probes, coverage **91,6%**, 36 тестов.
+- Store/events/CLI branches.
+
 ## [1.7.0] — 2026-11-15
 
 Readiness and probes.

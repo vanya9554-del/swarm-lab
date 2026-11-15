@@ -11,11 +11,13 @@ from swarmlab.mcp import McpDispatcher
 from swarmlab.store import SwarmError, SwarmStore
 
 
-def _req(method, url, body=None):
+def _req(method, url, body=None, token=None):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     if data is not None:
         req.add_header("Content-Type", "application/json")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
     try:
         with urllib.request.urlopen(req, timeout=5) as r:
             raw = r.read()
@@ -60,6 +62,36 @@ class ExtraApiTests(unittest.TestCase):
         self.server.server_close()
         self.thread.join(timeout=5)
         self.store.close()
+
+    def test_ready_failure(self) -> None:
+        def boom():
+            raise RuntimeError("db down")
+        self.store.stats = boom
+        try:
+            status, _, _ = _req("GET", self.base + "/ready")
+            self.assertEqual(status, 503)
+        finally:
+            del self.store.stats
+
+    def test_auth_and_heartbeat(self) -> None:
+        import os
+        from unittest.mock import patch
+        # legacy token mode с отдельным сервером
+        os.environ["SWARMLAB_TOKEN"] = "legacy"
+        try:
+            other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "legacy")
+            base = f"http://127.0.0.1:{other.server_address[1]}"
+            thread = threading.Thread(target=other.serve_forever, daemon=True)
+            thread.start()
+            try:
+                self.assertEqual(_req("GET", base + "/v1/stats")[0], 401)
+                self.assertEqual(_req("GET", base + "/v1/stats", None, "legacy")[0], 200)
+            finally:
+                other.shutdown(); other.server_close(); thread.join(timeout=5)
+        finally:
+            os.environ.pop("SWARMLAB_TOKEN", None)
+        _req("POST", self.base + "/v1/agents", {"agent_id": "h", "capabilities": ["x"]})
+        self.assertEqual(_req("POST", self.base + "/v1/heartbeat", {"agent_id": "h"})[0], 200)
 
     def test_batch_ops(self) -> None:
         _req("POST", self.base + "/v1/agents", {"agent_id": "b", "capabilities": ["x"]})

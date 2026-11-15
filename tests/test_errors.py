@@ -14,6 +14,31 @@ class ErrorTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.store.close()
 
+    def test_open_store_pg_branch(self) -> None:
+        from unittest.mock import patch
+        import swarmlab
+        with patch("swarmlab.pg.PgSwarmStore") as fake:
+            fake.return_value = object()
+            result = swarmlab.open_store("postgresql://x")
+            self.assertIsNotNone(result)
+            fake.assert_called_once_with("postgresql://x")
+
+    def test_events_failures(self) -> None:
+        from unittest.mock import patch
+        from swarmlab.events import PgEventStream
+        with patch("swarmlab.events.available", return_value=False):
+            with self.assertRaises(RuntimeError):
+                PgEventStream("x")
+        class BadConn:
+            def notifies(self, timeout=None):
+                raise RuntimeError("bad")
+            def close(self):
+                raise RuntimeError("bad")
+        stream = PgEventStream.__new__(PgEventStream)
+        stream.conn = BadConn()
+        self.assertIsNone(stream.wait(0.1))
+        stream.close()
+
     def test_error_branches(self) -> None:
         self.mcp.handle("bad")
         self.mcp.handle({"jsonrpc": "2.0", "id": 1})

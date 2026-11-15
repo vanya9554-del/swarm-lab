@@ -25,11 +25,12 @@
 - **S18**: SQLite read-lock fix; HTTP 200/200 726 tasks/s; 27 tests; release 1.5.0.
 - **S19**: night harness, coverage 90,4%, 31 tests; release 1.6.0.
 - **S20**: `/ready`, public probes, coverage 90,3%, 32 tests; release 1.7.0.
+- **S21**: readiness failure, 36 tests, coverage 91,6%; release 1.8.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-1.7: live K8s, external audit, chaos/reconnect.
+- Post-1.8: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 
