@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [1.2.0] — 2026-11-15
+
+Post-1.1 quality.
+
+### Добавлено
+- Token scopes/RBAC (`SWARMLAB_TOKENS`, 401/403), PG reconnect/retry.
+- Quality gate: ruff 0, coverage 76%, 20 тестов, CI coverage step.
+- `QUALITY.md`, CLI/error tests.
+
 ## [1.1.0] — 2026-11-15
 
 Post-1.0 hardening.

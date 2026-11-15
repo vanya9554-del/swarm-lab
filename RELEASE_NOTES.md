@@ -1,3 +1,7 @@
+# swarm-lab v1.2.0
+
+Scopes/RBAC, PG reconnect, quality gate (20 tests, 76% coverage, ruff 0).
+
 # swarm-lab v1.1.0
 
 Post-1.0: PG NOTIFY SSE, backpressure, chaos, compose/K8s.

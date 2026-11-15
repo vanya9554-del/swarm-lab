@@ -18,11 +18,13 @@
 - **S10 chaos**: 3 реплики, 6 воркеров, 100 задач, exactly-once; `CHAOS.md`.
 - **S11 deploy**: `docker-compose.yml`, `deploy/k8s.yaml`, `DEPLOY.md`; **15 tests**.
 - **S13**: `SWARMLAB_TOKENS` scopes read/write (403/401), PG reconnect/retry; **17 tests**.
+- **S14**: coverage 76%, ruff 0, CI quality, 20 tests.
+- **S15**: release 1.2.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- S14 coverage/lint/quality.
+- Post-1.2 hardening / coverage target 80%.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 
