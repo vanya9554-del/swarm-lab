@@ -44,6 +44,16 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})
         self.assertFalse(self.store.deregister("nope")["deleted"])
 
+    def test_invalid_result(self) -> None:
+        import time
+        self.store.conn.execute(
+            "INSERT INTO tasks(task_id, capability, payload, priority, status, lease_epoch, result, created_at) "
+            "VALUES ('badr', 'x', '{}', 0, 'completed', 1, 'not-json', ?)",
+            (time.time(),),
+        )
+        self.store.conn.commit()
+        self.assertEqual(self.store.get("badr")["result"], "not-json")
+
     def test_invalid_payload(self) -> None:
         import time
         self.store.conn.execute(

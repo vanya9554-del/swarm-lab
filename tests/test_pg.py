@@ -167,6 +167,17 @@ class PgTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_expire_count(self) -> None:
+        import time
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.submit("exp", {}, ttl_s=0.01)
+            time.sleep(0.03)
+            self.assertGreaterEqual(s.expire()["expired"], 1)
+        finally:
+            s.close()
+
     def test_queries(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

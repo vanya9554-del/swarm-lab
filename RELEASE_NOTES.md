@@ -1,3 +1,7 @@
+# swarm-lab v4.8.0
+
+README sync + store decode tests, 90 tests.
+
 # swarm-lab v4.7.0
 
 Coverage 95.0%, 88 tests, invalid payload decode.

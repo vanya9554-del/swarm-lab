@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.8.0] — 2026-11-15
+
+README/current docs.
+
+### Добавлено
+- README синхронизирован с 4.x: TTL/deps/attempts/OpenAPI/gzip; 90 тестов.
+
 ## [4.7.0] — 2026-11-15
 
 Coverage 95%.
