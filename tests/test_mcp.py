@@ -45,6 +45,10 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_expire_tool(self) -> None:
+        out = self._text(self._call("swarm_expire", {}))
+        self.assertIn("expired", out)
+
     def test_deregister_tool(self) -> None:
         self._call("swarm_register", {"agent_id": "d", "capabilities": ["x"]})
         self.assertTrue(self._text(self._call("swarm_deregister", {"agent_id": "d"}))["deleted"])

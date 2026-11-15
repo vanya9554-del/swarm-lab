@@ -1,3 +1,7 @@
+# swarm-lab v3.0.0
+
+Maintenance expiry, MCP swarm_expire, 64 tests.
+
 # swarm-lab v2.9.0
 
 Agent deregistration, 61 tests.

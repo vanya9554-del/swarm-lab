@@ -36,6 +36,7 @@ ROUTES = {
     ("GET", "/v1/events"),
     ("GET", "/v1/stream"),
     ("POST", "/v1/batch"),
+    ("POST", "/v1/maintenance/expire"),
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
@@ -281,6 +282,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 message = body
                 response = self.swarm.mcp.handle(message)
                 self._send(200, response or {})
+            elif path == "/v1/maintenance/expire":
+                self._send(200, {"ok": True, "data": self.swarm.store.expire()})
             elif path == "/v1/batch":
                 ops = body.get("ops")
                 if not isinstance(ops, list):
@@ -362,6 +365,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     )
                 elif name == "events":
                     data = self.swarm.store.events(int(op.get("after") or 0), int(op.get("limit") or 100))
+                elif name == "expire":
+                    data = self.swarm.store.expire()
                 elif name == "stats":
                     data = self.swarm.store.stats()
                 else:

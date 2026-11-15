@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [3.0.0] — 2026-11-15
+
+Milestone 3.0: maintenance expiry.
+
+### Добавлено
+- `POST /v1/maintenance/expire`, MCP `swarm_expire`, batch `expire`.
+- PG deregister test; 64 теста.
+
 ## [2.9.0] — 2026-11-15
 
 Agent deregistration.

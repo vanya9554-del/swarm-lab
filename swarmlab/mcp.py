@@ -133,6 +133,8 @@ class McpDispatcher:
                     str(args.get("task_id") or ""), str(args.get("agent_id") or ""),
                     args.get("result"), success=bool(args.get("success", True)), fence=fence,
                 ))
+            if name == "swarm_expire":
+                return _text(self.store.expire())
             if name == "swarm_deregister":
                 return _text(self.store.deregister(str(args.get("agent_id") or "")))
             if name == "swarm_requeue":
@@ -202,6 +204,7 @@ TOOLS: tuple[dict[str, Any], ...] = (
     {"name": "swarm_submit", "description": "Submit task", "inputSchema": {"type": "object", "properties": {"capability": {"type": "string"}, "payload": {}, "priority": {"type": "integer"}, "dedup_key": {"type": "string"}, "affinity_agent_id": {"type": "string"}}, "required": ["capability"], "additionalProperties": False}},
     {"name": "swarm_claim", "description": "Claim task", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "capability": {"type": "string"}, "lease_s": {"type": "number"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_complete", "description": "Complete task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}, "result": {}, "success": {"type": "boolean"}, "fence": {"type": "integer"}}, "required": ["task_id", "agent_id"], "additionalProperties": False}},
+    {"name": "swarm_expire", "description": "Expire pending TTL tasks", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
     {"name": "swarm_deregister", "description": "Deregister agent", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_requeue", "description": "Requeue cancelled/failed task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},
     {"name": "swarm_cancel", "description": "Cancel task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},

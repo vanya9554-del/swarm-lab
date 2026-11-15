@@ -99,6 +99,16 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_deregister(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("gone", ["x"])
+            self.assertTrue(s.deregister("gone")["deleted"])
+            self.assertFalse(s.deregister("gone")["deleted"])
+        finally:
+            s.close()
+
     def test_ttl(self) -> None:
         import time
 

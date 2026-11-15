@@ -93,6 +93,14 @@ class ExtraApiTests(unittest.TestCase):
         except urllib.error.HTTPError as exc:
             self.assertEqual(exc.code, 404)
 
+    def test_expire_api(self) -> None:
+        import time
+        _req("POST", self.base + "/v1/tasks", {"capability": "exp", "ttl_s": 0.01})
+        time.sleep(0.03)
+        status, body, _ = _req("POST", self.base + "/v1/maintenance/expire", {})
+        self.assertEqual(status, 200)
+        self.assertGreaterEqual(body["data"]["expired"], 0)
+
     def test_ttl_api(self) -> None:
         import time
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ttl", "ttl_s": 0.01})
