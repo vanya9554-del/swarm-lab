@@ -102,7 +102,6 @@ class HardeningTests(unittest.TestCase):
         os.environ["SWARMLAB_RATE_RPS"] = "2"
         statuses = [_get(self.base + "/health")[0] for _ in range(5)]
         self.assertIn(429, statuses)
-        self.assertEqual(getattr(resp, "headers", {}).get("Retry-After"), "1") if False else None
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
 
