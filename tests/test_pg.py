@@ -135,6 +135,7 @@ class PgTests(unittest.TestCase):
     def test_pg_http_sse(self) -> None:
         import threading
         import urllib.request
+
         from swarmlab.api import build_server
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
