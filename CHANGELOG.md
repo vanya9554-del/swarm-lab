@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.10.0] — 2026-11-16
+
+CI quality gates.
+
+### Добавлено
+- CI: `--fail-under=90` + manifest validation; 103 теста.
+
 ## [5.9.0] — 2026-11-15
 
 CI fix + SSE failure path.

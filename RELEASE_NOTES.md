@@ -1,3 +1,7 @@
+# swarm-lab v5.10.0
+
+CI gates: coverage >=90, manifest validation.
+
 # swarm-lab v5.9.0
 
 CI broken-pipe fix, SSE failure path, 103 tests.
