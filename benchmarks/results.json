@@ -1,0 +1,14 @@
+{
+  "backend": "sqlite",
+  "tasks": 200,
+  "workers": 8,
+  "completed": 200,
+  "seconds": 0.037,
+  "tasks_per_sec": 5412.4,
+  "latency_ms": {
+    "p50": 1.088,
+    "p95": 2.917,
+    "mean": 1.266
+  },
+  "errors": []
+}

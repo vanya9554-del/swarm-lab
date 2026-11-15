@@ -10,10 +10,11 @@
   SSE, batch, bearer token, CLI `serve`; 5 tests.
 - **S3 MCP**: tools/resources/prompts, HTTP `/mcp`, stdio `python -m swarmlab mcp`; 7 tests total.
 - **S4 PostgreSQL**: `swarmlab/pg.py`, `open_store(dsn)`, multi-replica claim, tests 9 total.
+- **S5 load/chaos**: `scripts/bench.py`, `BENCH.md`, 50-task PG multi-replica/stale test; **10 tests**; SQLite 5412 tasks/s, p50 1.09ms/p95 2.92ms.
 
 ## В работе
 
-- S5 load/chaos.
+- S6 hardening Docker/CI.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

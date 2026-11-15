@@ -26,6 +26,14 @@ curl -sS -X POST localhost:8788/v1/tasks -H 'Content-Type: application/json' \
   -d '{"capability":"search","payload":{"q":"x"}}'
 ```
 
+## Benchmark
+
+```bash
+python scripts/bench.py --backend sqlite --tasks 200 --workers 8
+```
+
+См. `BENCH.md`: 5412 tasks/s, p50 1.09 ms (SQLite, локально).
+
 ## Статус
 
 Статус: v0.1.0, работает store + HTTP API/SSE/batch. S3 MCP — следующий шаг. План — `PLAN.md`, протокол — `SPEC.md`, автономный runbook — `../NIGHT_SHIFT.md`.
