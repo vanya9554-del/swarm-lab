@@ -1,8 +1,6 @@
 """MCP (JSON-RPC 2024-11-05) для swarm-lab: tools/resources/prompts."""
 from __future__ import annotations
 
-import os
-
 import json
 import sys
 from typing import Any, TextIO
