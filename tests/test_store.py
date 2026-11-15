@@ -39,6 +39,10 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_get_agent(self) -> None:
+        self.assertEqual(self.store.get_agent("a1")["agent_id"], "a1")
+        self.assertIsNone(self.store.get_agent("nope"))
+
     def test_deregister(self) -> None:
         self.assertTrue(self.store.deregister("a1")["deleted"])
         self.assertNotIn("a1", {a["agent_id"] for a in self.store.discover("search")})

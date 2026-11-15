@@ -109,6 +109,13 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             resp.close()
 
+    def test_agent_api(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "prof", "capabilities": ["p"]})
+        status, body, _ = _req("GET", self.base + "/v1/agents/prof")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["agent_id"], "prof")
+        self.assertEqual(_req("GET", self.base + "/v1/agents/nope")[0], 404)
+
     def test_api_error_branches(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "err"})
         task_id = body["data"]["task_id"]

@@ -139,6 +139,9 @@ class McpDispatcher:
                 ))
             if name == "swarm_expire":
                 return _text(self.store.expire())
+            if name == "swarm_get_agent":
+                agent = self.store.get_agent(str(args.get("agent_id") or ""))
+                return _text(agent) if agent is not None else _err("NOT_FOUND", "agent not found")
             if name == "swarm_deregister":
                 return _text(self.store.deregister(str(args.get("agent_id") or "")))
             if name == "swarm_requeue":
@@ -209,6 +212,7 @@ TOOLS: tuple[dict[str, Any], ...] = (
     {"name": "swarm_claim", "description": "Claim task", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "capability": {"type": "string"}, "lease_s": {"type": "number"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_complete", "description": "Complete task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}, "result": {}, "success": {"type": "boolean"}, "fence": {"type": "integer"}}, "required": ["task_id", "agent_id"], "additionalProperties": False}},
     {"name": "swarm_expire", "description": "Expire pending TTL tasks", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
+    {"name": "swarm_get_agent", "description": "Get agent profile", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_deregister", "description": "Deregister agent", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_requeue", "description": "Requeue cancelled/failed task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},
     {"name": "swarm_cancel", "description": "Cancel task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},

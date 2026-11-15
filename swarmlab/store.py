@@ -138,6 +138,13 @@ class SwarmStore:
             raise SwarmError("NOT_FOUND", f"agent {agent_id} not found")
         return {"agent_id": agent_id, "status": status, "last_seen_at": now}
 
+    def get_agent(self, agent_id: str) -> dict[str, Any] | None:
+        row = self._one("SELECT * FROM agents WHERE agent_id = ?", (agent_id,))
+        if not row:
+            return None
+        row["capabilities"] = json.loads(row.get("capabilities") or "[]")
+        return row
+
     def deregister(self, agent_id: str) -> dict[str, Any]:
         with self.lock:
             deleted = self.conn.execute("DELETE FROM agents WHERE agent_id=?", (agent_id,)).rowcount

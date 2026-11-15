@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.17.0] — 2026-11-16
+
+Agent profile API.
+
+### Добавлено
+- `GET /v1/agents/{id}`, MCP `swarm_get_agent`; 113 тестов.
+
 ## [5.16.0] — 2026-11-16
 
 API error branches.

@@ -1,3 +1,7 @@
+# swarm-lab v5.17.0
+
+Agent profile API/MCP, 113 tests.
+
 # swarm-lab v5.16.0
 
 API error branches, 110 tests, 96.9%.

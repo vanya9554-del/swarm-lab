@@ -22,7 +22,10 @@ def spec() -> dict[str, Any]:
                 "get": {"summary": "Discover agents"},
                 "post": {"summary": "Register agent"},
             },
-            "/v1/agents/{agent_id}": {"delete": {"summary": "Deregister agent"}},
+            "/v1/agents/{agent_id}": {
+                "get": {"summary": "Get agent profile"},
+                "delete": {"summary": "Deregister agent"},
+            },
             "/v1/heartbeat": {"post": {"summary": "Agent heartbeat"}},
             "/v1/tasks": {
                 "get": {"summary": "List tasks"},

@@ -161,6 +161,10 @@ class PgSwarmStore:
             raise RuntimeError(f"agent {agent_id} not found")
         return {"agent_id": agent_id, "status": status, "last_seen_at": now}
 
+    def get_agent(self, agent_id: str) -> dict[str, Any] | None:
+        row = self._one("SELECT * FROM agents WHERE agent_id = %s", (agent_id,))
+        return self._decode(row) if row else None
+
     def deregister(self, agent_id: str) -> dict[str, Any]:
         with self.lock:
             with self.conn.cursor() as cur:

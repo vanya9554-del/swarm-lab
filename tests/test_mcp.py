@@ -81,6 +81,11 @@ class McpTests(unittest.TestCase):
         cancelled = self._text(self._call("swarm_cancel", {"task_id": submitted["task_id"]}))
         self.assertEqual(cancelled["status"], "cancelled")
 
+    def test_get_agent_tool(self) -> None:
+        self._call("swarm_register", {"agent_id": "ag", "capabilities": ["x"]})
+        self.assertEqual(self._text(self._call("swarm_get_agent", {"agent_id": "ag"}))["agent_id"], "ag")
+        self.assertTrue(self._call("swarm_get_agent", {"agent_id": "nope"})["isError"])
+
     def test_get_task_tool(self) -> None:
         submitted = self._text(self._call("swarm_submit", {"capability": "g"}))
         got = self._text(self._call("swarm_get_task", {"task_id": submitted["task_id"]}))
