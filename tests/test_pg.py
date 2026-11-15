@@ -101,6 +101,7 @@ class PgTests(unittest.TestCase):
 
     def test_ttl(self) -> None:
         import time
+
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
