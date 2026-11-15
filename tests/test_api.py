@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import json
@@ -67,7 +66,7 @@ class ApiTests(unittest.TestCase):
         req = urllib.request.Request(self.base + "/v1/stream?after=0&limit=1&timeout_s=1", method="GET")
         with urllib.request.urlopen(req, timeout=3) as resp:
             line = resp.readline().decode().strip()
-        self.assertTrue(line.startswith("id:") or line.startswith("data:"))
+        self.assertTrue(line.startswith(("id:", "data:")))
 
 
 if __name__ == "__main__":

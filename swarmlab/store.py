@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """swarm-lab: agent-native task market (SQLite)."""
 from __future__ import annotations
 

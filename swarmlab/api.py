@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Minimal agent-native HTTP API: JSON, batch, SSE. No UI."""
 from __future__ import annotations
 
@@ -116,10 +115,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
             if not scopes:
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
-        elif self.swarm.token:
-            if header != f"Bearer {self.swarm.token}":
-                self._error(401, "UNAUTHORIZED", "invalid bearer token")
-                return False
+        elif self.swarm.token and header != f"Bearer {self.swarm.token}":
+            self._error(401, "UNAUTHORIZED", "invalid bearer token")
+            return False
         needed = "write" if self.command == "POST" else "read"
         if needed not in scopes:
             self._error(403, "FORBIDDEN", f"scope '{needed}' required")
@@ -142,7 +140,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
             raise SwarmError("BAD_REQUEST", "body must be object")
         return value
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if not self._auth():
             return
         if not self._rate_ok():
@@ -188,7 +186,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         except SwarmError as exc:
             self._error(400 if exc.code in ("BAD_REQUEST", "BAD_JSON", "PAYLOAD_TOO_LARGE") else 409, exc.code, exc.message)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         if not self._auth():
             return
         if not self._rate_ok():
@@ -303,13 +301,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
             try:
                 from .events import PgEventStream
                 listener = PgEventStream(self.swarm.store.dsn)
-            except Exception:  # noqa: BLE001, S110
+            except Exception:  # noqa: BLE001
                 listener = None
         try:
             while sent < limit and time.time() < deadline:
                 events = self.swarm.store.events(after, min(50, limit - sent))
                 for event in events:
-                    self.wfile.write(f"id: {event['seq']}\ndata: {json.dumps(event, ensure_ascii=False, default=str)}\n\n".encode("utf-8"))
+                    self.wfile.write(f"id: {event['seq']}\ndata: {json.dumps(event, ensure_ascii=False, default=str)}\n\n".encode())
                     after = int(event["seq"])
                     sent += 1
                 self.wfile.flush()

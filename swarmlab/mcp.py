@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """MCP (JSON-RPC 2024-11-05) для swarm-lab: tools/resources/prompts."""
 from __future__ import annotations
 

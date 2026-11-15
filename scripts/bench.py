@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """swarm-lab benchmark: tasks/sec и latency claim+complete.
 
 SQLite:
@@ -26,7 +25,7 @@ def pct(values: list[float], q: float) -> float:
     if not values:
         return 0.0
     values = sorted(values)
-    return round(values[min(len(values) - 1, max(0, int(round((len(values) - 1) * q))))], 3)
+    return round(values[min(len(values) - 1, max(0, round((len(values) - 1) * q)))], 3)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,7 +36,6 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--output", default="benchmarks/results.json")
     args = ap.parse_args(argv)
-    from swarmlab import open_store
     from swarmlab.pg import PgSwarmStore
     from swarmlab.store import SwarmStore
 

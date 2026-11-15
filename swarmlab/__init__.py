@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """swarm-lab — agent-native swarm runtime."""
 from __future__ import annotations
 

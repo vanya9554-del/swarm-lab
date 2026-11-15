@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """swarm-lab PostgreSQL backend (optional): multi-replica claim."""
 from __future__ import annotations
 
@@ -48,7 +47,7 @@ def available() -> bool:
     try:
         import psycopg  # noqa: F401
         return True
-    except Exception:  # noqa: BLE001, S110
+    except Exception:  # noqa: BLE001
         return False
 
 
@@ -66,7 +65,6 @@ class PgSwarmStore:
     def __init__(self, dsn: str) -> None:
         if not available():
             raise RuntimeError("psycopg is not installed")
-        import psycopg
         from psycopg.rows import dict_row
 
         self.dsn = str(dsn)
@@ -76,6 +74,7 @@ class PgSwarmStore:
 
     def _connect(self) -> None:
         import os
+
         import psycopg
 
         attempts = max(1, int(os.environ.get("SWARMLAB_PG_ATTEMPTS", "2")))
@@ -105,18 +104,16 @@ class PgSwarmStore:
 
     def _one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
         self._ensure()
-        with self.lock:
-            with self.conn.cursor() as cur:
-                cur.execute(sql, params)
-                row = cur.fetchone()
-                return dict(row) if row else None
+        with self.lock, self.conn.cursor() as cur:
+            cur.execute(sql, params)
+            row = cur.fetchone()
+            return dict(row) if row else None
 
     def _all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         self._ensure()
-        with self.lock:
-            with self.conn.cursor() as cur:
-                cur.execute(sql, params)
-                return [dict(row) for row in cur.fetchall()]
+        with self.lock, self.conn.cursor() as cur:
+            cur.execute(sql, params)
+            return [dict(row) for row in cur.fetchall()]
 
     def event(self, event_type: str, payload: dict[str, Any]) -> int:
         self._ensure()

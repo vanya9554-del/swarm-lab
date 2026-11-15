@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Prometheus-совместимые метрики swarm-lab."""
 from __future__ import annotations
 
@@ -50,7 +49,7 @@ class SwarmMetrics:
             lines.append(f"swarmlab_events_total {(stats.get('events') or {}).get('total', 0)}")
         except Exception:  # noqa: BLE001, S110
             pass
-        lines.append(f"# HELP swarmlab_uptime_seconds Uptime")
+        lines.append("# HELP swarmlab_uptime_seconds Uptime")
         lines.append("# TYPE swarmlab_uptime_seconds gauge")
         lines.append(f"swarmlab_uptime_seconds {time.time() - self._started:.1f}")
         lines.append("")

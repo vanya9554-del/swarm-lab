@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Release 1.0 artifacts: SBOM, checksums, notes."""
 from __future__ import annotations
 

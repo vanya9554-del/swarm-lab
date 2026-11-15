@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
 """swarm-lab CLI (bootstrap)."""
 from __future__ import annotations
 
 import argparse
 import json
-import sys
 
-from . import __version__
-from .store import SwarmStore
-from . import open_store
+from . import __version__, open_store
 
 
 def main(argv: list[str] | None = None) -> int:

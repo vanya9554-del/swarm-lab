@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """PostgreSQL LISTEN/NOTIFY для SSE swarm-lab."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Self
 
 CHANNEL = "swarmlab_events"
 
@@ -11,7 +10,7 @@ def available() -> bool:
     try:
         import psycopg  # noqa: F401
         return True
-    except Exception:  # noqa: BLE001, S110
+    except Exception:  # noqa: BLE001
         return False
 
 
@@ -31,7 +30,7 @@ class PgEventStream:
             for notify in self.conn.notifies(timeout=max(0.01, float(timeout))):
                 payload = str(notify.payload)
                 return int(payload) if payload.isdigit() else None
-        except Exception:  # noqa: BLE001, S110
+        except Exception:  # noqa: BLE001
             return None
         return None
 
@@ -41,10 +40,10 @@ class PgEventStream:
         except Exception:  # noqa: BLE001, S110
             pass
 
-    def __enter__(self) -> "PgEventStream":
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.close()
 
 

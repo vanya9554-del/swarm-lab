@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import os
@@ -27,7 +26,7 @@ def _init(work: Path) -> Path:
     proc = subprocess.run(
         [str(initdb), "-D", str(pgdata), "--auth=trust", "--auth-local=trust",
          "--encoding=SQL_ASCII", "--locale=C", "-U", "postgres"],
-        text=True, capture_output=True,
+        check=False, text=True, capture_output=True,
     )
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr[-500:])

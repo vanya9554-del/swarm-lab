@@ -11,3 +11,10 @@ run:
 
 mcp:
 	python -m swarmlab mcp
+
+quality:
+	python -m ruff check swarmlab tests scripts
+	python -m coverage run --source=swarmlab -m unittest discover -s tests -q
+	python -m coverage report
+
+cov: quality
