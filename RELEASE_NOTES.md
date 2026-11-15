@@ -1,3 +1,7 @@
+# swarm-lab v2.3.0
+
+Task cancellation API/MCP/batch, 50 tests.
+
 # swarm-lab v2.2.0
 
 K8s PDB/NetworkPolicy, reconnect under load, 47 tests.

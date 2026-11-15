@@ -132,6 +132,8 @@ class McpDispatcher:
                     str(args.get("task_id") or ""), str(args.get("agent_id") or ""),
                     args.get("result"), success=bool(args.get("success", True)), fence=fence,
                 ))
+            if name == "swarm_cancel":
+                return _text(self.store.cancel(str(args.get("task_id") or ""), args.get("agent_id")))
             if name == "swarm_renew":
                 fence = int(args["fence"]) if args.get("fence") is not None else None
                 return _text(self.store.renew(
@@ -164,7 +166,7 @@ class McpDispatcher:
         mapping = {
             "stats": "swarm_stats", "discover": "swarm_discover", "events": "swarm_events",
             "submit": "swarm_submit", "claim": "swarm_claim", "complete": "swarm_complete",
-            "renew": "swarm_renew", "register": "swarm_register",
+            "renew": "swarm_renew", "cancel": "swarm_cancel", "register": "swarm_register",
         }
         tool = mapping.get(name)
         if not tool:
@@ -195,6 +197,7 @@ TOOLS: tuple[dict[str, Any], ...] = (
     {"name": "swarm_submit", "description": "Submit task", "inputSchema": {"type": "object", "properties": {"capability": {"type": "string"}, "payload": {}, "priority": {"type": "integer"}, "dedup_key": {"type": "string"}, "affinity_agent_id": {"type": "string"}}, "required": ["capability"], "additionalProperties": False}},
     {"name": "swarm_claim", "description": "Claim task", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "capability": {"type": "string"}, "lease_s": {"type": "number"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_complete", "description": "Complete task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}, "result": {}, "success": {"type": "boolean"}, "fence": {"type": "integer"}}, "required": ["task_id", "agent_id"], "additionalProperties": False}},
+    {"name": "swarm_cancel", "description": "Cancel task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}}, "required": ["task_id"], "additionalProperties": False}},
     {"name": "swarm_renew", "description": "Renew lease", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}, "lease_s": {"type": "number"}, "fence": {"type": "integer"}}, "required": ["task_id", "agent_id"], "additionalProperties": False}},
     {"name": "swarm_batch", "description": "Batch ops", "inputSchema": {"type": "object", "properties": {"ops": {"type": "array", "items": {"type": "object"}}}, "required": ["ops"], "additionalProperties": False}},
 )

@@ -270,6 +270,20 @@ class PgSwarmStore:
         self.event("task." + status, {"task_id": task_id, "agent_id": agent_id})
         return {"task_id": task_id, "status": status, "completed_at": now}
 
+    def cancel(self, task_id: str, agent_id: str | None = None) -> dict[str, Any]:
+        task = self.get(task_id)
+        if not task:
+            raise RuntimeError("NOT_FOUND")
+        if task.get("status") in ("completed", "failed", "cancelled"):
+            return {**task, "idempotent": True}
+        if agent_id and task.get("claimed_by") and task["claimed_by"] != agent_id:
+            raise RuntimeError("FORBIDDEN")
+        with self.lock:
+            self.conn.execute("UPDATE tasks SET status='cancelled' WHERE task_id=%s", (task_id,))
+            self.conn.commit()
+        self.event("task.cancelled", {"task_id": task_id, "agent_id": agent_id})
+        return self.get(task_id) or {"task_id": task_id, "status": "cancelled"}
+
     def renew(self, task_id: str, agent_id: str, lease_s: float = 60.0, fence: int | None = None) -> dict[str, Any]:
         task = self.get(task_id)
         if not task or task.get("claimed_by") != agent_id:

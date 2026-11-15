@@ -25,6 +25,7 @@ ROUTES = {
     ("GET", "/v1/agents"),
     ("POST", "/v1/heartbeat"),
     ("POST", "/v1/tasks"),
+    ("POST", "/v1/tasks/{task_id}/cancel"),
     ("GET", "/v1/tasks"),
     ("GET", "/v1/tasks/{task_id}"),
     ("POST", "/v1/tasks/claim"),
@@ -34,7 +35,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
-TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew)$")
+TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel)$")
 
 
 def _json(data: Any) -> bytes:
@@ -278,7 +279,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 task_id, action = match.group(1), match.group(2)
                 agent_id = str(body.get("agent_id") or "")
                 fence = int(body["fence"]) if body.get("fence") is not None else None
-                if action == "complete":
+                if action == "cancel":
+                    data = self.swarm.store.cancel(task_id, agent_id or None)
+                elif action == "complete":
                     data = self.swarm.store.complete(
                         task_id, agent_id, body.get("result"), success=bool(body.get("success", True)), fence=fence
                     )
@@ -312,6 +315,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                         str(op.get("task_id") or ""), agent, op.get("result"),
                         fence=int(op["fence"]) if op.get("fence") is not None else None,
                     )
+                elif name == "cancel":
+                    data = self.swarm.store.cancel(str(op.get("task_id") or ""), agent or None)
                 elif name == "renew":
                     data = self.swarm.store.renew(
                         str(op.get("task_id") or ""), agent, float(op.get("lease_s") or 60),

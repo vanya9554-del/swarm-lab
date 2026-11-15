@@ -73,6 +73,14 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_cancel_api(self) -> None:
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "c"})
+        task_id = body["data"]["task_id"]
+        status, body, _ = _req("POST", self.base + f"/v1/tasks/{task_id}/cancel", {})
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["status"], "cancelled")
+        self.assertEqual(_req("POST", self.base + "/v1/tasks/nope/cancel", {})[0], 404)
+
     def test_get_task(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "g"})
         task_id = body["data"]["task_id"]

@@ -259,6 +259,19 @@ class SwarmStore:
         self.event("task." + status, {"task_id": task_id, "agent_id": agent_id})
         return {"task_id": task_id, "status": status, "completed_at": now}
 
+    def cancel(self, task_id: str, agent_id: str | None = None) -> dict[str, Any]:
+        task = self.get(task_id)
+        if not task:
+            raise SwarmError("NOT_FOUND", "task not found")
+        if task.get("status") in ("completed", "failed", "cancelled"):
+            return {**task, "idempotent": True}
+        if agent_id and task.get("claimed_by") and task["claimed_by"] != agent_id:
+            raise SwarmError("FORBIDDEN", "task is claimed by another agent")
+        with self.lock:
+            self.conn.execute("UPDATE tasks SET status='cancelled' WHERE task_id=?", (task_id,))
+        self.event("task.cancelled", {"task_id": task_id, "agent_id": agent_id})
+        return self.get(task_id) or {"task_id": task_id, "status": "cancelled"}
+
     def renew(self, task_id: str, agent_id: str, lease_s: float = 60.0, fence: int | None = None) -> dict[str, Any]:
         task = self.get(task_id)
         if not task:

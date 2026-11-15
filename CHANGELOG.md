@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [2.3.0] — 2026-11-15
+
+Task cancellation.
+
+### Добавлено
+- `POST /v1/tasks/{id}/cancel`, MCP `swarm_cancel`, batch `cancel`.
+- Ownership guard, idempotent cancel; 50 тестов.
+
 ## [2.2.0] — 2026-11-15
 
 Deploy/K8s + reconnect chaos.

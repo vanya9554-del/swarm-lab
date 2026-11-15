@@ -39,6 +39,18 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_cancel(self) -> None:
+        t = self.store.submit("x", {})
+        self.assertEqual(self.store.cancel(t["task_id"])["status"], "cancelled")
+        self.assertTrue(self.store.cancel(t["task_id"]).get("idempotent"))
+        claimed = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        self.assertEqual(self.store.cancel(claimed["task_id"], "a1")["status"], "cancelled")
+        other = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        with self.assertRaises(SwarmError):
+            self.store.cancel(other["task_id"], "a2")
+
     def test_affinity_priority_and_events(self) -> None:
         low = self.store.submit("search", {"n": 1}, priority=1)
         high = self.store.submit("search", {"n": 2}, priority=9)
