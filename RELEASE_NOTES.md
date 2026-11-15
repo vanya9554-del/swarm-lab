@@ -1,3 +1,7 @@
+# swarm-lab v5.3.0
+
+MCP failure paths, 96 tests.
+
 # swarm-lab v5.2.0
 
 SWARMLAB_LEASE_S, 96 tests.

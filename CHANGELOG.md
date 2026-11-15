@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.3.0] — 2026-11-15
+
+MCP failure paths.
+
+### Добавлено
+- unknown tool, tool error, stdio parse error; 96 тестов.
+
 ## [5.2.0] — 2026-11-15
 
 Configurable lease.
