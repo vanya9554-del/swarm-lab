@@ -153,6 +153,7 @@ class PgTests(unittest.TestCase):
 
     def test_backpressure(self) -> None:
         import os
+
         from swarmlab.pg import PgSwarmStore
         os.environ["SWARMLAB_MAX_PENDING"] = "1"
         try:
