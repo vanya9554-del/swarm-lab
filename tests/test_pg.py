@@ -184,6 +184,7 @@ class PgTests(unittest.TestCase):
 
     def test_decode(self) -> None:
         import time
+
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
