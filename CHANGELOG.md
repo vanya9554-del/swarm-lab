@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.4.0] — 2026-11-15
+
+Harness isolation.
+
+### Исправлено
+- Night harness запускает только smoke-тесты (39), не конкурирует с полным suite; 96 тестов.
+
 ## [5.3.0] — 2026-11-15
 
 MCP failure paths.

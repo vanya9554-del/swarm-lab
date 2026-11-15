@@ -3,7 +3,7 @@
 `scripts/night_harness.py` работает **независимо от model-turn'ов**:
 - каждые 5с: health/ensure server, submit→claim→complete цикл;
 - каждую 1с: tick; JSONL `data/night_harness.jsonl`;
-- каждые 15мин: `unittest` (без остановки цикла);
+- каждые 15мин: smoke-тесты (`store/errors/hardening/mcp`), чтобы не пересекаться с полным прогоном;
 - до `2026-11-16T12:00:00+03:00`.
 
 Запуск:

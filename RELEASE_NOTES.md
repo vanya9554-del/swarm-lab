@@ -1,3 +1,7 @@
+# swarm-lab v5.4.0
+
+Harness smoke-only tests, 96 tests.
+
 # swarm-lab v5.3.0
 
 MCP failure paths, 96 tests.

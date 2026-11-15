@@ -115,7 +115,8 @@ def main(argv: list[str] | None = None) -> int:
             if started - last_test >= 900:
                 last_test = started
                 proc = subprocess.run(
-                    [PYTHON, "-m", "unittest", "discover", "-s", "tests", "-q"],
+                    [PYTHON, "-m", "unittest", "tests.test_store", "tests.test_errors",
+                     "tests.test_hardening", "tests.test_mcp", "-q"],
                     check=False, cwd=str(ROOT), capture_output=True, text=True, timeout=300,
                 )
                 log({"event": "tests", "returncode": proc.returncode, "tail": (proc.stderr or proc.stdout)[-500:]})
