@@ -1,3 +1,7 @@
+# swarm-lab v4.0.0
+
+Milestone 4.0: OpenAPI 3.1 discovery, 78 tests.
+
 # swarm-lab v3.9.0
 
 Health version/uptime, 77 tests.

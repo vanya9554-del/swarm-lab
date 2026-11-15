@@ -14,6 +14,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import __version__
 from .mcp import McpDispatcher
+from .openapi import spec as openapi_spec
 from .metrics import CONTENT_TYPE as METRICS_TYPE
 from .metrics import SwarmMetrics
 from .store import SwarmError, SwarmStore
@@ -25,6 +26,7 @@ ROUTES = {
     ("GET", "/v1/stats"),
     ("GET", "/v1/version"),
     ("GET", "/v1/capabilities"),
+    ("GET", "/v1/openapi"),
     ("POST", "/v1/agents"),
     ("DELETE", "/v1/agents/{agent_id}"),
     ("GET", "/v1/agents"),
@@ -213,6 +215,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     "version": __version__,
                     "uptime_s": round(time.time() - self.swarm.started_at, 1),
                 })
+            elif path == "/v1/openapi":
+                self._send(200, openapi_spec())
             elif path == "/v1/version":
                 self._send(200, {"ok": True, "data": {"version": __version__, "name": "swarm-lab"}})
             elif path == "/v1/capabilities":

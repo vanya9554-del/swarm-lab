@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.0.0] — 2026-11-15
+
+Milestone 4.0: OpenAPI discovery.
+
+### Добавлено
+- `GET /v1/openapi` (OpenAPI 3.1); 78 тестов.
+
 ## [3.9.0] — 2026-11-15
 
 Health observability.

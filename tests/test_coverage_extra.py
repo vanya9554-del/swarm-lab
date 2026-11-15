@@ -73,6 +73,12 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_openapi(self) -> None:
+        status, body, _ = _req("GET", self.base + "/v1/openapi")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["openapi"], "3.1.0")
+        self.assertIn("/v1/tasks/{task_id}/complete", body["paths"])
+
     def test_version_capabilities(self) -> None:
         status, body, _ = _req("GET", self.base + "/v1/version")
         self.assertEqual(status, 200)
