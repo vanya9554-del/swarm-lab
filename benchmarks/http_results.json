@@ -1,0 +1,18 @@
+{
+  "tasks": 200,
+  "workers": 8,
+  "completed": 193,
+  "seconds": 1.762,
+  "tasks_per_sec": 109.5,
+  "latency_ms": {
+    "p50": 2.185,
+    "p95": 31.945,
+    "mean": 10.297
+  },
+  "errors": [
+    "404:{'ok': False, 'error': {'code': 'NOT_FOUND', 'message': 'task not found'}}",
+    "404:{'ok': False, 'error': {'code': 'NOT_FOUND', 'message': 'task not found'}}",
+    "404:{'ok': False, 'error': {'code': 'NOT_FOUND', 'message': 'task not found'}}",
+    "404:{'ok': False, 'error': {'code': 'NOT_FOUND', 'message': 'task not found'}}"
+  ]
+}

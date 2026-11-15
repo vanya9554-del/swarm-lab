@@ -41,6 +41,16 @@ def _json(data: Any) -> bytes:
 
 class SwarmHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
+    allow_reuse_address = True
+    request_queue_size = 128
+
+    def server_bind(self) -> None:
+        super().server_bind()
+        try:
+            import socket
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
 
     def __init__(self, addr: tuple[str, int], store: SwarmStore, token: str | None = None) -> None:
         self.store = store

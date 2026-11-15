@@ -1,19 +1,19 @@
 # ACCEPTANCE — swarm-lab 1.0
 
-**Дата:** 15.11.2026 · **Версия:** 1.3.0 · **Проект:** agent-native swarm runtime (без UI).
+**Дата:** 15.11.2026 · **Версия:** 1.4.0 · **Проект:** agent-native swarm runtime (без UI).
 
 ## Матрикс
 
 | Проверка | Результат |
 |---|---|
-| unittest | **23/23 OK** (store, API, MCP, PG, load, hardening) |
+| unittest | **26/26 OK** (store, API, MCP, PG, load, hardening) |
 | SQLite engine | task market, priority, affinity, dedup, lease/fence |
 | HTTP API | register/discover/submit/claim/complete/renew/events/stream/batch/stats |
 | SSE | event stream, `after=seq`; PG LISTEN/NOTIFY |
 | MCP | tools/resources/prompts, stdio + HTTP `/mcp` |
 | PostgreSQL | 3 replica chaos 100 tasks; 2 replica atomic claim `FOR UPDATE SKIP LOCKED`, stale fence |
 | Load | SQLite 200 tasks/8 workers: **5412 tasks/s**, p50 **1.088 ms**, p95 **2.917 ms** |
-| Quality | coverage 80%, ruff 0 |
+| Quality | coverage 86%, ruff 0 |
 | Observability | X-Request-Id, latency histogram |
 | Hardening | scopes/RBAC, bearer token, rate limit per token, backpressure 429, body limit, headers, `/metrics` |
 | Deploy | Dockerfile, compose (SQLite/PG), K8s manifests, CI |

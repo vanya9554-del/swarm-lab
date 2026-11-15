@@ -99,6 +99,29 @@ class PgTests(unittest.TestCase):
             a.close()
             b.close()
 
+    def test_more_methods(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("m1", ["a"])
+            s.register("m2", ["a"])
+            self.assertEqual(s.heartbeat("m1")["agent_id"], "m1")
+            self.assertEqual(len(s.discover("a")), 2)
+            task = s.submit("a", {"n": 1}, priority=5)
+            duplicate = s.submit("a", {}, dedup_key="pg-more")
+            self.assertTrue(s.submit("a", {}, dedup_key="pg-more").get("duplicate"))
+            claimed = s.claim("m1", "a")
+            self.assertEqual(claimed["task_id"], task["task_id"])
+            s.renew(task["task_id"], "m1", 30, claimed["lease_epoch"])
+            self.assertIn("a", {r["capability"] for r in s.tasks("claimed")})
+            self.assertGreaterEqual(len(s.events(0, 20)), 2)
+            s.complete(task["task_id"], "m1", {}, fence=claimed["lease_epoch"])
+            self.assertTrue(s.complete(task["task_id"], "m1", {}, fence=claimed["lease_epoch"]).get("idempotent"))
+            self.assertIn("agents", s.stats())
+            self.assertIsNotNone(duplicate)
+        finally:
+            s.close()
+
     def test_reconnect_after_connection_close(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

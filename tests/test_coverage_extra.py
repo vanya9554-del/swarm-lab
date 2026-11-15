@@ -61,6 +61,23 @@ class ExtraApiTests(unittest.TestCase):
         self.thread.join(timeout=5)
         self.store.close()
 
+    def test_renew_and_stream(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "r", "capabilities": ["x"]})
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "x"})
+        task_id = body["data"]["task_id"]
+        _, body, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "r", "capability": "x"})
+        fence = body["data"]["lease_epoch"]
+        status, renewed, _ = _req("POST", self.base + f"/v1/tasks/{task_id}/renew", {"agent_id": "r", "fence": fence})
+        self.assertEqual(status, 200)
+        self.assertIn("lease_until", renewed["data"])
+        status, _, _ = _req("GET", self.base + "/v1/tasks?status=claimed")
+        self.assertEqual(status, 200)
+        status, _, _ = _req("POST", self.base + "/v1/batch", {"ops": [{"op": "nope"}]})
+        self.assertEqual(status, 200)
+        req = urllib.request.Request(self.base + "/v1/stream?after=0&limit=1&timeout_s=0.2", method="GET")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            self.assertEqual(resp.status, 200)
+
     def test_get_routes_and_errors(self) -> None:
         status, _, headers = _req("GET", self.base + "/v1/stats")
         self.assertEqual(status, 200)

@@ -1,3 +1,7 @@
+# swarm-lab v1.4.0
+
+Transport tuning, request IDs, latency histogram, coverage 86%, 26 tests.
+
 # swarm-lab v1.3.0
 
 Request IDs, latency histogram, coverage 80%, 23 tests.

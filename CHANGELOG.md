@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [1.4.0] — 2026-11-15
+
+Transport/observability/coverage.
+
+### Добавлено
+- TCP_NODELAY, request_queue_size=128.
+- Coverage **86%**, 26 тестов; MCP/stdio edge paths.
+- Request-id и latency histogram; HTTP benchmark script.
+
 ## [1.3.0] — 2026-11-15
 
 Observability/coverage.

@@ -14,6 +14,26 @@ class ErrorTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.store.close()
 
+    def test_stdio_and_more_tools(self) -> None:
+        import io
+
+        from swarmlab.mcp import main_stdio
+        src = io.StringIO('{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n')
+        out = io.StringIO()
+        main_stdio(self.store, stdin=src, stdout=out)
+        self.assertIn('"result"', out.getvalue())
+        self.mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "resources/read", "params": {"uri": "swarm://events"}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 3, "method": "prompts/get", "params": {"name": "swarm_planner", "arguments": {"goal": "x"}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 4, "method": "prompts/get", "params": {"name": "bad"}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 5, "method": "tools/list"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 6, "method": "resources/list"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 7, "method": "notifications/initialized"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 8, "method": "ping"})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "swarm_discover", "arguments": {}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "swarm_events", "arguments": {}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 11, "method": "tools/call", "params": {"name": "swarm_batch", "arguments": {"ops": [{"op": "register", "agent_id": "z", "capabilities": ["x"]}, {"op": "submit", "capability": "x"}, {"op": "claim", "agent_id": "z", "capability": "x"}, {"op": "renew", "task_id": "bad", "agent_id": "z"}, {"op": "complete", "task_id": "bad", "agent_id": "z"}]}}})
+        self.mcp.handle({"jsonrpc": "2.0", "id": 12, "method": "resources/read", "params": {"uri": "swarm://events"}})
+
     def test_mcp_errors_and_batch(self) -> None:
         unknown = self.mcp.handle({"jsonrpc": "2.0", "id": 1, "method": "nope"})
         self.assertIn("error", unknown)
