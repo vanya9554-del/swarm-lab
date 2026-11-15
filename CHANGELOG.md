@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.11.0] — 2026-11-16
+
+SSE listener coverage.
+
+### Добавлено
+- PG SSE listener success/failure; TCP_NODELAY error path; coverage 96,4%, 105 тестов.
+
 ## [5.10.1] — 2026-11-16
 
 CI green.

@@ -102,6 +102,33 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_stream_listener_success(self) -> None:
+        import threading
+        from unittest.mock import patch
+        from swarmlab.api import build_server
+        store = SwarmStore(":memory:")
+        store.dsn = "postgresql://x"
+        store.backend = "postgres"
+        other = build_server(store, "127.0.0.1", 0)
+        thread = threading.Thread(target=other.serve_forever, daemon=True)
+        thread.start()
+        base = f"http://127.0.0.1:{other.server_address[1]}"
+        class FakeListener:
+            def wait(self, timeout=None):
+                return None
+            def close(self):
+                return None
+        try:
+            with patch("swarmlab.events.PgEventStream", return_value=FakeListener()):
+                resp = urllib.request.urlopen(base + "/v1/stream?after=0&limit=1&timeout_s=0.1", timeout=5)
+                try:
+                    self.assertEqual(resp.status, 200)
+                    resp.read()
+                finally:
+                    resp.close()
+        finally:
+            other.shutdown(); other.server_close(); thread.join(timeout=5)
+
     def test_stream_listener_failure(self) -> None:
         import threading
         from unittest.mock import patch
@@ -109,6 +136,7 @@ class ExtraApiTests(unittest.TestCase):
         from swarmlab.api import build_server
         store = SwarmStore(":memory:")
         store.dsn = "postgresql://x"
+        store.backend = "postgres"
         other = build_server(store, "127.0.0.1", 0)
         thread = threading.Thread(target=other.serve_forever, daemon=True)
         thread.start()

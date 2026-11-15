@@ -44,6 +44,22 @@ class HardeningTests(unittest.TestCase):
         self.store.close()
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
+    def test_tcp_nodelay_error(self) -> None:
+        import socket
+        from unittest.mock import patch
+        from swarmlab.api import build_server
+        from swarmlab.store import SwarmStore
+        original = socket.socket.setsockopt
+
+        def flaky(sock, level, opt, value):
+            if level == socket.IPPROTO_TCP and opt == socket.TCP_NODELAY:
+                raise OSError("no tcp nodelay")
+            return original(sock, level, opt, value)
+
+        with patch.object(socket.socket, "setsockopt", flaky):
+            other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0)
+        other.server_close()
+
     def test_gzip(self) -> None:
         import gzip
         # создаём достаточно большой ответ

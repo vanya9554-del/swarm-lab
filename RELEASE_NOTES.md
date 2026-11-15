@@ -1,3 +1,7 @@
+# swarm-lab v5.11.0
+
+SSE listener coverage, 105 tests, 96.4%.
+
 # swarm-lab v5.10.1
 
 CI green: SQLite coverage >=90 + manifest validation.
