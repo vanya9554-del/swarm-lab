@@ -45,6 +45,14 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_max_attempts_tool(self) -> None:
+        self._call("swarm_register", {"agent_id": "ma", "capabilities": ["ma"]})
+        submitted = self._text(self._call("swarm_submit", {"capability": "ma", "max_attempts": 1}))
+        claim = self._text(self._call("swarm_claim", {"agent_id": "ma", "capability": "ma"}))
+        self.assertEqual(claim["attempts"], 1)
+        got = self._text(self._call("swarm_get_task", {"task_id": submitted["task_id"]}))
+        self.assertEqual(got["max_attempts"], 1)
+
     def test_dependency_tool(self) -> None:
         self._call("swarm_register", {"agent_id": "dep", "capabilities": ["dep"]})
         first = self._text(self._call("swarm_submit", {"capability": "dep"}))

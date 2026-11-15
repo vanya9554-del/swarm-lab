@@ -45,11 +45,12 @@
 - **S38**: PG claim guards, coverage 93,6%, 71 тест; release 3.5.0.
 - **S39**: batch maintenance, coverage 94,0%, 72 теста; release 3.6.0.
 - **S40**: dead-letter attempts, 74 теста; release 3.7.0.
+- **S41**: HTTP bench 300/300, 76 тестов; release 3.8.0.
 - **S12 release 1.1**: PG NOTIFY/backpressure/chaos/deploy, tag v1.1.0; GitHub push.
 
 ## В работе
 
-- Post-3.7: live K8s, external audit, chaos.
+- Post-3.8: live K8s, external audit, chaos.
 - S4 PostgreSQL multi-replica (optional deps).
 - S5 load/chaos benchmark.
 

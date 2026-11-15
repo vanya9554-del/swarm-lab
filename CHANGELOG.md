@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [3.8.0] — 2026-11-15
+
+Bench re-validation.
+
+### Добавлено
+- HTTP 300/300, 586.7 tasks/s, p50 9.2 ms; attempts API/MCP tests; 76 тестов.
+
 ## [3.7.0] — 2026-11-15
 
 Dead-letter attempts.

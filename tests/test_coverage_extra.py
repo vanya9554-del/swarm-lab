@@ -93,6 +93,15 @@ class ExtraApiTests(unittest.TestCase):
         except urllib.error.HTTPError as exc:
             self.assertEqual(exc.code, 404)
 
+    def test_max_attempts_api(self) -> None:
+        _req("POST", self.base + "/v1/agents", {"agent_id": "ma", "capabilities": ["ma"]})
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ma", "max_attempts": 1})
+        task_id = body["data"]["task_id"]
+        _, claim, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "ma", "capability": "ma"})
+        self.assertEqual(claim["data"]["attempts"], 1)
+        _, task, _ = _req("GET", self.base + f"/v1/tasks/{task_id}")
+        self.assertEqual(task["data"]["max_attempts"], 1)
+
     def test_batch_maintenance(self) -> None:
         _req("POST", self.base + "/v1/agents", {"agent_id": "bm", "capabilities": ["bm"]})
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "bm"})

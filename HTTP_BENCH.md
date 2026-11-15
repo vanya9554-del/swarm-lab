@@ -19,3 +19,7 @@
 `sqlite3.InterfaceError: bad parameter or other API misuse` — `_one/_all` читали
 общий SQLite connection без `self.lock`, пока другой поток делал claim/commit.
 Исправлено: все чтения под `RLock`; регрессия `SqliteConcurrencyTests` (8 воркеров/100 задач).
+
+## 3.7 (300 tasks/8 workers)
+
+- **300/300**, **586.7 tasks/s**, p50 **9.239 ms**, p95 **31.523 ms**, 0 errors.
