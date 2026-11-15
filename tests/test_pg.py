@@ -229,6 +229,25 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_tasks_filter(self) -> None:
+        import os
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("tf", ["tf"])
+            s.submit("tf", {})
+            self.assertTrue(s.tasks(None, 5, "tf"))
+            self.assertEqual(s.tasks(None, 5, "nope"), [])
+            s.conn.execute("UPDATE agents SET last_seen_at=0 WHERE agent_id='tf'")
+            s.conn.commit()
+            os.environ["SWARMLAB_AGENT_TTL"] = "1"
+            try:
+                self.assertNotIn("tf", {a["agent_id"] for a in s.discover("tf")})
+            finally:
+                os.environ.pop("SWARMLAB_AGENT_TTL", None)
+        finally:
+            s.close()
+
     def test_agent_profile(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

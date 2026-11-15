@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.21.0] — 2026-11-16
+
+PG filter/TTL coverage.
+
+### Добавлено
+- PG capability filter + agent TTL; coverage 97,4%, 117 тестов.
+
 ## [5.20.0] — 2026-11-16
 
 Task capability filter.
