@@ -229,6 +229,22 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_agent_profile(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("prof", ["p"])
+            self.assertEqual(s.get_agent("prof")["agent_id"], "prof")
+            self.assertIsNone(s.get_agent("nope"))
+            t = s.submit("p", {})
+            s.claim("prof", "p")
+            with self.assertRaises(RuntimeError):
+                s.cancel(t["task_id"], "other")
+            with self.assertRaises(RuntimeError):
+                s.requeue("missing")
+        finally:
+            s.close()
+
     def test_queries(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

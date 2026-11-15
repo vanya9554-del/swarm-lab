@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.18.0] — 2026-11-16
+
+PG agent profile.
+
+### Добавлено
+- PG `get_agent`/cancel/requeue guards; coverage 96,6%, 114 тестов.
+
 ## [5.17.0] — 2026-11-16
 
 Agent profile API.

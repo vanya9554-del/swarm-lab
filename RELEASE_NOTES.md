@@ -1,3 +1,7 @@
+# swarm-lab v5.18.0
+
+PG agent profile/guards, 114 tests, 96.6%.
+
 # swarm-lab v5.17.0
 
 Agent profile API/MCP, 113 tests.
