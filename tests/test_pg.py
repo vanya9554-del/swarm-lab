@@ -136,6 +136,36 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_guards(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("gg1", ["gg"])
+            s.register("gg2", ["gg"])
+            t = s.submit("gg", {})
+            with self.assertRaises(RuntimeError):
+                s.requeue(t["task_id"])
+            s.claim("gg1", "gg")
+            with self.assertRaises(RuntimeError):
+                s.cancel(t["task_id"], "gg2")
+        finally:
+            s.close()
+
+    def test_backpressure(self) -> None:
+        import os
+        from swarmlab.pg import PgSwarmStore
+        os.environ["SWARMLAB_MAX_PENDING"] = "1"
+        try:
+            s = PgSwarmStore(self.dsn)
+            try:
+                s.submit("bp", {})
+                with self.assertRaises(RuntimeError):
+                    s.submit("bp", {})
+            finally:
+                s.close()
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
+
     def test_queries(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [4.5.0] — 2026-11-15
+
+PG guards/backpressure.
+
+### Добавлено
+- PG backpressure + requeue/cancel guards; 86 тестов.
+
 ## [4.4.0] — 2026-11-15
 
 DELETE auth coverage.

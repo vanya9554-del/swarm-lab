@@ -1,3 +1,7 @@
+# swarm-lab v4.5.0
+
+PG guards/backpressure, 86 tests.
+
 # swarm-lab v4.4.0
 
 DELETE auth coverage, 84 tests.
