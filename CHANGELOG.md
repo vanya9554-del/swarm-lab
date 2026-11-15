@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [2.1.0] — 2026-11-15
+
+Coverage/edge paths.
+
+### Добавлено
+- Events import/wait edges, rate-limit POST, metrics-broken path; coverage 93,2%, 45 тестов.
+
 ## [2.0.0] — 2026-11-15
 
 Milestone 2.0: task read API.

@@ -44,6 +44,17 @@ class HardeningTests(unittest.TestCase):
         self.store.close()
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
+    def test_metrics_broken_stats(self) -> None:
+        def boom():
+            raise RuntimeError("db down")
+        self.store.stats = boom
+        try:
+            status, _, body = _get(self.base + "/metrics")
+            self.assertEqual(status, 200)
+            self.assertIn(b"swarmlab_http_requests_total", body)
+        finally:
+            del self.store.stats
+
     def test_ready(self) -> None:
         status, headers, body = _get(self.base + "/ready")
         self.assertEqual(status, 200)
@@ -56,6 +67,22 @@ class HardeningTests(unittest.TestCase):
         self.assertIn("swarmlab_http_requests_total", body.decode())
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
         self.assertIn("swarmlab_http_requests_total_all", body.decode())
+
+    def test_rate_limit_post(self) -> None:
+        os.environ["SWARMLAB_RATE_RPS"] = "1"
+        try:
+            req = urllib.request.Request(self.base + "/v1/tasks", data=b"{}", method="POST")
+            req.add_header("Content-Type", "application/json")
+            statuses = []
+            for _ in range(3):
+                try:
+                    with urllib.request.urlopen(req, timeout=3) as resp:
+                        statuses.append(resp.status)
+                except urllib.error.HTTPError as exc:
+                    statuses.append(exc.code)
+            self.assertIn(429, statuses)
+        finally:
+            os.environ.pop("SWARMLAB_RATE_RPS", None)
 
     def test_backpressure(self) -> None:
         os.environ["SWARMLAB_MAX_PENDING"] = "1"

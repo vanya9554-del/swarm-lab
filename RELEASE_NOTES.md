@@ -1,3 +1,7 @@
+# swarm-lab v2.1.0
+
+Coverage 93.2%, 45 tests, rate-limit/metrics edge paths.
+
 # swarm-lab v2.0.0
 
 Milestone 2.0: GET task by id, MCP get_task, 41 tests, coverage 92.4%.

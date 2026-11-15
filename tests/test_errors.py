@@ -24,6 +24,12 @@ class ErrorTests(unittest.TestCase):
             self.assertIsNotNone(result)
             fake.assert_called_once_with("postgresql://x")
 
+    def test_events_import_error(self) -> None:
+        from unittest.mock import patch
+        import swarmlab.events as ev
+        with patch("builtins.__import__", side_effect=ImportError("no psycopg")):
+            self.assertFalse(ev.available())
+
     def test_events_failures(self) -> None:
         from unittest.mock import patch
 
@@ -38,6 +44,18 @@ class ErrorTests(unittest.TestCase):
         stream = PgEventStream.__new__(PgEventStream)
         stream.conn = BadConn()
         self.assertIsNone(stream.wait(0.1))
+        stream.close()
+
+    def test_events_empty_wait(self) -> None:
+        from swarmlab.events import PgEventStream
+        class EmptyConn:
+            def notifies(self, timeout=None):
+                return iter(())
+            def close(self):
+                pass
+        stream = PgEventStream.__new__(PgEventStream)
+        stream.conn = EmptyConn()
+        self.assertIsNone(stream.wait(0.01))
         stream.close()
 
     def test_error_branches(self) -> None:
