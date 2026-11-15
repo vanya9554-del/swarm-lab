@@ -44,10 +44,10 @@ spec:
             - name: SWARMLAB_RATE_RPS
               value: "50"
           readinessProbe:
-            httpGet: {path: /health, port: http}
+            httpGet: {path: /ready, port: http}
             initialDelaySeconds: 3
           livenessProbe:
-            httpGet: {path: /health, port: http}
+            httpGet: {path: /ready, port: http}
             initialDelaySeconds: 10
           resources:
             requests: {cpu: 100m, memory: 64Mi}

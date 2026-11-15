@@ -44,6 +44,12 @@ class HardeningTests(unittest.TestCase):
         self.store.close()
         os.environ.pop("SWARMLAB_RATE_RPS", None)
 
+    def test_ready(self) -> None:
+        status, headers, body = _get(self.base + "/ready")
+        self.assertEqual(status, 200)
+        self.assertIn(b'"ready":true', body)
+        self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
+
     def test_metrics_and_headers(self) -> None:
         status, headers, body = _get(self.base + "/metrics")
         self.assertEqual(status, 200)

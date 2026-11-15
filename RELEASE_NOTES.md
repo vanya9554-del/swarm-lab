@@ -1,3 +1,7 @@
+# swarm-lab v1.7.0
+
+Readiness probes, public health/metrics, coverage 90.3%, 32 tests.
+
 # swarm-lab v1.6.0
 
 Continuous night harness, coverage 90.4%, 31 tests.

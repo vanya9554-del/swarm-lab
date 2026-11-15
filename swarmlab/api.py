@@ -19,6 +19,7 @@ from .store import SwarmError, SwarmStore
 MAX_BODY = 1 << 20
 ROUTES = {
     ("GET", "/health"),
+    ("GET", "/ready"),
     ("GET", "/v1/stats"),
     ("POST", "/v1/agents"),
     ("GET", "/v1/agents"),
@@ -161,15 +162,22 @@ class SwarmHandler(BaseHTTPRequestHandler):
         return value
 
     def do_GET(self) -> None:
-        if not self._auth():
+        parsed = urlparse(self.path)
+        path, query = parsed.path, parse_qs(parsed.query)
+        public = path in ("/health", "/ready", "/metrics")
+        if not public and not self._auth():
             return
         if not self._rate_ok():
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}})
             return
-        parsed = urlparse(self.path)
-        path, query = parsed.path, parse_qs(parsed.query)
         try:
-            if path == "/metrics":
+            if path == "/ready":
+                try:
+                    stats = self.swarm.store.stats()
+                    self._send(200, {"ok": True, "ready": True, "backend": getattr(self.swarm.store, "backend", "sqlite"), "stats": stats})
+                except Exception as exc:  # noqa: BLE001
+                    self._send(503, {"ok": False, "ready": False, "error": str(exc)})
+            elif path == "/metrics":
                 body = self.swarm.metrics.render(self.swarm.store).encode("utf-8")
                 self.swarm.metrics.observe("GET", path, 200)
                 self.send_response(200)

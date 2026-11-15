@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [1.7.0] — 2026-11-15
+
+Readiness and probes.
+
+### Добавлено
+- `GET /ready` (DB readiness), public `/health`/`/ready`/`/metrics`.
+- K8s probes → `/ready`; coverage 90,3%, 32 теста.
+
 ## [1.6.0] — 2026-11-15
 
 Continuous harness + coverage 90%.

@@ -49,7 +49,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(status, 403)
         status, _ = _req("POST", self.base + "/v1/tasks", "writer", {"capability": "x"})
         self.assertEqual(status, 200)
-        status, _ = _req("GET", self.base + "/health", "unknown")
+        status, _ = _req("GET", self.base + "/v1/stats", "unknown")
         self.assertEqual(status, 401)
 
 
