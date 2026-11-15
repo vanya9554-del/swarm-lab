@@ -38,7 +38,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
-TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel)$")
+TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel|requeue)$")
 
 
 def _json(data: Any) -> bytes:
@@ -292,7 +292,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 task_id, action = match.group(1), match.group(2)
                 agent_id = str(body.get("agent_id") or "")
                 fence = int(body["fence"]) if body.get("fence") is not None else None
-                if action == "cancel":
+                if action == "requeue":
+                    data = self.swarm.store.requeue(task_id)
+                elif action == "cancel":
                     data = self.swarm.store.cancel(task_id, agent_id or None)
                 elif action == "complete":
                     data = self.swarm.store.complete(
@@ -306,7 +308,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 404 if exc.code == "NOT_FOUND"
                 else 403 if exc.code == "FORBIDDEN"
                 else 429 if exc.code == "BACKPRESSURE"
-                else 409 if exc.code == "STALE_LEASE"
+                else 409 if exc.code in ("STALE_LEASE", "CONFLICT")
                 else 400
             )
             self._error(status, exc.code, exc.message)
@@ -328,6 +330,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                         str(op.get("task_id") or ""), agent, op.get("result"),
                         fence=int(op["fence"]) if op.get("fence") is not None else None,
                     )
+                elif name == "requeue":
+                    data = self.swarm.store.requeue(str(op.get("task_id") or ""))
                 elif name == "cancel":
                     data = self.swarm.store.cancel(str(op.get("task_id") or ""), agent or None)
                 elif name == "renew":

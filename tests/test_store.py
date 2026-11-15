@@ -39,6 +39,13 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_requeue(self) -> None:
+        t = self.store.submit("x", {})
+        self.store.cancel(t["task_id"])
+        self.assertEqual(self.store.requeue(t["task_id"])["status"], "pending")
+        with self.assertRaises(SwarmError):
+            self.store.requeue(t["task_id"])
+
     def test_cancel(self) -> None:
         t = self.store.submit("x", {})
         self.assertEqual(self.store.cancel(t["task_id"])["status"], "cancelled")

@@ -81,6 +81,15 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("batch", body["data"]["features"])
 
+    def test_requeue_api(self) -> None:
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "rq"})
+        task_id = body["data"]["task_id"]
+        _req("POST", self.base + f"/v1/tasks/{task_id}/cancel", {})
+        status, body, _ = _req("POST", self.base + f"/v1/tasks/{task_id}/requeue", {})
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["status"], "pending")
+        self.assertEqual(_req("POST", self.base + f"/v1/tasks/{task_id}/requeue", {})[0], 409)
+
     def test_cancel_api(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "c"})
         task_id = body["data"]["task_id"]

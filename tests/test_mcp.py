@@ -45,6 +45,11 @@ class McpTests(unittest.TestCase):
         import json
         return json.loads(response["content"][0]["text"])
 
+    def test_requeue_tool(self) -> None:
+        submitted = self._text(self._call("swarm_submit", {"capability": "rq"}))
+        self._call("swarm_cancel", {"task_id": submitted["task_id"]})
+        self.assertEqual(self._text(self._call("swarm_requeue", {"task_id": submitted["task_id"]}))["status"], "pending")
+
     def test_cancel_tool(self) -> None:
         submitted = self._text(self._call("swarm_submit", {"capability": "c"}))
         cancelled = self._text(self._call("swarm_cancel", {"task_id": submitted["task_id"]}))

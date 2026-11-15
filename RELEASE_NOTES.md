@@ -1,3 +1,7 @@
+# swarm-lab v2.7.0
+
+Requeue API/MCP, 55 tests.
+
 # swarm-lab v2.6.0
 
 Retry-After on 429, 52 tests.

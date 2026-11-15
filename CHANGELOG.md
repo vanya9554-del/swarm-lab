@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [2.7.0] — 2026-11-15
+
+Requeue cancelled/failed tasks.
+
+### Добавлено
+- `POST /v1/tasks/{id}/requeue`, MCP `swarm_requeue`, batch requeue; 55 тестов.
+
 ## [2.6.0] — 2026-11-15
 
 HTTP rate-limit headers.
