@@ -94,6 +94,7 @@ class ExtraApiTests(unittest.TestCase):
 
     def test_tokens_invalid(self) -> None:
         import os
+
         from swarmlab.api import build_server
         os.environ["SWARMLAB_TOKENS"] = "not-json"
         try:
