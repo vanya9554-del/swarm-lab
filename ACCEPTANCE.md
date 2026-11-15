@@ -1,6 +1,6 @@
 # ACCEPTANCE — swarm-lab 1.0
 
-**Дата:** 15.11.2026 · **Версия:** 5.7.0 · **Проект:** agent-native swarm runtime (без UI).
+**Дата:** 15.11.2026 · **Версия:** 5.8.0 · **Проект:** agent-native swarm runtime (без UI).
 
 ## Матрикс
 

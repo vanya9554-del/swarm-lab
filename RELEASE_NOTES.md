@@ -1,3 +1,7 @@
+# swarm-lab v5.8.0
+
+MCP runtime exception, 102 tests.
+
 # swarm-lab v5.7.0
 
 Coverage 96.0%, 102 tests, API backpressure/PG unavailable.

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.8.0] — 2026-11-15
+
+MCP runtime exception path.
+
+### Добавлено
+- tool runtime error test; 102 теста.
+
 ## [5.7.0] — 2026-11-15
 
 Coverage 96%.
