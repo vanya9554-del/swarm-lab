@@ -109,6 +109,18 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             resp.close()
 
+    def test_stream_keepalive_env(self) -> None:
+        import os
+        os.environ["SWARMLAB_STREAM_KEEPALIVE_S"] = "0.1"
+        try:
+            resp = urllib.request.urlopen(self.base + "/v1/stream?after=999999&limit=1&timeout_s=0.4", timeout=5)
+            try:
+                self.assertIn(b": keepalive", resp.read())
+            finally:
+                resp.close()
+        finally:
+            os.environ.pop("SWARMLAB_STREAM_KEEPALIVE_S", None)
+
     def test_stream_listener_success(self) -> None:
         import threading
         from unittest.mock import patch

@@ -1,3 +1,7 @@
+# swarm-lab v5.14.0
+
+SWARMLAB_STREAM_KEEPALIVE_S, 108 tests.
+
 # swarm-lab v5.13.0
 
 SSE keepalive, 107 tests, 96.5%.

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.14.0] — 2026-11-16
+
+Configurable SSE keepalive.
+
+### Добавлено
+- `SWARMLAB_STREAM_KEEPALIVE_S`; 108 тестов.
+
 ## [5.13.0] — 2026-11-16
 
 SSE keepalive.
