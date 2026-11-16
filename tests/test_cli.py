@@ -33,6 +33,18 @@ class CliTests(unittest.TestCase):
             self.assertEqual(main(["mcp", "--db", ":memory:"]), 0)
             fake.assert_called_once()
 
+    def test_run_module(self) -> None:
+        import runpy
+        import sys
+        old = sys.argv
+        sys.argv = ["swarmlab", "--version"]
+        try:
+            with self.assertRaises(SystemExit) as ctx:
+                runpy.run_module("swarmlab", run_name="__main__")
+            self.assertEqual(ctx.exception.code, 0)
+        finally:
+            sys.argv = old
+
     def test_help(self) -> None:
         out = io.StringIO()
         with redirect_stdout(out):

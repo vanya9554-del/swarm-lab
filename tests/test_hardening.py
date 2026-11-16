@@ -92,6 +92,13 @@ class HardeningTests(unittest.TestCase):
         self.assertIn(b'"version"', body)
         self.assertIn(b'"uptime_s"', body)
 
+    def test_metrics_statuses(self) -> None:
+        t = self.store.submit("x", {})
+        self.store.cancel(t["task_id"])
+        status, _, body = _get(self.base + "/metrics")
+        self.assertEqual(status, 200)
+        self.assertIn(b'swarmlab_tasks{status="cancelled"}', body)
+
     def test_ready(self) -> None:
         status, headers, body = _get(self.base + "/ready")
         self.assertEqual(status, 200)

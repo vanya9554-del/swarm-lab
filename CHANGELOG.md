@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.29.0] — 2026-11-16
+
+Coverage 99.7%.
+
+### Добавлено
+- CLI runpy, metrics statuses, PG requeue; coverage 99,7%, 128 тестов.
+
 ## [5.28.0] — 2026-11-16
 
 Dead code cleanup.
