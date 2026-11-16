@@ -1,3 +1,7 @@
+# swarm-lab v9.1.0
+
+Observability: histogram, JSON logs, alerts, dashboard, SLO; 151 tests.
+
 # swarm-lab v9.0.0
 
 Milestone 9.0: Helm chart, Docker/Helm CI, 149 tests, 100%.

@@ -116,3 +116,5 @@ python -m swarmlab serve --port 8788
 - **S111**: shift complete; 149 тестов, 100%, CI green, server/harness stable.
 
 - **S112**: Helm chart + Docker/Helm CI, milestone 9.0.0.
+
+- **S113**: observability (histogram, JSON logs, alerts, Grafana, SLO); release 9.1.0.

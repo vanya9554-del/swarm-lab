@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [9.1.0] — 2026-11-16
+
+Observability.
+
+### Добавлено
+- HTTP latency histogram в `/metrics`; JSON access logs (`SWARMLAB_LOG_FORMAT=json`).
+- PrometheusRule, Grafana dashboard, SLO/error budget; Helm `prometheusRule`.
+- 151 тест, 100% coverage.
+
 ## [9.0.0] — 2026-11-16
 
 Milestone 9.0: production deployment.
