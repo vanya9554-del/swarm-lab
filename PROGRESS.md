@@ -102,3 +102,5 @@ python -m swarmlab serve --port 8788
 - **S101**: data retention prune, 145 тестов; release 8.1.0.
 
 - **S102**: final report refresh (v8.1, 145 тестов, 5000 soak).
+
+- **S103**: CI green; harness 7956 tasks, 0 errors.
