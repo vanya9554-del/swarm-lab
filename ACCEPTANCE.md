@@ -6,7 +6,7 @@
 
 | Проверка | Результат |
 |---|---|
-| unittest | **158/158 OK** (store, API, MCP, PG, load, hardening) |
+| unittest | **162/162 OK** (store, API, MCP, PG, load, hardening) |
 | SQLite engine | task market, priority, affinity, dedup, lease/fence |
 | HTTP API | register/discover/submit/claim/complete/renew/events/stream/batch/stats |
 | SSE | event stream, `after=seq`; PG LISTEN/NOTIFY |
