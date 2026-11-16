@@ -1,0 +1,13 @@
+{
+  "tasks": 500,
+  "workers": 8,
+  "completed": 500,
+  "seconds": 0.923,
+  "tasks_per_sec": 541.8,
+  "latency_ms": {
+    "p50": 8.996,
+    "p95": 33.358,
+    "mean": 14.139
+  },
+  "errors": []
+}

@@ -96,3 +96,5 @@ python -m swarmlab serve --port 8788
 - **S98**: engine 3354.6 tasks/s; release 7.1.0.
 
 - **S99**: HEAD support, 141 тест; release 7.2.0.
+
+- **S100**: 10×500 soak, 5000/5000, 0 errors; milestone 8.0.0.

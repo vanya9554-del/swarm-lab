@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [8.0.0] — 2026-11-16
+
+Milestone 8.0: soak stability.
+
+### Добавлено
+- 10×500/8 = **5000/5000**, 0 errors; 141 тест, 100% coverage.
+
 ## [7.2.0] — 2026-11-16
 
 HEAD support.

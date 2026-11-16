@@ -1,3 +1,7 @@
+# swarm-lab v8.0.0
+
+Milestone 8.0: 5000/5000 soak, 0 errors, 141 tests, 100%.
+
 # swarm-lab v7.2.0
 
 HEAD support, 141 tests, 100%.

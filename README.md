@@ -59,6 +59,6 @@ docker run -p 8788:8788 -e SWARMLAB_TOKEN=secret swarm-lab
 
 ## Статус
 
-**v7.2.0** — 141 тест, coverage **95,0%**, ruff 0; релиз-артефакты в `release/v4.7.0/`.
+**v8.0.0** — 141 тест, coverage **95,0%**, ruff 0; релиз-артефакты в `release/v4.7.0/`.
 План — `PLAN.md`, протокол — `SPEC.md`, качество — `QUALITY.md`,
 автономный runbook — `../NIGHT_SHIFT.md`.
