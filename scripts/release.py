@@ -43,7 +43,13 @@ def main() -> int:
         "components": components,
     }
     (release / "sbom.json").write_text(json.dumps(sbom, ensure_ascii=False, indent=2), encoding="utf-8")
-    files = sorted(p for p in ROOT.rglob("*") if p.is_file() and "release" not in p.parts and ".git" not in p.parts and "__pycache__" not in p.parts and not p.name.endswith((".db", ".pyc")))
+    excluded = {"release", ".git", "__pycache__", "benchmarks", ".tools", "data", "dist", "build"}
+    files = sorted(
+        p for p in ROOT.rglob("*")
+        if p.is_file()
+        and not any(part in excluded for part in p.parts)
+        and not p.name.endswith((".db", ".pyc"))
+    )
     lines = ["# SHA256 checksums — swarm-lab v" + __version__, ""]
     for path in files:
         lines.append(f"{sha256(path)}  {path.relative_to(ROOT).as_posix()}")
