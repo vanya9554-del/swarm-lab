@@ -24,7 +24,7 @@
 | unit/integration tests | ✅ | **173/173 OK** |
 | coverage | ✅ | **100,0%** |
 | ruff | ✅ | 0 |
-| CI (test/docker/trivy/helm/kubeconform) | ✅ | green |
+| CI (test/docker/trivy/helm/kind/s3/DAST/SAST) | ✅ | green |
 | CI Python 3.12 | ✅ | green |
 | fuzz/property | ✅ | `tests/test_fuzz.py` |
 | PG chaos 500 | ✅ | 3 реплики/6 воркеров, exactly-once |

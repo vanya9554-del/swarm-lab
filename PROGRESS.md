@@ -154,3 +154,5 @@ python -m swarmlab serve --port 8788
 - **S130**: OIDC JWKS discovery, 174 теста; release 10.8.0.
 
 - **S131**: live kind, OIDC JWKS, S3 backup, bandit; milestone 11.0.0.
+
+- **S132**: DAST ZAP, cosign, multi-arch, SBOM; release 11.1.0.

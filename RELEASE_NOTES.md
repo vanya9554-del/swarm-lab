@@ -1,3 +1,7 @@
+# swarm-lab v11.1.0
+
+DAST ZAP, cosign signing, multi-arch, SBOM.
+
 # swarm-lab v11.0.0
 
 Live kind K8s, OIDC JWKS, S3 backup, bandit; 174 tests.

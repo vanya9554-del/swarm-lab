@@ -1,5 +1,15 @@
 # Changelog — swarm-lab
 
+## [11.1.0] — 2026-11-16
+
+Supply chain + DAST.
+
+### Добавлено
+- OWASP ZAP baseline DAST в CI (0 FAIL, отчёт artifact).
+- Multi-arch образ (amd64/arm64), provenance, **cosign keyless** подпись.
+- SBOM (Syft SPDX) в release workflow.
+- 174 теста, 100% coverage.
+
 ## [11.0.0] — 2026-11-16
 
 Milestone 11.0: production closures.
