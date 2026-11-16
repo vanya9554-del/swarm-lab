@@ -1,3 +1,7 @@
+# swarm-lab v5.22.0
+
+Soak 1000/1000, 529 tasks/s; 117 tests.
+
 # swarm-lab v5.21.0
 
 PG filter/TTL coverage, 117 tests, 97.4%.

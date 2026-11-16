@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.22.0] — 2026-11-16
+
+Soak validation.
+
+### Добавлено
+- 1000/1000 HTTP tasks, 529 tasks/s, p50 9.3 ms; 117 тестов.
+
 ## [5.21.0] — 2026-11-16
 
 PG filter/TTL coverage.
