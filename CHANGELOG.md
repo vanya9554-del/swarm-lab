@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.28.0] — 2026-11-16
+
+Dead code cleanup.
+
+### Исправлено
+- удалён dead POST `/v1/agents/{id}` branch; coverage 99,5%.
+
 ## [5.27.0] — 2026-11-16
 
 Coverage 99%.

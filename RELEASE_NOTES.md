@@ -1,3 +1,7 @@
+# swarm-lab v5.28.0
+
+Dead code cleanup, coverage 99.5%.
+
 # swarm-lab v5.27.0
 
 Coverage 99.1%, store 100%, 125 tests.

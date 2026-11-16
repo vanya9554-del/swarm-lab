@@ -287,12 +287,6 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
                 self._send(200, {"ok": True, "data": data})
-            elif path.startswith("/v1/agents/"):
-                agent = self.swarm.store.get_agent(path.rsplit("/", 1)[-1])
-                if agent is None:
-                    self._error(404, "NOT_FOUND", "agent not found")
-                else:
-                    self._send(200, {"ok": True, "data": agent})
             elif path == "/v1/tasks":
                 data = self.swarm.store.submit(
                     str(body.get("capability") or ""),

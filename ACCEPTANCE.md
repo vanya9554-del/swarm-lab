@@ -1,6 +1,6 @@
 # ACCEPTANCE — swarm-lab 1.0
 
-**Дата:** 15.11.2026 · **Версия:** 5.27.0 · **Проект:** agent-native swarm runtime (без UI).
+**Дата:** 15.11.2026 · **Версия:** 5.28.0 · **Проект:** agent-native swarm runtime (без UI).
 
 ## Матрикс
 
@@ -13,7 +13,7 @@
 | MCP | tools/resources/prompts, stdio + HTTP `/mcp` |
 | PostgreSQL | 3 replica chaos 100 tasks; 2 replica atomic claim `FOR UPDATE SKIP LOCKED`, stale fence |
 | Load | SQLite 200 tasks/8 workers: **5412 tasks/s**, p50 **1.088 ms**, p95 **2.917 ms** |
-| Quality | coverage 99,1%, ruff 0; HTTP 200/200, 726 tasks/s |
+| Quality | coverage 99,5%, ruff 0; HTTP 200/200, 726 tasks/s |
 | Observability | X-Request-Id, latency histogram |
 | Hardening | scopes/RBAC, bearer token, rate limit per token, backpressure 429, body limit, headers, `/metrics` |
 | Deploy | Dockerfile, compose (SQLite/PG), K8s manifests, CI |
