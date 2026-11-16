@@ -47,6 +47,7 @@ class SwarmMetrics:
             "# TYPE swarmlab_http_requests_total_all counter",
             f"swarmlab_http_requests_total_all {total}",
         ]
+        stats: dict = {}
         try:
             stats = store.stats()
             lines.append("# HELP swarmlab_agents Agents")
@@ -54,6 +55,9 @@ class SwarmMetrics:
             lines.append(f"swarmlab_agents {stats.get('agents', 0)}")
             for status, value in sorted((stats.get("tasks") or {}).items()):
                 lines.append(f'swarmlab_tasks{{status="{status}"}} {value}')
+            lines.append("# HELP swarmlab_audit_entries Audit entries")
+            lines.append("# TYPE swarmlab_audit_entries gauge")
+            lines.append(f"swarmlab_audit_entries {stats.get('audit', 0)}")
             lines.append("# HELP swarmlab_events_total Events")
             lines.append("# TYPE swarmlab_events_total counter")
             lines.append(f"swarmlab_events_total {(stats.get('events') or {}).get('total', 0)}")

@@ -83,6 +83,10 @@ class StoreTests(unittest.TestCase):
         self.store.conn.execute("INSERT INTO audit(created_at, action, detail) VALUES (0, 'x', 'bad')")
         self.assertEqual(self.store.audits()[0]["detail"], "bad")
 
+    def test_stats_audit(self) -> None:
+        self.store.audit("x")
+        self.assertEqual(self.store.stats()["audit"], 1)
+
     def test_schema_version(self) -> None:
         self.assertEqual(self.store.schema_version(), 11)
 

@@ -1,3 +1,7 @@
+# swarm-lab v10.6.0
+
+Audit metrics/stats; 173 tests.
+
 # swarm-lab v10.5.0
 
 CI dependency audit (pip-audit); 172 tests.

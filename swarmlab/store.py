@@ -471,8 +471,10 @@ class SwarmStore:
         agents = self._one("SELECT COUNT(*) AS n FROM agents") or {}
         tasks = self._all("SELECT status, COUNT(*) AS n FROM tasks GROUP BY status")
         events = self._one("SELECT COUNT(*) AS n, MAX(seq) AS last_seq FROM events") or {}
+        audit = self._one("SELECT COUNT(*) AS n FROM audit") or {}
         return {
             "agents": int(agents.get("n") or 0),
             "tasks": {str(r["status"]): int(r["n"]) for r in tasks},
             "events": {"total": int(events.get("n") or 0), "last_seq": int(events.get("last_seq") or 0)},
+            "audit": int(audit.get("n") or 0),
         }

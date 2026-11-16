@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [10.6.0] — 2026-11-16
+
+Audit metrics.
+
+### Добавлено
+- `stats.audit`, `swarmlab_audit_entries`; 173 теста, 100% coverage.
+
 ## [10.5.0] — 2026-11-16
 
 Dependency audit.
