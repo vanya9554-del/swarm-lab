@@ -134,3 +134,5 @@ python -m swarmlab serve --port 8788
 - **S120**: Python client SDK, 162 теста; release 9.8.0.
 
 - **S121**: HTTP PG multi-replica chaos 100/100; release 9.9.0.
+
+- **S122**: milestone 10.0, acceptance checklist; release 10.0.0.

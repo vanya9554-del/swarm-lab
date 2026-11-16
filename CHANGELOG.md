@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [10.0.0] — 2026-11-16
+
+Milestone 10.0: production-ready.
+
+### Добавлено
+- Schema v10, acceptance checklist, final production infra.
+- 163 теста, 100% coverage, CI/CD/GHCR/ArgoCD/observability/security.
+
 ## [9.9.0] — 2026-11-16
 
 HTTP multi-replica chaos.

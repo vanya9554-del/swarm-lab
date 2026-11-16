@@ -66,7 +66,7 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(self.store.vacuum()["ok"])
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 9)
+        self.assertEqual(self.store.schema_version(), 10)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

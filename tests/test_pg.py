@@ -387,7 +387,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 9)
+            self.assertEqual(s.schema_version(), 10)
         finally:
             s.close()
 

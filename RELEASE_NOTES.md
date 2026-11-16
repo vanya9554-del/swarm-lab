@@ -1,3 +1,7 @@
+# swarm-lab v10.0.0
+
+Production-ready milestone: 163 tests, 100%, CI/CD, Helm, observability, JWT.
+
 # swarm-lab v9.9.0
 
 HTTP PG multi-replica chaos 100/100; 163 tests.
