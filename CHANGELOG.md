@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.5.0] — 2026-11-16
+
+SPEC v6.
+
+### Добавлено
+- SPEC синхронизирован: TTL/deps/attempts/lifecycle/API/MCP/PG; 134 теста.
+
 ## [6.4.0] — 2026-11-16
 
 TCP keepalive.
