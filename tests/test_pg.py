@@ -232,6 +232,7 @@ class PgTests(unittest.TestCase):
     def test_env_and_complete(self) -> None:
         import os
         import time
+
         from swarmlab.pg import PgSwarmStore
         os.environ["SWARMLAB_MAX_PENDING"] = "bad"
         try:
