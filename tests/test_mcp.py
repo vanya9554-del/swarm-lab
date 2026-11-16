@@ -166,6 +166,7 @@ class McpStdioErrorTests(unittest.TestCase):
 class McpCallErrorTests(unittest.TestCase):
     def test_call_errors(self) -> None:
         from unittest.mock import patch
+
         from swarmlab.mcp import McpDispatcher, McpError
         from swarmlab.store import SwarmStore
         store = SwarmStore(":memory:")
