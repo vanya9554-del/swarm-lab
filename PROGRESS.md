@@ -110,3 +110,5 @@ python -m swarmlab serve --port 8788
 - **S106**: post-change 5000/5000 soak; release 8.3.0.
 
 - **S107**: final verification; 149 тестов, 100%, CI green, harness 8676 tasks/0 errors.
+
+- **S110**: pre-return final check; 149 тестов, 100%, CI green.
