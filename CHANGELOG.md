@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.24.0] — 2026-11-16
+
+Coverage 98%.
+
+### Добавлено
+- store stale/event decode, PG env/complete edges; coverage 98,1%, 120 тестов.
+
 ## [5.23.0] — 2026-11-16
 
 Invalid backpressure env.

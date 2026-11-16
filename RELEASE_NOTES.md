@@ -1,3 +1,7 @@
+# swarm-lab v5.24.0
+
+Coverage 98.1%, 120 tests.
+
 # swarm-lab v5.23.0
 
 Invalid backpressure env, 118 tests, 97.5%.

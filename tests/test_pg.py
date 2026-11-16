@@ -229,6 +229,32 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_env_and_complete(self) -> None:
+        import os
+        import time
+        from swarmlab.pg import PgSwarmStore
+        os.environ["SWARMLAB_MAX_PENDING"] = "bad"
+        try:
+            s = PgSwarmStore(self.dsn)
+            try:
+                s.register("ec", ["ec"])
+                t = s.submit("ec", {})
+                s.claim("ec", "ec")
+                with self.assertRaises(RuntimeError):
+                    s.complete(t["task_id"], "other", {})
+                with self.assertRaises(RuntimeError):
+                    s.complete("missing", "ec", {})
+                s.conn.execute(
+                    "INSERT INTO events(seq, type, payload, created_at) VALUES (999999, 'bad', 'not-json', %s)",
+                    (time.time(),),
+                )
+                s.conn.commit()
+                self.assertTrue(any(e["type"] == "bad" for e in s.events(999998, 5)))
+            finally:
+                s.close()
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
+
     def test_tasks_filter(self) -> None:
         import os
 

@@ -58,6 +58,19 @@ class StoreTests(unittest.TestCase):
         self.store.conn.commit()
         self.assertEqual(self.store.get("badr")["result"], "not-json")
 
+    def test_stale_event_decode(self) -> None:
+        import time
+        t = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        with self.assertRaises(SwarmError):
+            self.store.complete(t["task_id"], "a1", {}, fence=999)
+        self.store.conn.execute(
+            "INSERT INTO events(seq, type, payload, created_at) VALUES (999999, 'bad', 'not-json', ?)",
+            (time.time(),),
+        )
+        self.store.conn.commit()
+        self.assertTrue(any(e["type"] == "bad" for e in self.store.events(999998, 5)))
+
     def test_invalid_payload(self) -> None:
         import time
         self.store.conn.execute(
