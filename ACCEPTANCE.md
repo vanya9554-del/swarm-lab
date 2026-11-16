@@ -40,11 +40,11 @@
 | Helm chart | ✅ | `deploy/helm/swarmlab`, CI lint/template/kubeconform |
 | TLS ingress | ✅ | chart ingress/tls |
 | HPA/PDB/NetworkPolicy | ✅ | chart |
-| Backup/restore | ✅ | scripts + test + CronJob |
+| Backup/restore + S3 | ✅ | scripts + test + CI moto S3 |
 | Migrations/rolling upgrade | ✅ | schema v11, RUNBOOK |
 | ArgoCD staging/prod | ✅ | `deploy/argocd` |
 | GHCR push по тегу | ✅ | release workflow |
-| Live K8s deploy | ✅ | kind CI: install/smoke/rolling |
+| Live K8s deploy | ✅ | kind CI: install/dry-run/smoke/rolling |
 
 ## Security
 
@@ -54,7 +54,7 @@
 | JWT HS256/RS256, iss/aud/exp/nbf | ✅ | tests |
 | Rate limit/body limit/headers | ✅ | tests |
 | Secrets via K8s/ESO | ✅ | Helm values/existingSecret |
-| Пентест-чеклист | ✅ | SECURITY.md |
+| Пентест-чеклист + SAST | ✅ | SECURITY.md, bandit |
 | Audit log | ✅ | `/v1/audit`, MCP `swarm_audit` |
 | Trivy | ✅ | CI |
 | Внешний аудит/пентест | ⏳ | внешний исполнитель |

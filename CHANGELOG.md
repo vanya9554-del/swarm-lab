@@ -1,5 +1,16 @@
 # Changelog — swarm-lab
 
+## [11.0.0] — 2026-11-16
+
+Milestone 11.0: production closures.
+
+### Добавлено
+- Live Kubernetes (kind) в CI: Helm install, server-side dry-run, smoke, rolling upgrade.
+- OIDC JWKS discovery (`SWARMLAB_JWT_JWKS_URL`), cache/kid rotation.
+- S3-compatible backup (`scripts/backup_s3.py`) + CI moto S3.
+- Bandit SAST в CI; fix maxBody integer rendering.
+- 174 теста, 100% coverage, CI green (7 jobs).
+
 ## [10.8.0] — 2026-11-16
 
 OIDC JWKS discovery.

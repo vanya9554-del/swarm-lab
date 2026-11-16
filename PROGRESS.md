@@ -152,3 +152,5 @@ python -m swarmlab serve --port 8788
 - **S129**: live kind validation in CI, maxBody fix; release 10.7.0.
 
 - **S130**: OIDC JWKS discovery, 174 теста; release 10.8.0.
+
+- **S131**: live kind, OIDC JWKS, S3 backup, bandit; milestone 11.0.0.
