@@ -149,9 +149,8 @@ class StoreTests(unittest.TestCase):
     def test_claim_exception(self) -> None:
         from unittest.mock import patch
         self.store.submit("x", {})
-        with patch.object(self.store, "_one", side_effect=RuntimeError("boom")):
-            with self.assertRaises(RuntimeError):
-                self.store.claim("a1", "x")
+        with patch.object(self.store, "_one", side_effect=RuntimeError("boom")), self.assertRaises(RuntimeError):
+            self.store.claim("a1", "x")
 
     def test_claim_rollback(self) -> None:
         self.store.submit("x", {})
