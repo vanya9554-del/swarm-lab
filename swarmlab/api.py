@@ -14,6 +14,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+import urllib.request
 
 from . import __version__
 from .mcp import McpDispatcher
@@ -23,6 +24,27 @@ from .openapi import spec as openapi_spec
 from .store import SwarmError, SwarmStore
 
 MAX_BODY = int(os.environ.get("SWARMLAB_MAX_BODY") or (1 << 20))
+_JWKS_LOCK = threading.Lock()
+_JWKS_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+_JWKS_TTL_S = 300.0
+
+
+def _fetch_jwks(url: str) -> list[dict[str, Any]]:
+    now = time.time()
+    with _JWKS_LOCK:
+        cached = _JWKS_CACHE.get(url)
+        if cached and now - cached[0] < _JWKS_TTL_S:
+            return cached[1]
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        data = json.loads(resp.read())
+    keys = data.get("keys") if isinstance(data, dict) else None
+    if not isinstance(keys, list):
+        return []
+    result = [key for key in keys if isinstance(key, dict)]
+    with _JWKS_LOCK:
+        _JWKS_CACHE[url] = (now, result)
+    return result
 ROUTES = {
     ("GET", "/health"),
     ("GET", "/ready"),
@@ -202,7 +224,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def _jwt_scopes(self, token: str) -> set[str] | None:
         secret = os.environ.get("SWARMLAB_JWT_SECRET", "")
         public_key = os.environ.get("SWARMLAB_JWT_PUBLIC_KEY", "")
-        if (not secret and not public_key) or not token or token.count(".") != 2:
+        jwks_url = os.environ.get("SWARMLAB_JWT_JWKS_URL", "")
+        if (not secret and not public_key and not jwks_url) or not token or token.count(".") != 2:
             return None
         try:
             head_b64, body_b64, sig_b64 = token.split(".")
@@ -216,13 +239,29 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 if not hmac.compare_digest(expected, signature):
                     return None
             elif head.get("alg") == "RS256":
-                if not public_key:
-                    return None
+                from cryptography.hazmat.primitives import hashes
+                from cryptography.hazmat.primitives.asymmetric import padding, rsa
                 try:
-                    from cryptography.hazmat.primitives import hashes, serialization
-                    from cryptography.hazmat.primitives.asymmetric import padding
-                    key = serialization.load_pem_public_key(public_key.encode())
-                    key.verify(signature, signing_input, padding.PKCS1v15(), hashes.SHA256())
+                    if public_key:
+                        from cryptography.hazmat.primitives import serialization
+                        key = serialization.load_pem_public_key(public_key.encode())
+                        key.verify(signature, signing_input, padding.PKCS1v15(), hashes.SHA256())
+                    elif jwks_url:
+                        kid = head.get("kid")
+                        jwk = next(
+                            (item for item in _fetch_jwks(jwks_url)
+                             if item.get("kty") == "RSA" and item.get("kid") == kid),
+                            None,
+                        )
+                        if not jwk:
+                            return None
+                        numbers = rsa.RSAPublicNumbers(
+                            int.from_bytes(_b64url_decode(jwk["e"]), "big"),
+                            int.from_bytes(_b64url_decode(jwk["n"]), "big"),
+                        )
+                        numbers.public_key().verify(signature, signing_input, padding.PKCS1v15(), hashes.SHA256())
+                    else:
+                        return None
                 except Exception:  # noqa: BLE001
                     return None
             else:
@@ -267,7 +306,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self._record_audit("auth.denied", self.path)
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
-        elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY")) and jwt_scopes is None:
+        elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY") or os.environ.get("SWARMLAB_JWT_JWKS_URL")) and jwt_scopes is None:
             self._record_audit("auth.denied", self.path)
             self._error(401, "UNAUTHORIZED", "JWT required")
             return False

@@ -384,6 +384,60 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_JWT_PUBLIC_KEY", None)
 
+    def test_jwt_jwks(self) -> None:
+        import base64
+        import hashlib
+        import json
+        import os
+        import threading
+        import time
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import padding, rsa
+
+        def b64(value: bytes) -> str:
+            return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+        private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        numbers = private.public_key().public_numbers()
+        jwk = {"kty": "RSA", "kid": "k1", "alg": "RS256",
+               "n": b64(numbers.n.to_bytes((numbers.n.bit_length() + 7) // 8, "big")),
+               "e": b64(numbers.e.to_bytes((numbers.e.bit_length() + 7) // 8, "big"))}
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:  # noqa: N802
+                data = {"keys": [jwk]} if self.path == "/jwks" else {"keys": "bad"}
+                body = json.dumps(data).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args) -> None:
+                return
+
+        srv = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        head = b64(json.dumps({"alg": "RS256", "typ": "JWT", "kid": "k1"}).encode())
+        body = b64(json.dumps({"sub": "j", "exp": int(time.time()) + 60}).encode())
+        sig = b64(private.sign(f"{head}.{body}".encode(), padding.PKCS1v15(), hashes.SHA256()))
+        token = f"{head}.{body}.{sig}"
+        os.environ["SWARMLAB_JWT_JWKS_URL"] = f"http://127.0.0.1:{srv.server_port}/jwks"
+        try:
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 200)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 200)
+            bad_head = b64(json.dumps({"alg": "RS256", "typ": "JWT", "kid": "no"}).encode())
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{bad_head}.{body}.{sig}")[0], 401)
+            os.environ["SWARMLAB_JWT_JWKS_URL"] = f"http://127.0.0.1:{srv.server_port}/bad"
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 401)
+            os.environ["SWARMLAB_JWT_JWKS_URL"] = "http://127.0.0.1:1/jwks"
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 401)
+        finally:
+            os.environ.pop("SWARMLAB_JWT_JWKS_URL", None)
+            srv.shutdown()
+            srv.server_close()
+
     def test_delete_auth(self) -> None:
         from swarmlab.api import build_server
         other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "tok")

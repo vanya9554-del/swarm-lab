@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [10.8.0] — 2026-11-16
+
+OIDC JWKS discovery.
+
+### Добавлено
+- `SWARMLAB_JWT_JWKS_URL`: кэш 5 мин, выбор по `kid`, RS256.
+- Helm `auth.jwtJwksUrl`; 174 теста, 100% coverage.
+
 ## [10.7.0] — 2026-11-16
 
 Live kind cluster validation.

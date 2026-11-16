@@ -1,3 +1,7 @@
+# swarm-lab v10.8.0
+
+OIDC JWKS discovery; 174 tests, 100%.
+
 # swarm-lab v10.7.0
 
 Live kind K8s validation in CI; maxBody fix.

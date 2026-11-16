@@ -90,6 +90,7 @@ auth:
   # Optional HS256 JWT auth (OIDC gateways can mint HS256; RS256 via gateway).
   jwtIssuer: ""
   jwtAudience: ""
+  jwtJwksUrl: ""
   jwtSecret:
     existingSecret: ""
     key: jwt-secret

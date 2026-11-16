@@ -7,7 +7,7 @@
 - **JWT HS256/RS256** (`SWARMLAB_JWT_SECRET` или `SWARMLAB_JWT_PUBLIC_KEY`, optional `SWARMLAB_JWT_ISSUER`/`SWARMLAB_JWT_AUDIENCE`):
   - HS256: shared secret; RS256: PEM public key (optional dependency `swarm-lab[oidc]`);
   - `exp`/`nbf`, `iss`, `aud`; scopes из `scope`/`scopes` (default `read write`);
-  - RS256 подходит для OIDC-провайдера; discovery/JWKS rotation — на gateway (внешний блокер).
+  - RS256: PEM или **JWKS discovery** (`SWARMLAB_JWT_JWKS_URL`, cache 5 мин, rotation).
 - Публичные: `/health`, `/ready`, `/metrics` (probes); остальное — auth.
 
 ## Транспорт

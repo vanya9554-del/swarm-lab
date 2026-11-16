@@ -58,6 +58,10 @@ spec:
                   name: {{ .Values.auth.jwtPublicKey.existingSecret }}
                   key: {{ .Values.auth.jwtPublicKey.key }}
             {{- end }}
+            {{- if .Values.auth.jwtJwksUrl }}
+            - name: SWARMLAB_JWT_JWKS_URL
+              value: {{ .Values.auth.jwtJwksUrl | quote }}
+            {{- end }}
             {{- if .Values.auth.jwtIssuer }}
             - name: SWARMLAB_JWT_ISSUER
               value: {{ .Values.auth.jwtIssuer | quote }}
