@@ -94,3 +94,5 @@ python -m swarmlab serve --port 8788
 - **S97**: security headers, milestone 7.0.0.
 
 - **S98**: engine 3354.6 tasks/s; release 7.1.0.
+
+- **S99**: HEAD support, 141 тест; release 7.2.0.

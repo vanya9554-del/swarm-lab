@@ -86,6 +86,21 @@ class HardeningTests(unittest.TestCase):
         finally:
             del self.store.stats
 
+    def test_head(self) -> None:
+        import http.client
+        from urllib.parse import urlparse
+        parsed = urlparse(self.base)
+        conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=3)
+        conn.request("HEAD", "/v1/stream?after=0&limit=1&timeout_s=0.2")
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.read(), b"")
+        conn.request("HEAD", "/health")
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.read(), b"")
+        conn.close()
+
     def test_health_info(self) -> None:
         status, _, body = _get(self.base + "/health")
         self.assertEqual(status, 200)

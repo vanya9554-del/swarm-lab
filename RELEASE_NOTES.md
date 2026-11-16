@@ -1,3 +1,7 @@
+# swarm-lab v7.2.0
+
+HEAD support, 141 tests, 100%.
+
 # swarm-lab v7.1.0
 
 Engine benchmark 3354.6 tasks/s, p50 1.987 ms.

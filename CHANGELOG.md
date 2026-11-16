@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [7.2.0] — 2026-11-16
+
+HEAD support.
+
+### Добавлено
+- `HEAD` для GET endpoints (без body), stream-заголовки; 141 тест.
+
 ## [7.1.0] — 2026-11-16
 
 Engine benchmark.

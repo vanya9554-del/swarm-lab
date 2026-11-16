@@ -130,7 +130,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
         for key, value in (headers or {}).items():
             self.send_header(str(key), str(value))
         self.end_headers()
-        self.wfile.write(body)
+        if not getattr(self, "_head", False):
+            self.wfile.write(body)
 
     def _rate_ok(self) -> bool:
         try:
@@ -187,6 +188,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
             raise SwarmError("BAD_REQUEST", "body must be object")
         return value
 
+    def do_HEAD(self) -> None:
+        self._head = True
+        try:
+            self.do_GET()
+        finally:
+            self._head = False
+
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path, query = parsed.path, parse_qs(parsed.query)
@@ -217,7 +225,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self.send_header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
                 self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
                 self.end_headers()
-                self.wfile.write(body)
+                if not getattr(self, "_head", False):
+                    self.wfile.write(body)
             elif path == "/health":
                 self._send(200, {
                     "ok": True,
@@ -426,6 +435,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "close")
         self.end_headers()
+        if getattr(self, "_head", False):
+            self.close_connection = True
+            return
         self.close_connection = True
         deadline = time.time() + min(30.0, max(0.2, timeout_s))
         sent = 0
