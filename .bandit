@@ -1,3 +1,2 @@
-[bandit]
-skips = B110,B310,B608
-exclude_dirs = tests,.tools,release,data,benchmarks
+skips: B110,B310,B608
+exclude_dirs: tests,.tools,release,data,benchmarks
