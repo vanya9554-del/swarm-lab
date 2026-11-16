@@ -103,7 +103,7 @@ config:
   leaseS: 60
   agentTtl: 90
   streamKeepaliveS: 1
-  maxBody: 1048576
+  maxBody: "1048576"
   pgAttempts: 2
 
 startupProbe:

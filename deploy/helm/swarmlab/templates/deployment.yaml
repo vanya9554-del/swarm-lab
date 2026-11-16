@@ -77,7 +77,7 @@ spec:
             - name: SWARMLAB_STREAM_KEEPALIVE_S
               value: {{ .Values.config.streamKeepaliveS | quote }}
             - name: SWARMLAB_MAX_BODY
-              value: {{ .Values.config.maxBody | quote }}
+              value: {{ .Values.config.maxBody | int | quote }}
             - name: SWARMLAB_PG_ATTEMPTS
               value: {{ .Values.config.pgAttempts | quote }}
           {{- if .Values.startupProbe.enabled }}
