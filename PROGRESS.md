@@ -108,3 +108,5 @@ python -m swarmlab serve --port 8788
 - **S105**: task event history, 149 тестов; release 8.2.0.
 
 - **S106**: post-change 5000/5000 soak; release 8.3.0.
+
+- **S107**: final verification; 149 тестов, 100%, CI green, harness 8676 tasks/0 errors.
