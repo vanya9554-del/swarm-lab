@@ -1,3 +1,7 @@
+# swarm-lab v6.2.0
+
+Chaos/load 4/4, exactly-once, reconnect.
+
 # swarm-lab v6.1.0
 
 2000/2000 HTTP soak, 529.7 tasks/s.

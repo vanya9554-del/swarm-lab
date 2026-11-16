@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.2.0] — 2026-11-16
+
+Chaos validation.
+
+### Добавлено
+- 4/4 chaos/load (3 replicas, reconnect, exactly-once); 132 теста.
+
 ## [6.1.0] — 2026-11-16
 
 2000-task soak.
