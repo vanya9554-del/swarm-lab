@@ -1,3 +1,7 @@
+# swarm-lab v6.6.0
+
+Final report, 134 tests, 100% coverage.
+
 # swarm-lab v6.5.0
 
 SPEC v6 sync, 134 tests, 100% coverage.
