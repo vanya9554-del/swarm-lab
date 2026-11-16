@@ -379,6 +379,22 @@ class PgSwarmStore:
         params.append(int(limit))
         return [self._decode(row) for row in self._all(sql, tuple(params))]
 
+    def task_events(self, task_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        rows = self._all(
+            "SELECT * FROM events WHERE payload LIKE %s ORDER BY seq DESC LIMIT %s",
+            (f'%"{task_id}"%', max(1, min(500, int(limit)))),
+        )
+        out = []
+        for row in rows:
+            try:
+                payload = json.loads(row.get("payload") or "{}")
+            except (ValueError, TypeError):
+                payload = {}
+            if payload.get("task_id") == task_id:
+                row["payload"] = payload
+                out.append(row)
+        return out
+
     def events(self, after: int = 0, limit: int = 100) -> list[dict[str, Any]]:
         rows = self._all("SELECT * FROM events WHERE seq > %s ORDER BY seq LIMIT %s", (int(after), int(limit)))
         for row in rows:

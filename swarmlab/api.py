@@ -36,6 +36,7 @@ ROUTES = {
     ("POST", "/v1/tasks/{task_id}/cancel"),
     ("GET", "/v1/tasks"),
     ("GET", "/v1/tasks/{task_id}"),
+    ("GET", "/v1/tasks/{task_id}/events"),
     ("POST", "/v1/tasks/claim"),
     ("GET", "/v1/events"),
     ("GET", "/v1/stream"),
@@ -262,6 +263,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 capability = (query.get("capability") or [None])[0]
                 limit = int((query.get("limit") or ["50"])[0])
                 self._send(200, {"ok": True, "data": self.swarm.store.tasks(status, limit, capability)})
+            elif path.startswith("/v1/tasks/") and path.endswith("/events"):
+                task_id = path.split("/")[-2]
+                self._send(200, {"ok": True, "data": self.swarm.store.task_events(task_id, int((query.get("limit") or ["50"])[0]))})
             elif path.startswith("/v1/tasks/"):
                 task = self.swarm.store.get(path.rsplit("/", 1)[-1])
                 if task is None:

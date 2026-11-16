@@ -351,6 +351,13 @@ class ExtraApiTests(unittest.TestCase):
         _, claim3, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "dep", "capability": "dep"})
         self.assertEqual(claim3["data"]["task_id"], second_id)
 
+    def test_task_events_api(self) -> None:
+        _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ev"})
+        task_id = body["data"]["task_id"]
+        status, payload, _ = _req("GET", self.base + f"/v1/tasks/{task_id}/events")
+        self.assertEqual(status, 200)
+        self.assertIsInstance(payload["data"], list)
+
     def test_prune_api(self) -> None:
         status, body, _ = _req("POST", self.base + "/v1/maintenance/prune", {"older_than_s": 60})
         self.assertEqual(status, 200)

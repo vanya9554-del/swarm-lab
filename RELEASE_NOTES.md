@@ -1,3 +1,7 @@
+# swarm-lab v8.2.0
+
+Task event history, 149 tests, 100%.
+
 # swarm-lab v8.1.0
 
 Data retention prune, 145 tests, 100%.

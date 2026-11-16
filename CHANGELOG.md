@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [8.2.0] — 2026-11-16
+
+Task event history.
+
+### Добавлено
+- `GET /v1/tasks/{id}/events`, MCP `swarm_task_events`; 149 тестов.
+
 ## [8.1.0] — 2026-11-16
 
 Data retention prune.

@@ -351,6 +351,22 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_task_events(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("te", ["te"])
+            t = s.submit("te", {})
+            s.claim("te", "te")
+            self.assertTrue(s.task_events(t["task_id"]))
+            s.conn.execute(
+                "INSERT INTO events(type, payload, created_at) VALUES ('bad', '{\"task_id\":\"x\"', 0)"
+            )
+            s.conn.commit()
+            self.assertEqual(s.task_events("x"), [])
+        finally:
+            s.close()
+
     def test_prune(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

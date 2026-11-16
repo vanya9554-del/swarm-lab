@@ -32,6 +32,7 @@ def spec() -> dict[str, Any]:
                 "post": {"summary": "Submit task"},
             },
             "/v1/tasks/{task_id}": {"get": {"summary": "Get task"}},
+            "/v1/tasks/{task_id}/events": {"get": {"summary": "Task event history"}},
             "/v1/tasks/claim": {"post": {"summary": "Claim task"}},
             "/v1/tasks/{task_id}/complete": {"post": {"summary": "Complete task"}},
             "/v1/tasks/{task_id}/renew": {"post": {"summary": "Renew lease"}},

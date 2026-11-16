@@ -39,6 +39,18 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_task_events(self) -> None:
+        t = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        events = self.store.task_events(t["task_id"])
+        self.assertTrue(any(e["type"] == "task.claimed" for e in events))
+        self.assertEqual(self.store.task_events("nope"), [])
+        self.store.conn.execute(
+            "INSERT INTO events(type, payload, created_at) VALUES ('bad', '{\"task_id\":\"x\"', 0)"
+        )
+        self.store.conn.commit()
+        self.assertEqual(self.store.task_events("x"), [])
+
     def test_prune(self) -> None:
         t = self.store.submit("x", {})
         self.store.claim("a1", "x")

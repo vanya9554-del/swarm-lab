@@ -69,6 +69,11 @@ class McpTests(unittest.TestCase):
     def test_vacuum_tool(self) -> None:
         self.assertTrue(self._text(self._call("swarm_vacuum", {}))["ok"])
 
+    def test_task_events_tool(self) -> None:
+        submitted = self._text(self._call("swarm_submit", {"capability": "te"}))
+        events = self._text(self._call("swarm_task_events", {"task_id": submitted["task_id"]}))
+        self.assertIsInstance(events, list)
+
     def test_expire_tool(self) -> None:
         out = self._text(self._call("swarm_expire", {}))
         self.assertIn("expired", out)
