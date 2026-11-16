@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [9.0.0] — 2026-11-16
+
+Milestone 9.0: production deployment.
+
+### Добавлено
+- Helm chart (`deploy/helm/swarmlab`): SQLite/PG, ingress/TLS, HPA, PDB, NetworkPolicy, ServiceMonitor, backup CronJob.
+- CI jobs: `docker build` + `helm lint/template` (SQLite/PG).
+- Deploy README, validator checks Helm/CI; 149 тестов, 100% coverage.
+
 ## [8.3.0] — 2026-11-16
 
 Post-change soak.

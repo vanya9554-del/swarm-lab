@@ -1,3 +1,7 @@
+# swarm-lab v9.0.0
+
+Milestone 9.0: Helm chart, Docker/Helm CI, 149 tests, 100%.
+
 # swarm-lab v8.3.0
 
 Post-change 5000/5000 soak, 0 errors.
