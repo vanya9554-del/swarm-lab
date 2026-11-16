@@ -47,3 +47,13 @@ jobs:
           tar -xzf /tmp/kubeconform.tar.gz -C /tmp
           /tmp/kubeconform -strict -ignore-missing-schemas -summary /tmp/sqlite.yaml /tmp/pg.yaml
 
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pip-audit ".[oidc]" "psycopg[binary]"
+      - run: python -m pip_audit --progress-spinner off
