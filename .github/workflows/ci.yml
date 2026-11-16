@@ -149,11 +149,13 @@ jobs:
       - run: docker run -d --name swarmlab-dast --network host swarmlab:dast
       - run: |
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8788/ready && break || sleep 1; done
-      - run: mkdir -p zap
+      - run: |
+          mkdir -p zap
+          chmod 777 zap
       - run: |
           docker run --rm --network host -v "$PWD/zap:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t http://127.0.0.1:8788 -J report.json -I -m 2
+            -t http://127.0.0.1:8788/ready -J report.json -I -m 2
       - uses: actions/upload-artifact@v4
         if: always()
         with:
