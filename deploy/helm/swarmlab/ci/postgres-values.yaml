@@ -29,5 +29,10 @@ auth:
   enabled: true
   existingSecret: swarmlab-auth
   tokenKey: token
+  jwtSecret:
+    existingSecret: swarmlab-jwt
+    key: jwt-secret
+  jwtIssuer: "https://issuer.example"
+  jwtAudience: "swarm"
 prometheusRule:
   enabled: true

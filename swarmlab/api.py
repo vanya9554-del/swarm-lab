@@ -1,7 +1,10 @@
 """Minimal agent-native HTTP API: JSON, batch, SSE. No UI."""
 from __future__ import annotations
 
+import base64
 import gzip
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -48,6 +51,10 @@ ROUTES = {
     ("GET", "/metrics"),
 }
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel|requeue)$")
+
+
+def _b64url_decode(value: str) -> bytes:
+    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
 
 def _json(data: Any) -> bytes:
@@ -176,18 +183,62 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def _error(self, status: int, code: str, message: str) -> None:
         self._send(status, {"ok": False, "error": {"code": code, "message": message}})
 
+    def _jwt_scopes(self, token: str) -> set[str] | None:
+        secret = os.environ.get("SWARMLAB_JWT_SECRET", "")
+        if not secret or not token or token.count(".") != 2:
+            return None
+        try:
+            head_b64, body_b64, sig_b64 = token.split(".")
+            head = json.loads(_b64url_decode(head_b64))
+            if head.get("alg") != "HS256":
+                return None
+            expected = hmac.new(secret.encode(), f"{head_b64}.{body_b64}".encode(), hashlib.sha256).digest()
+            if not hmac.compare_digest(expected, _b64url_decode(sig_b64)):
+                return None
+            payload = json.loads(_b64url_decode(body_b64))
+            now = int(time.time())
+            if payload.get("exp") is not None and int(payload["exp"]) < now:
+                return None
+            if payload.get("nbf") is not None and int(payload["nbf"]) > now:
+                return None
+            issuer = os.environ.get("SWARMLAB_JWT_ISSUER")
+            if issuer and payload.get("iss") != issuer:
+                return None
+            audience = os.environ.get("SWARMLAB_JWT_AUDIENCE")
+            if audience:
+                aud = payload.get("aud")
+                if isinstance(aud, list):
+                    if audience not in aud:
+                        return None
+                elif aud != audience:
+                    return None
+            raw = payload.get("scope") or payload.get("scopes") or "read write"
+            scopes = set(str(raw).replace(",", " ").split())
+            return scopes or None
+        except (ValueError, TypeError, KeyError):
+            return None
+
     def _auth(self) -> bool:
         header = self.headers.get("Authorization", "")
-        scopes = {"read", "write"}
+        token = header[7:] if header.startswith("Bearer ") else ""
+        jwt_scopes = self._jwt_scopes(token)
+        scopes: set[str] | None = None
         if self.swarm.tokens:
-            token = header[7:] if header.startswith("Bearer ") else ""
-            scopes = set(self.swarm.tokens.get(token, set()))
-            if not scopes:
+            scopes = set(self.swarm.tokens.get(token, set())) or None
+            if scopes is None and jwt_scopes is None:
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
-        elif self.swarm.token and header != f"Bearer {self.swarm.token}":
-            self._error(401, "UNAUTHORIZED", "invalid bearer token")
+        elif self.swarm.token:
+            if header != f"Bearer {self.swarm.token}" and jwt_scopes is None:
+                self._error(401, "UNAUTHORIZED", "invalid bearer token")
+                return False
+        elif os.environ.get("SWARMLAB_JWT_SECRET") and jwt_scopes is None:
+            self._error(401, "UNAUTHORIZED", "JWT required")
             return False
+        if jwt_scopes is not None:
+            scopes = jwt_scopes
+        if scopes is None:
+            scopes = {"read", "write"}
         needed = "write" if self.command == "POST" else "read"
         if needed not in scopes:
             self._error(403, "FORBIDDEN", f"scope '{needed}' required")

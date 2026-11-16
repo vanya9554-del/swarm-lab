@@ -296,6 +296,56 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_RATE_RPS", None)
 
+    def test_jwt(self) -> None:
+        import base64
+        import hashlib
+        import hmac
+        import json
+        import os
+        import time
+
+        def b64(value: bytes) -> str:
+            return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+        def make(payload: dict, secret: str) -> str:
+            head = b64(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
+            body = b64(json.dumps(payload).encode())
+            sig = b64(hmac.new(secret.encode(), f"{head}.{body}".encode(), hashlib.sha256).digest())
+            return f"{head}.{body}.{sig}"
+
+        os.environ["SWARMLAB_JWT_SECRET"] = "jwt-secret"
+        try:
+            token = make({"sub": "a", "exp": int(time.time()) + 60}, "jwt-secret")
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 200)
+            readonly = make({"sub": "a", "scope": "read", "exp": int(time.time()) + 60}, "jwt-secret")
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, readonly)[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/tasks", {"capability": "j"}, readonly)[0], 403)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, make({"exp": int(time.time()) - 1}, "jwt-secret"))[0], 401)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, make({"exp": int(time.time()) + 60}, "wrong"))[0], 401)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, make({"nbf": int(time.time()) + 60}, "jwt-secret"))[0], 401)
+            none_head = b64(json.dumps({"alg": "none", "typ": "JWT"}).encode())
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{none_head}.e30.e30")[0], 401)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, "a.b.c")[0], 401)
+            import os as _os
+            _os.environ["SWARMLAB_JWT_ISSUER"] = "issuer"
+            _os.environ["SWARMLAB_JWT_AUDIENCE"] = "swarm"
+            try:
+                ok = make({"iss": "issuer", "aud": "swarm", "exp": int(time.time()) + 60}, "jwt-secret")
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, ok)[0], 200)
+                bad = make({"iss": "other", "aud": "swarm", "exp": int(time.time()) + 60}, "jwt-secret")
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, bad)[0], 401)
+                bad_aud = make({"iss": "issuer", "aud": "other", "exp": int(time.time()) + 60}, "jwt-secret")
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, bad_aud)[0], 401)
+                list_aud = make({"iss": "issuer", "aud": ["swarm", "other"], "exp": int(time.time()) + 60}, "jwt-secret")
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, list_aud)[0], 200)
+                wrong_list = make({"iss": "issuer", "aud": ["other"], "exp": int(time.time()) + 60}, "jwt-secret")
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, wrong_list)[0], 401)
+            finally:
+                _os.environ.pop("SWARMLAB_JWT_ISSUER", None)
+                _os.environ.pop("SWARMLAB_JWT_AUDIENCE", None)
+        finally:
+            os.environ.pop("SWARMLAB_JWT_SECRET", None)
+
     def test_delete_auth(self) -> None:
         from swarmlab.api import build_server
         other = build_server(SwarmStore(":memory:"), "127.0.0.1", 0, "tok")

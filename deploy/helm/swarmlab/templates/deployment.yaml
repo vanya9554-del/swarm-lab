@@ -44,6 +44,21 @@ spec:
           env:
             {{- include "swarmlab.databaseEnv" . | nindent 12 }}
             {{- include "swarmlab.authEnv" . | nindent 12 }}
+            {{- if .Values.auth.jwtSecret.existingSecret }}
+            - name: SWARMLAB_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.jwtSecret.existingSecret }}
+                  key: {{ .Values.auth.jwtSecret.key }}
+            {{- end }}
+            {{- if .Values.auth.jwtIssuer }}
+            - name: SWARMLAB_JWT_ISSUER
+              value: {{ .Values.auth.jwtIssuer | quote }}
+            {{- end }}
+            {{- if .Values.auth.jwtAudience }}
+            - name: SWARMLAB_JWT_AUDIENCE
+              value: {{ .Values.auth.jwtAudience | quote }}
+            {{- end }}
             - name: SWARMLAB_RATE_RPS
               value: {{ .Values.config.rateRps | quote }}
             - name: SWARMLAB_MAX_PENDING
