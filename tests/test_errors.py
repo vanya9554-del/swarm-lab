@@ -47,9 +47,8 @@ class ErrorTests(unittest.TestCase):
             raise OSError("down")
 
         pkg.connect = fail
-        with patch.dict(sys.modules, {"psycopg": pkg, "psycopg.rows": rows}):
-            with self.assertRaises(RuntimeError):
-                pg.PgSwarmStore("postgresql://x")
+        with patch.dict(sys.modules, {"psycopg": pkg, "psycopg.rows": rows}), self.assertRaises(RuntimeError):
+            pg.PgSwarmStore("postgresql://x")
 
     def test_events_import_error(self) -> None:
         from unittest.mock import patch
