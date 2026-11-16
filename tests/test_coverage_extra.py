@@ -386,13 +386,13 @@ class ExtraApiTests(unittest.TestCase):
 
     def test_jwt_jwks(self) -> None:
         import base64
-        import hashlib
         import json
         import os
         import threading
         import time
         from http.server import BaseHTTPRequestHandler, HTTPServer
-        from cryptography.hazmat.primitives import hashes, serialization
+
+        from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
         def b64(value: bytes) -> str:
@@ -405,7 +405,7 @@ class ExtraApiTests(unittest.TestCase):
                "e": b64(numbers.e.to_bytes((numbers.e.bit_length() + 7) // 8, "big"))}
 
         class Handler(BaseHTTPRequestHandler):
-            def do_GET(self) -> None:  # noqa: N802
+            def do_GET(self) -> None:
                 data = {"keys": [jwk]} if self.path == "/jwks" else {"keys": "bad"}
                 body = json.dumps(data).encode()
                 self.send_response(200)
