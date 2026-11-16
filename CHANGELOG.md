@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [9.7.0] — 2026-11-16
+
+PG chaos 500.
+
+### Добавлено
+- 3 replicas/6 workers/500 tasks exactly-once; 158 тестов.
+
 ## [9.6.0] — 2026-11-16
 
 OIDC RS256 JWT.

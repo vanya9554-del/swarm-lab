@@ -23,3 +23,7 @@ python -m unittest tests.test_chaos -v
 ## 2026-11-16
 
 - `test_chaos_exactly_once`, `test_parallel_exactly_once_and_stale`, `test_reconnect_under_load`, `test_sqlite_concurrent_store` — **4/4 OK**.
+
+## 2026-11-16 PG chaos 500
+
+- 3 реплики, 6 воркеров, **500/500**, exactly-once, 7.2s.

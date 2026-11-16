@@ -1,3 +1,7 @@
+# swarm-lab v9.7.0
+
+PG chaos 500/500 exactly-once.
+
 # swarm-lab v9.6.0
 
 RS256 JWT, optional OIDC dependency; 158 tests.

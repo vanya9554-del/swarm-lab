@@ -1,4 +1,4 @@
-"""S10: chaos — 3 реплики, 6 воркеров, 100 задач, exactly-once."""
+"""S10: chaos — 3 реплики, 6 воркеров, 500 задач, exactly-once."""
 from __future__ import annotations
 
 import os
@@ -36,7 +36,7 @@ def _init(work: Path) -> Path:
 
 
 class ChaosTests(unittest.TestCase):
-    TASKS = 100
+    TASKS = 500
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -99,12 +99,12 @@ class ChaosTests(unittest.TestCase):
             for t in threads:
                 t.start()
             for t in threads:
-                t.join(timeout=30)
+                t.join(timeout=60)
             elapsed = time.perf_counter() - started
             self.assertFalse(errors, errors)
             self.assertEqual(len(seen), self.TASKS)
             self.assertEqual(len(set(seen)), self.TASKS)
-            self.assertLess(elapsed, 30)
+            self.assertLess(elapsed, 60)
             stats = stores[0].stats()
             self.assertEqual(stats["tasks"].get("completed"), self.TASKS)
         finally:
