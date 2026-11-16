@@ -100,3 +100,5 @@ python -m swarmlab serve --port 8788
 - **S100**: 10×500 soak, 5000/5000, 0 errors; milestone 8.0.0.
 
 - **S101**: data retention prune, 145 тестов; release 8.1.0.
+
+- **S102**: final report refresh (v8.1, 145 тестов, 5000 soak).

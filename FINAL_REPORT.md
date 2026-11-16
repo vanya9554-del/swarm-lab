@@ -2,11 +2,11 @@
 
 ## Итог
 
-- **v6.5.0**, tags v1.0.0…v6.5.0
-- **134/134 тестов**, coverage **100,0%**, ruff **0**
+- **v8.1.0**, tags v1.0.0…v8.1.0
+- **145/145 тестов**, coverage **100,0%**, ruff **0**
 - **CI green** (ruff, manifests, SQLite coverage ≥90)
 - GitHub: https://github.com/vanya9554-del/swarm-lab
-- Локальный сервер: `http://127.0.0.1:8788`, MCP `6.5.0`
+- Локальный сервер: `http://127.0.0.1:8788`, MCP `8.1.0`
 - Harness: health/soak каждые 5с, smoke-тесты каждые 15мин, до 16.11 12:00
 
 ## Что реализовано
@@ -27,7 +27,8 @@
 
 | Метрика | Значение |
 |---|---:|
-| HTTP soak 2000/16 | **2000/2000**, 529,7 tasks/s, p50 24,7 ms, p95 68,5 ms |
+| HTTP soak 2000/16 | **2000/2000**, 529,7 tasks/s |
+| HTTP soak 10×500/8 | **5000/5000**, 0 errors |
 | HTTP soak 300/8 | 300/300, 586,7 tasks/s, p50 9,2 ms |
 | Engine benchmark | 5412 tasks/s, p50 1,09 ms |
 | Chaos/load | 4/4 OK (exactly-once, stale, reconnect, SQLite concurrency) |
