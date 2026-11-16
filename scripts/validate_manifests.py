@@ -22,6 +22,12 @@ def check() -> list[str]:
         for needle in needles:
             if needle not in text:
                 errors.append(f"{name}: missing {needle}")
+    for rel in (".github/workflows/release.yml", "deploy/argocd/staging.yaml", "deploy/argocd/prod.yaml"):
+        if not (ROOT / rel).exists():
+            errors.append(f"missing: {rel}")
+    for script in ("backup.py", "restore.py", "release.py", "validate_manifests.py"):
+        if not (ROOT / "scripts" / script).exists():
+            errors.append(f"script missing: {script}")
     obs = (ROOT / "deploy" / "observability")
     for name, rel, needles in [
         ("prometheus-rules", "prometheus-rules.yaml", ["SwarmlabHighErrorRate", "SwarmlabHighLatencyP95"]),

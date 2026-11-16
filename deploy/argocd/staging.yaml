@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: swarmlab-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/vanya9554-del/swarm-lab
+    targetRevision: main
+    path: deploy/helm/swarmlab
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.repository
+          value: ghcr.io/vanya9554-del/swarm-lab
+        - name: image.tag
+          value: main
+        - name: ingress.enabled
+          value: "true"
+        - name: ingress.hosts[0].host
+          value: swarm-staging.example.com
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: swarmlab-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

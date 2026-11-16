@@ -56,3 +56,23 @@ python scripts/validate_manifests.py
 - TLS/Ingress зависит от кластера и cert-manager.
 - Backup SQLite: `VACUUM INTO` в отдельный PVC; восстановление — скопировать файл.
 - Backup PG: `pg_dump` в PVC; восстановление — `psql`.
+
+## Backup/restore (SQLite)
+
+```bash
+python scripts/backup.py --db data/swarm.db --out backups/swarm-$(date +%Y%m%d).db
+python scripts/restore.py --backup backups/swarm-20261116.db --db data/swarm.db
+```
+
+Restore требует остановленный сервер (WAL sidecar-файлы удаляются). Для PG — `pg_dump`/`psql`.
+
+## ArgoCD / GHCR
+
+- `deploy/argocd/staging.yaml` — автосинк с `main`, namespace `swarmlab-staging`.
+- `deploy/argocd/prod.yaml` — тег `vX.Y.Z`, ручной sync.
+- `release.yml` собирает и пушит `ghcr.io/vanya9554-del/swarm-lab:<tag>` на git tag.
+
+```bash
+kubectl apply -f deploy/argocd/staging.yaml
+kubectl apply -f deploy/argocd/prod.yaml
+```
