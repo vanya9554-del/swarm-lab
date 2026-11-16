@@ -33,6 +33,19 @@ class CliTests(unittest.TestCase):
             self.assertEqual(main(["mcp", "--db", ":memory:"]), 0)
             fake.assert_called_once()
 
+    def test_signal_unavailable(self) -> None:
+        from unittest.mock import patch
+        class FakeServer:
+            server_address = ("127.0.0.1", 0)
+            def serve_forever(self):
+                raise KeyboardInterrupt
+            def server_close(self):
+                pass
+            def shutdown(self):
+                pass
+        with patch("swarmlab.api.build_server", return_value=FakeServer()), patch("signal.signal", side_effect=ValueError("nope")):
+            self.assertEqual(main(["serve", "--db", ":memory:"]), 0)
+
     def test_sigterm_handler(self) -> None:
         from unittest.mock import patch
         class FakeServer:
