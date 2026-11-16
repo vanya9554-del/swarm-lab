@@ -61,6 +61,7 @@ class SwarmHTTPServer(ThreadingHTTPServer):
         try:
             import socket
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         except OSError:
             pass
 

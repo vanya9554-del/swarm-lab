@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.4.0] — 2026-11-16
+
+TCP keepalive.
+
+### Добавлено
+- `SO_KEEPALIVE` на server socket; 134 теста, 100% coverage.
+
 ## [6.3.0] — 2026-11-16
 
 Graceful SIGTERM.

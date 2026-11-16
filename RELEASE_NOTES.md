@@ -1,3 +1,7 @@
+# swarm-lab v6.4.0
+
+TCP keepalive, 134 tests, 100% coverage.
+
 # swarm-lab v6.3.0
 
 Graceful SIGTERM, 133 tests.
