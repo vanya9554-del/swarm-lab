@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [8.3.0] — 2026-11-16
+
+Post-change soak.
+
+### Добавлено
+- 10×500/8 = 5000/5000, 0 errors; 149 тестов.
+
 ## [8.2.0] — 2026-11-16
 
 Task event history.

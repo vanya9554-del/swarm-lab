@@ -1,3 +1,7 @@
+# swarm-lab v8.3.0
+
+Post-change 5000/5000 soak, 0 errors.
+
 # swarm-lab v8.2.0
 
 Task event history, 149 tests, 100%.
