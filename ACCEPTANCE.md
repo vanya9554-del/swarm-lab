@@ -44,7 +44,7 @@
 | Migrations/rolling upgrade | ✅ | schema v11, RUNBOOK |
 | ArgoCD staging/prod | ✅ | `deploy/argocd` |
 | GHCR push по тегу | ✅ | release workflow |
-| Live K8s deploy | ⏳ | нет кластера (внешний блокер) |
+| Live K8s deploy | ✅ | kind CI: install/smoke/rolling |
 
 ## Security
 

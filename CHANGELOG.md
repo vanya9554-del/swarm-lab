@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [10.7.0] — 2026-11-16
+
+Live kind cluster validation.
+
+### Добавлено
+- CI job `kind`: реальный Kubernetes, Helm install, server-side dry-run, smoke, rolling upgrade.
+- Fix: `SWARMLAB_MAX_BODY` рендерится как integer (не float scientific).
+- 173 теста, CI green.
+
 ## [10.6.0] — 2026-11-16
 
 Audit metrics.

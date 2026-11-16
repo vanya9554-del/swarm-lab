@@ -1,3 +1,7 @@
+# swarm-lab v10.7.0
+
+Live kind K8s validation in CI; maxBody fix.
+
 # swarm-lab v10.6.0
 
 Audit metrics/stats; 173 tests.
