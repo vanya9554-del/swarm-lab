@@ -41,6 +41,7 @@ def spec() -> dict[str, Any]:
             "/v1/events": {"get": {"summary": "Event log"}},
             "/v1/stream": {"get": {"summary": "SSE stream"}},
             "/v1/batch": {"post": {"summary": "Batch RPC"}},
+            "/v1/audit": {"get": {"summary": "Audit log"}},
             "/v1/stats": {"get": {"summary": "Store stats"}},
             "/v1/maintenance/expire": {"post": {"summary": "Expire TTL tasks"}},
             "/v1/maintenance/vacuum": {"post": {"summary": "WAL checkpoint"}},

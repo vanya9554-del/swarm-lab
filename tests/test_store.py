@@ -65,8 +65,18 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_audit(self) -> None:
+        self.store.audit("login", "actor", "/x", {"ok": 1}, "127.0.0.1")
+        rows = self.store.audits()
+        self.assertEqual(rows[0]["action"], "login")
+        self.assertEqual(rows[0]["detail"], {"ok": 1})
+
+    def test_audit_invalid_detail(self) -> None:
+        self.store.conn.execute("INSERT INTO audit(created_at, action, detail) VALUES (0, 'x', 'bad')")
+        self.assertEqual(self.store.audits()[0]["detail"], "bad")
+
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 10)
+        self.assertEqual(self.store.schema_version(), 11)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

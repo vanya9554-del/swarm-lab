@@ -30,6 +30,7 @@ ROUTES = {
     ("GET", "/v1/version"),
     ("GET", "/v1/capabilities"),
     ("GET", "/v1/openapi"),
+    ("GET", "/v1/audit"),
     ("POST", "/v1/agents"),
     ("DELETE", "/v1/agents/{agent_id}"),
     ("GET", "/v1/agents"),
@@ -104,6 +105,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
 
     def handle_one_request(self) -> None:
         self.request_id = uuid.uuid4().hex[:12]
+        self.audit_actor = ""
         self._started = time.perf_counter()
         super().handle_one_request()
 
@@ -137,6 +139,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
             self.command, path, status,
             time.perf_counter() - getattr(self, "_started", time.perf_counter()),
         )
+        if self.command in ("POST", "DELETE") and status < 400 and not path.startswith("/mcp"):
+            self._record_audit("api.mutation", path, {"status": status})
         body = _json(payload)
         encoding = ""
         if len(body) >= 512 and "gzip" in self.headers.get("Accept-Encoding", ""):
@@ -182,6 +186,18 @@ class SwarmHandler(BaseHTTPRequestHandler):
 
     def _error(self, status: int, code: str, message: str) -> None:
         self._send(status, {"ok": False, "error": {"code": code, "message": message}})
+
+    def _record_audit(self, action: str, target: str = "", detail: Any = None) -> None:
+        try:
+            self.swarm.store.audit(
+                action,
+                actor=getattr(self, "audit_actor", ""),
+                target=target,
+                detail=detail,
+                ip=self.address_string(),
+            )
+        except Exception:  # noqa: BLE001, S110
+            pass
 
     def _jwt_scopes(self, token: str) -> set[str] | None:
         secret = os.environ.get("SWARMLAB_JWT_SECRET", "")
@@ -237,18 +253,22 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def _auth(self) -> bool:
         header = self.headers.get("Authorization", "")
         token = header[7:] if header.startswith("Bearer ") else ""
+        self.audit_actor = f"token:{hashlib.sha256(token.encode()).hexdigest()[:12]}" if token else "anonymous"
         jwt_scopes = self._jwt_scopes(token)
         scopes: set[str] | None = None
         if self.swarm.tokens:
             scopes = set(self.swarm.tokens.get(token, set())) or None
             if scopes is None and jwt_scopes is None:
+                self._record_audit("auth.denied", self.path)
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
         elif self.swarm.token:
             if header != f"Bearer {self.swarm.token}" and jwt_scopes is None:
+                self._record_audit("auth.denied", self.path)
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
         elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY")) and jwt_scopes is None:
+            self._record_audit("auth.denied", self.path)
             self._error(401, "UNAUTHORIZED", "JWT required")
             return False
         if jwt_scopes is not None:
@@ -257,6 +277,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
             scopes = {"read", "write"}
         needed = "write" if self.command == "POST" else "read"
         if needed not in scopes:
+            self._record_audit("auth.forbidden", self.path, {"needed": needed})
             self._error(403, "FORBIDDEN", f"scope '{needed}' required")
             return False
         self.scopes = scopes
@@ -294,7 +315,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
         try:
-            if path == "/ready":
+            if path == "/v1/audit":
+                self._send(200, {"ok": True, "data": self.swarm.store.audits(int((query.get("limit") or ["100"])[0]))})
+            elif path == "/ready":
                 try:
                     stats = self.swarm.store.stats()
                     check = self.swarm.store.check() if hasattr(self.swarm.store, "check") else {"ok": True}

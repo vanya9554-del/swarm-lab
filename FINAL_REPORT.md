@@ -2,12 +2,12 @@
 
 ## Итог
 
-- **Версия:** 10.0.0; теги `v1.0.0`…`v10.0.0`.
-- **Тесты:** 163/163 OK; coverage **100,0%**; ruff **0**.
+- **Версия:** 10.1.0; теги `v1.0.0`…`v10.1.0`.
+- **Тесты:** 170/170 OK; coverage **100,0%**; ruff **0**.
 - **CI:** green — test, docker build, Trivy, Helm lint/template, kubeconform.
 - **CD:** GHCR image по тегу; ArgoCD staging/prod.
 - GitHub: https://github.com/vanya9554-del/swarm-lab
-- Локальный сервер: `http://127.0.0.1:8788`, MCP **10.0.0**.
+- Локальный сервер: `http://127.0.0.1:8788`, MCP **10.1.0**.
 
 ## Что реализовано
 

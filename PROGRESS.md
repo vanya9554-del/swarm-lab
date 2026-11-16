@@ -136,3 +136,5 @@ python -m swarmlab serve --port 8788
 - **S121**: HTTP PG multi-replica chaos 100/100; release 9.9.0.
 
 - **S122**: milestone 10.0, acceptance checklist; release 10.0.0.
+
+- **S123**: audit log, schema v11, 170 тестов; release 10.1.0.

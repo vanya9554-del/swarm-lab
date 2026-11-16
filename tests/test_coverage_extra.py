@@ -482,6 +482,21 @@ class ExtraApiTests(unittest.TestCase):
         _, claim3, _ = _req("POST", self.base + "/v1/tasks/claim", {"agent_id": "dep", "capability": "dep"})
         self.assertEqual(claim3["data"]["task_id"], second_id)
 
+    def test_audit_failure(self) -> None:
+        original = self.store.audit
+        self.store.audit = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+        try:
+            status, _, _ = _req("POST", self.base + "/v1/tasks", {"capability": "fail"})
+            self.assertEqual(status, 200)
+        finally:
+            self.store.audit = original
+
+    def test_audit_api(self) -> None:
+        _req("POST", self.base + "/v1/tasks", {"capability": "au"})
+        status, body, _ = _req("GET", self.base + "/v1/audit")
+        self.assertEqual(status, 200)
+        self.assertTrue(any(row["action"] == "api.mutation" for row in body["data"]))
+
     def test_task_events_api(self) -> None:
         _, body, _ = _req("POST", self.base + "/v1/tasks", {"capability": "ev"})
         task_id = body["data"]["task_id"]

@@ -21,7 +21,7 @@
 
 | Критерий | Статус | Значение |
 |---|---|---|
-| unit/integration tests | ✅ | **163/163 OK** |
+| unit/integration tests | ✅ | **170/170 OK** |
 | coverage | ✅ | **100,0%** |
 | ruff | ✅ | 0 |
 | CI (test/docker/trivy/helm/kubeconform) | ✅ | green |
@@ -41,7 +41,7 @@
 | TLS ingress | ✅ | chart ingress/tls |
 | HPA/PDB/NetworkPolicy | ✅ | chart |
 | Backup/restore | ✅ | scripts + test + CronJob |
-| Migrations/rolling upgrade | ✅ | schema v10, RUNBOOK |
+| Migrations/rolling upgrade | ✅ | schema v11, RUNBOOK |
 | ArgoCD staging/prod | ✅ | `deploy/argocd` |
 | GHCR push по тегу | ✅ | release workflow |
 | Live K8s deploy | ⏳ | нет кластера (внешний блокер) |
@@ -55,6 +55,7 @@
 | Rate limit/body limit/headers | ✅ | tests |
 | Secrets via K8s/ESO | ✅ | Helm values/existingSecret |
 | Пентест-чеклист | ✅ | SECURITY.md |
+| Audit log | ✅ | `/v1/audit`, MCP `swarm_audit` |
 | Trivy | ✅ | CI |
 | Внешний аудит/пентест | ⏳ | внешний исполнитель |
 | KMS/S3 | ⏳ | нет доступа |

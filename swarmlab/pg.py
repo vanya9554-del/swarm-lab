@@ -42,6 +42,15 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tasks_dedup ON tasks(capability, dedup_key)
     WHERE dedup_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_tasks_pending ON tasks(status, priority, created_at);
+CREATE TABLE IF NOT EXISTS audit (
+    id BIGSERIAL PRIMARY KEY,
+    created_at DOUBLE PRECISION NOT NULL,
+    actor TEXT NOT NULL DEFAULT '',
+    action TEXT NOT NULL,
+    target TEXT NOT NULL DEFAULT '',
+    detail TEXT NOT NULL DEFAULT '',
+    ip TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS events (
     seq BIGSERIAL PRIMARY KEY,
     type TEXT NOT NULL,
@@ -99,7 +108,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 10) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 11) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -393,6 +402,23 @@ class PgSwarmStore:
         sql += " ORDER BY created_at DESC LIMIT %s"
         params.append(int(limit))
         return [self._decode(row) for row in self._all(sql, tuple(params))]
+
+    def audit(self, action: str, actor: str = "", target: str = "", detail: Any = None, ip: str = "") -> None:
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO audit(created_at, actor, action, target, detail, ip) VALUES (%s, %s, %s, %s, %s, %s)",
+                (time.time(), actor, action, target, json.dumps(detail or {}), ip),
+            )
+            self.conn.commit()
+
+    def audits(self, limit: int = 100) -> list[dict[str, Any]]:
+        rows = self._all("SELECT * FROM audit ORDER BY id DESC LIMIT %s", (max(1, min(500, int(limit))),))
+        for row in rows:
+            try:
+                row["detail"] = json.loads(row.get("detail") or "{}")
+            except (ValueError, TypeError):
+                pass
+        return rows
 
     def task_events(self, task_id: str, limit: int = 50) -> list[dict[str, Any]]:
         rows = self._all(

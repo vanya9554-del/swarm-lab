@@ -142,6 +142,11 @@ class McpTests(unittest.TestCase):
             thread.join(timeout=5)
 
 
+    def test_audit_tool(self) -> None:
+        rows = self._text(self._call("swarm_audit", {"limit": 5}))
+        self.assertIsInstance(rows, list)
+
+
 if __name__ == "__main__":
     unittest.main()
 

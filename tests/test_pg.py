@@ -383,11 +383,30 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_audit(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.audit("login", "actor", "/x", {"ok": 1}, "127.0.0.1")
+            self.assertEqual(s.audits()[0]["action"], "login")
+        finally:
+            s.close()
+
+    def test_audit_invalid_detail(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.conn.execute("INSERT INTO audit(created_at, action, detail) VALUES (0, 'x', 'bad')")
+            s.conn.commit()
+            self.assertEqual(s.audits()[0]["detail"], "bad")
+        finally:
+            s.close()
+
     def test_schema_version(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 10)
+            self.assertEqual(s.schema_version(), 11)
         finally:
             s.close()
 

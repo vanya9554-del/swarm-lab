@@ -1,3 +1,7 @@
+# swarm-lab v10.1.0
+
+Audit log (/v1/audit, MCP), schema v11; 170 tests.
+
 # swarm-lab v10.0.0
 
 Production-ready milestone: 163 tests, 100%, CI/CD, Helm, observability, JWT.

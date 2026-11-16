@@ -10,7 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -56,6 +56,15 @@ CREATE TABLE IF NOT EXISTS events (
     type       TEXT NOT NULL,
     payload    TEXT,
     created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS audit (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at REAL NOT NULL,
+    actor      TEXT NOT NULL DEFAULT '',
+    action     TEXT NOT NULL,
+    target     TEXT NOT NULL DEFAULT '',
+    detail     TEXT NOT NULL DEFAULT '',
+    ip         TEXT NOT NULL DEFAULT ''
 );
 """
 
@@ -381,6 +390,22 @@ class SwarmStore:
         sql += " ORDER BY created_at DESC LIMIT ?"
         params.append(int(limit))
         return [self._decode(row) for row in self._all(sql, tuple(params))]
+
+    def audit(self, action: str, actor: str = "", target: str = "", detail: Any = None, ip: str = "") -> None:
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO audit(created_at, actor, action, target, detail, ip) VALUES (?, ?, ?, ?, ?, ?)",
+                (time.time(), actor, action, target, json.dumps(detail or {}), ip),
+            )
+
+    def audits(self, limit: int = 100) -> list[dict[str, Any]]:
+        rows = self._all("SELECT * FROM audit ORDER BY id DESC LIMIT ?", (max(1, min(500, int(limit))),))
+        for row in rows:
+            try:
+                row["detail"] = json.loads(row.get("detail") or "{}")
+            except (ValueError, TypeError):
+                pass
+        return rows
 
     def task_events(self, task_id: str, limit: int = 50) -> list[dict[str, Any]]:
         rows = self._all(

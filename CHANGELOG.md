@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [10.1.0] — 2026-11-16
+
+Audit log.
+
+### Добавлено
+- `audit` table (SQLite/PG): auth denied/forbidden, mutations; `/v1/audit`, MCP `swarm_audit`.
+- Schema v11; 170 тестов, 100% coverage.
+
 ## [10.0.0] — 2026-11-16
 
 Milestone 10.0: production-ready.
