@@ -27,3 +27,7 @@ python -m unittest tests.test_chaos -v
 ## 2026-11-16 PG chaos 500
 
 - 3 реплики, 6 воркеров, **500/500**, exactly-once, 7.2s.
+
+## 2026-11-16 HTTP PG 2 replicas
+
+- 2 API-реплики на общем PG, 2 клиента, **100/100** exactly-once.

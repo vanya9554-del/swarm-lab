@@ -65,6 +65,61 @@ class ChaosTests(unittest.TestCase):
             pass
         cls.tmp.cleanup()
 
+    def test_http_two_replicas(self) -> None:
+        import threading
+
+        from swarmlab.api import build_server
+        from swarmlab.client import SwarmClient
+        from swarmlab.pg import PgSwarmStore
+
+        stores = [PgSwarmStore(self.dsn) for _ in range(2)]
+        servers = [build_server(st, "127.0.0.1", 0) for st in stores]
+        threads = [threading.Thread(target=srv.serve_forever, daemon=True) for srv in servers]
+        for t in threads:
+            t.start()
+        clients = [SwarmClient(f"http://127.0.0.1:{srv.server_address[1]}") for srv in servers]
+        try:
+            for i, c in enumerate(clients):
+                c.register(f"h{i}", ["httpchaos"])
+            baseline = clients[0].stats()["tasks"].get("completed", 0)
+            for i in range(100):
+                clients[0].submit("httpchaos", {"n": i})
+            seen: list[str] = []
+            errors: list[BaseException] = []
+            lock = threading.Lock()
+            barrier = threading.Barrier(2)
+
+            def worker(idx: int) -> None:
+                try:
+                    barrier.wait(timeout=5)
+                    while True:
+                        task = clients[idx].claim(f"h{idx}", "httpchaos")
+                        if not task:
+                            return
+                        clients[idx].complete(task["task_id"], f"h{idx}", {}, task["lease_epoch"])
+                        with lock:
+                            seen.append(task["task_id"])
+                except BaseException as exc:  # noqa: BLE001
+                    errors.append(exc)
+
+            workers = [threading.Thread(target=worker, args=(i,)) for i in range(2)]
+            for t in workers:
+                t.start()
+            for t in workers:
+                t.join(timeout=30)
+            self.assertFalse(errors, errors)
+            self.assertEqual(len(seen), 100)
+            self.assertEqual(len(set(seen)), 100)
+            self.assertEqual(clients[0].stats()["tasks"].get("completed"), baseline + 100)
+        finally:
+            for c in clients:
+                c.close()
+            for srv in servers:
+                srv.shutdown()
+                srv.server_close()
+            for st in stores:
+                st.close()
+
     def test_chaos_exactly_once(self) -> None:
         from swarmlab.pg import PgSwarmStore
         stores = [PgSwarmStore(self.dsn) for _ in range(3)]

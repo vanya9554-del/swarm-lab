@@ -132,3 +132,5 @@ python -m swarmlab serve --port 8788
 - **S119**: PG chaos 500/500; release 9.7.0.
 
 - **S120**: Python client SDK, 162 теста; release 9.8.0.
+
+- **S121**: HTTP PG multi-replica chaos 100/100; release 9.9.0.

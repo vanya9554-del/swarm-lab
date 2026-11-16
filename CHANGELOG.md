@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [9.9.0] — 2026-11-16
+
+HTTP multi-replica chaos.
+
+### Добавлено
+- 2 API-реплики на общем PG: 100/100 exactly-once; 163 теста.
+
 ## [9.8.0] — 2026-11-16
 
 Python client SDK.

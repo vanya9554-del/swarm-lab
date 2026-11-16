@@ -1,3 +1,7 @@
+# swarm-lab v9.9.0
+
+HTTP PG multi-replica chaos 100/100; 163 tests.
+
 # swarm-lab v9.8.0
 
 Python client SDK; 162 tests.
