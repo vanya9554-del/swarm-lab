@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [7.1.0] — 2026-11-16
+
+Engine benchmark.
+
+### Добавлено
+- SQLite 1000/8: 3354.6 tasks/s, p50 1.987 ms; 140 тестов.
+
 ## [7.0.0] — 2026-11-16
 
 Milestone 7.0: security headers.

@@ -92,3 +92,5 @@ python -m swarmlab serve --port 8788
 - **S96**: GitHub Release v6.9.0 + assets (checksums, sbom, notes).
 
 - **S97**: security headers, milestone 7.0.0.
+
+- **S98**: engine 3354.6 tasks/s; release 7.1.0.

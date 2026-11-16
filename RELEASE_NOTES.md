@@ -1,3 +1,7 @@
+# swarm-lab v7.1.0
+
+Engine benchmark 3354.6 tasks/s, p50 1.987 ms.
+
 # swarm-lab v7.0.0
 
 Milestone 7.0: security headers, 140 tests, 100% coverage.

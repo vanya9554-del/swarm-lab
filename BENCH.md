@@ -24,3 +24,7 @@ multi-replica exactly-once отдельно (`tests/test_load.py`).
 ## HTTP (8 workers, 200 tasks)
 
 - **200/200**, 726.4 tasks/s, p50 7.47 ms, p95 25.5 ms; 0 errors. См. `HTTP_BENCH.md`.
+
+## 7.0 (SQLite, 1000/8)
+
+- **1000/1000**, **3354.6 tasks/s**, p50 **1.987 ms**, p95 **4.657 ms**, 0 errors.
