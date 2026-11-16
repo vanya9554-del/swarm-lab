@@ -21,6 +21,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t swarmlab:ci .
       - run: docker run --rm swarmlab:ci python -m swarmlab --version
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: swarmlab:ci
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
 
   helm:
     runs-on: ubuntu-latest
