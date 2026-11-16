@@ -389,6 +389,11 @@ class SwarmStore:
                     pass
         return rows
 
+    def vacuum(self) -> dict[str, Any]:
+        with self.lock:
+            row = self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+        return {"ok": True, "checkpoint": list(row) if row else []}
+
     def check(self) -> dict[str, Any]:
         row = self._one("PRAGMA quick_check")
         value = str(next(iter(row.values()))) if row else "unknown"

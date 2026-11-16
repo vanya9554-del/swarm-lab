@@ -389,6 +389,11 @@ class PgSwarmStore:
                     pass
         return rows
 
+    def vacuum(self) -> dict[str, Any]:
+        with self.lock:
+            self.conn.commit()
+        return {"ok": True}
+
     def check(self) -> dict[str, Any]:
         row = self._one("SELECT 1 AS ok")
         return {"ok": bool(row and row.get("ok") == 1)}

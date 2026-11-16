@@ -351,6 +351,14 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_vacuum(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            self.assertTrue(s.vacuum()["ok"])
+        finally:
+            s.close()
+
     def test_check(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

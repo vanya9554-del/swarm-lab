@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.9.0] — 2026-11-16
+
+WAL checkpoint/vacuum.
+
+### Добавлено
+- `POST /v1/maintenance/vacuum`, MCP `swarm_vacuum`; 140 тестов.
+
 ## [6.8.0] — 2026-11-16
 
 Readiness integrity.

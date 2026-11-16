@@ -1,3 +1,7 @@
+# swarm-lab v6.9.0
+
+Vacuum/WAL checkpoint, 140 tests, 100%.
+
 # swarm-lab v6.8.0
 
 Readiness integrity check, 136 tests.
