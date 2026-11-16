@@ -1,3 +1,7 @@
+# swarm-lab v6.7.0
+
+SQLite pragmas tuned; 500/500 soak.
+
 # swarm-lab v6.6.0
 
 Final report, 134 tests, 100% coverage.

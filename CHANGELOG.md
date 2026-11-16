@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.7.0] — 2026-11-16
+
+SQLite tuning.
+
+### Добавлено
+- busy_timeout 5s, cache 20MB, temp_store MEMORY; 500/500, 499.7 tasks/s.
+
 ## [6.6.0] — 2026-11-16
 
 Final report.

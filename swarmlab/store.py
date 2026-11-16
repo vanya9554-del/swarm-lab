@@ -13,6 +13,9 @@ from typing import Any
 SCHEMA = """
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
+PRAGMA busy_timeout=5000;
+PRAGMA cache_size=-20000;
+PRAGMA temp_store=MEMORY;
 
 CREATE TABLE IF NOT EXISTS agents (
     agent_id      TEXT PRIMARY KEY,
