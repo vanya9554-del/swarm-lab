@@ -34,9 +34,10 @@ class ErrorTests(unittest.TestCase):
 
     def test_pg_connect_failure(self) -> None:
         import sys
-        from unittest.mock import patch
-        import swarmlab.pg as pg
         import types
+        from unittest.mock import patch
+
+        from swarmlab import pg
         pkg = types.ModuleType("psycopg")
         pkg.__path__ = []
         rows = types.ModuleType("psycopg.rows")
