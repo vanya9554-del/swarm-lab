@@ -118,3 +118,5 @@ python -m swarmlab serve --port 8788
 - **S112**: Helm chart + Docker/Helm CI, milestone 9.0.0.
 
 - **S113**: observability (histogram, JSON logs, alerts, Grafana, SLO); release 9.1.0.
+
+- **S114**: JWT security + Helm wiring; release 9.2.0.

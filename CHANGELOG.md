@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [9.2.0] — 2026-11-16
+
+JWT security.
+
+### Добавлено
+- HS256 JWT auth, `iss`/`aud`/`exp`/`nbf`, scopes; Helm wiring.
+- SECURITY.md/пентест-чеклист; 152 теста, 100% coverage.
+
 ## [9.1.0] — 2026-11-16
 
 Observability.

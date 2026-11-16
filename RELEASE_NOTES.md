@@ -1,3 +1,7 @@
+# swarm-lab v9.2.0
+
+HS256 JWT auth, issuer/audience, 152 tests.
+
 # swarm-lab v9.1.0
 
 Observability: histogram, JSON logs, alerts, dashboard, SLO; 151 tests.
