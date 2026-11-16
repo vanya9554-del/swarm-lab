@@ -351,6 +351,14 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_prune(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            self.assertIn("tasks", s.prune(60))
+        finally:
+            s.close()
+
     def test_vacuum(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

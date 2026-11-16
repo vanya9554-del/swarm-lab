@@ -389,6 +389,17 @@ class SwarmStore:
                     pass
         return rows
 
+    def prune(self, older_than_s: float = 86400) -> dict[str, Any]:
+        cutoff = time.time() - max(60.0, float(older_than_s))
+        with self.lock:
+            tasks = self.conn.execute(
+                "DELETE FROM tasks WHERE status IN ('completed', 'failed', 'cancelled') "
+                "AND completed_at IS NOT NULL AND completed_at < ?",
+                (cutoff,),
+            ).rowcount
+            events = self.conn.execute("DELETE FROM events WHERE created_at < ?", (cutoff,)).rowcount
+        return {"ok": True, "tasks": int(tasks or 0), "events": int(events or 0), "cutoff": cutoff}
+
     def vacuum(self) -> dict[str, Any]:
         with self.lock:
             row = self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()

@@ -137,6 +137,8 @@ class McpDispatcher:
                     str(args.get("task_id") or ""), str(args.get("agent_id") or ""),
                     args.get("result"), success=bool(args.get("success", True)), fence=fence,
                 ))
+            if name == "swarm_prune":
+                return _text(self.store.prune(float(args.get("older_than_s") or 86400)))
             if name == "swarm_vacuum":
                 return _text(self.store.vacuum())
             if name == "swarm_expire":
@@ -211,6 +213,7 @@ TOOLS: tuple[dict[str, Any], ...] = (
     {"name": "swarm_submit", "description": "Submit task", "inputSchema": {"type": "object", "properties": {"capability": {"type": "string"}, "payload": {}, "priority": {"type": "integer"}, "dedup_key": {"type": "string"}, "affinity_agent_id": {"type": "string"}}, "required": ["capability"], "additionalProperties": False}},
     {"name": "swarm_claim", "description": "Claim task", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "capability": {"type": "string"}, "lease_s": {"type": "number"}}, "required": ["agent_id"], "additionalProperties": False}},
     {"name": "swarm_complete", "description": "Complete task", "inputSchema": {"type": "object", "properties": {"task_id": {"type": "string"}, "agent_id": {"type": "string"}, "result": {}, "success": {"type": "boolean"}, "fence": {"type": "integer"}}, "required": ["task_id", "agent_id"], "additionalProperties": False}},
+    {"name": "swarm_prune", "description": "Prune old completed tasks/events", "inputSchema": {"type": "object", "properties": {"older_than_s": {"type": "number"}}, "additionalProperties": False}},
     {"name": "swarm_vacuum", "description": "WAL checkpoint/vacuum", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
     {"name": "swarm_expire", "description": "Expire pending TTL tasks", "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
     {"name": "swarm_get_agent", "description": "Get agent profile", "inputSchema": {"type": "object", "properties": {"agent_id": {"type": "string"}}, "required": ["agent_id"], "additionalProperties": False}},

@@ -39,6 +39,18 @@ class StoreTests(unittest.TestCase):
         idem = self.store.complete(task["task_id"], "a2", {"ok": 2}, fence=again["lease_epoch"])
         self.assertTrue(idem.get("idempotent"))
 
+    def test_prune(self) -> None:
+        import time
+        t = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        self.store.complete(t["task_id"], "a1", {}, fence=self.store.get(t["task_id"])["lease_epoch"])
+        self.store.conn.execute("UPDATE tasks SET completed_at=0 WHERE task_id=?", (t["task_id"],))
+        self.store.conn.execute("INSERT INTO events(type, payload, created_at) VALUES ('old', '{}', 0)")
+        self.store.conn.commit()
+        out = self.store.prune(60)
+        self.assertGreaterEqual(out["tasks"], 1)
+        self.assertGreaterEqual(out["events"], 1)
+
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 

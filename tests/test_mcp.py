@@ -63,6 +63,9 @@ class McpTests(unittest.TestCase):
         next_claim = self._text(self._call("swarm_claim", {"agent_id": "dep", "capability": "dep"}))
         self.assertEqual(next_claim["task_id"], second["task_id"])
 
+    def test_prune_tool(self) -> None:
+        self.assertIn("tasks", self._text(self._call("swarm_prune", {"older_than_s": 60})))
+
     def test_vacuum_tool(self) -> None:
         self.assertTrue(self._text(self._call("swarm_vacuum", {}))["ok"])
 

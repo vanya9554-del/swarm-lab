@@ -389,6 +389,20 @@ class PgSwarmStore:
                     pass
         return rows
 
+    def prune(self, older_than_s: float = 86400) -> dict[str, Any]:
+        cutoff = time.time() - max(60.0, float(older_than_s))
+        with self.lock:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "DELETE FROM tasks WHERE status IN ('completed', 'failed', 'cancelled') "
+                    "AND completed_at IS NOT NULL AND completed_at < %s", (cutoff,)
+                )
+                tasks = cur.rowcount
+                cur.execute("DELETE FROM events WHERE created_at < %s", (cutoff,))
+                events = cur.rowcount
+            self.conn.commit()
+        return {"ok": True, "tasks": int(tasks or 0), "events": int(events or 0), "cutoff": cutoff}
+
     def vacuum(self) -> dict[str, Any]:
         with self.lock:
             self.conn.commit()

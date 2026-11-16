@@ -42,6 +42,7 @@ ROUTES = {
     ("POST", "/v1/batch"),
     ("POST", "/v1/maintenance/expire"),
     ("POST", "/v1/maintenance/vacuum"),
+    ("POST", "/v1/maintenance/prune"),
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
@@ -328,6 +329,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 message = body
                 response = self.swarm.mcp.handle(message)
                 self._send(200, response or {})
+            elif path == "/v1/maintenance/prune":
+                self._send(200, {"ok": True, "data": self.swarm.store.prune(float(body.get("older_than_s") or 86400))})
             elif path == "/v1/maintenance/vacuum":
                 self._send(200, {"ok": True, "data": self.swarm.store.vacuum()})
             elif path == "/v1/maintenance/expire":

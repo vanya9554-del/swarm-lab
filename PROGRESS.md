@@ -98,3 +98,5 @@ python -m swarmlab serve --port 8788
 - **S99**: HEAD support, 141 тест; release 7.2.0.
 
 - **S100**: 10×500 soak, 5000/5000, 0 errors; milestone 8.0.0.
+
+- **S101**: data retention prune, 145 тестов; release 8.1.0.

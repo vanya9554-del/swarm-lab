@@ -43,6 +43,7 @@ def spec() -> dict[str, Any]:
             "/v1/stats": {"get": {"summary": "Store stats"}},
             "/v1/maintenance/expire": {"post": {"summary": "Expire TTL tasks"}},
             "/v1/maintenance/vacuum": {"post": {"summary": "WAL checkpoint"}},
+            "/v1/maintenance/prune": {"post": {"summary": "Prune old rows"}},
             "/mcp": {"post": {"summary": "MCP JSON-RPC"}},
         },
     }

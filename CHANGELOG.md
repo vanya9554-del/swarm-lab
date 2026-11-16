@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [8.1.0] — 2026-11-16
+
+Data retention prune.
+
+### Добавлено
+- `POST /v1/maintenance/prune`, MCP `swarm_prune`; 145 тестов.
+
 ## [8.0.0] — 2026-11-16
 
 Milestone 8.0: soak stability.
