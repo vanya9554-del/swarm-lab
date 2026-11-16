@@ -238,6 +238,15 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_requeue_direct(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            with self.assertRaises(RuntimeError):
+                s.requeue("missing-direct")
+        finally:
+            s.close()
+
     def test_notify_failure(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)

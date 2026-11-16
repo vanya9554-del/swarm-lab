@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.30.0] — 2026-11-16
+
+Test suite 130.
+
+### Добавлено
+- MCP call-error/PG requeue tests; 130 тестов.
+
 ## [5.29.0] — 2026-11-16
 
 Coverage 99.7%.

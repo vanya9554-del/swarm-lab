@@ -160,3 +160,22 @@ class McpStdioErrorTests(unittest.TestCase):
             self.assertIn("result", text)
         finally:
             store.close()
+
+
+
+class McpCallErrorTests(unittest.TestCase):
+    def test_call_errors(self) -> None:
+        from unittest.mock import patch
+        from swarmlab.mcp import McpDispatcher, McpError
+        from swarmlab.store import SwarmStore
+        store = SwarmStore(":memory:")
+        try:
+            dispatcher = McpDispatcher(store)
+            with patch.object(dispatcher, "_call", side_effect=McpError(-32602, "bad")):
+                response = dispatcher.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "x"}})
+            self.assertIn("error", response)
+            with patch.object(dispatcher, "_call", side_effect=ValueError("bad")):
+                response = dispatcher.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "x"}})
+            self.assertIn("error", response)
+        finally:
+            store.close()
