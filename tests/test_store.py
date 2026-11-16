@@ -79,6 +79,14 @@ class StoreTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_AGENT_TTL", None)
 
+    def test_invalid_max_pending(self) -> None:
+        import os
+        os.environ["SWARMLAB_MAX_PENDING"] = "bad"
+        try:
+            self.store.submit("x", {})
+        finally:
+            os.environ.pop("SWARMLAB_MAX_PENDING", None)
+
     def test_backpressure(self) -> None:
         import os
 

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.23.0] — 2026-11-16
+
+Invalid backpressure env.
+
+### Добавлено
+- `SWARMLAB_MAX_PENDING=bad` → 0; coverage 97,5%, 118 тестов.
+
 ## [5.22.0] — 2026-11-16
 
 Soak validation.
