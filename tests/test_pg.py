@@ -229,6 +229,38 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_notify_failure(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        real = s.conn
+
+        class Wrap:
+            def __init__(self):
+                self.calls = 0
+            def cursor(self):
+                self.calls += 1
+                calls = self.calls
+                class Ctx:
+                    def __enter__(self):
+                        if calls == 2:
+                            raise RuntimeError("notify failed")
+                        self._cur = real.cursor()
+                        return self._cur
+                    def __exit__(self, *args):
+                        self._cur.close()
+                return Ctx()
+            def __getattr__(self, name):
+                return getattr(real, name)
+
+        s.conn = Wrap()
+        try:
+            self.assertGreater(s.event("notify.test", {}), 0)
+            with self.assertRaises(RuntimeError):
+                s.requeue("definitely-missing")
+        finally:
+            s.conn = real
+            s.close()
+
     def test_env_and_complete(self) -> None:
         import os
         import time

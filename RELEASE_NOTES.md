@@ -1,3 +1,7 @@
+# swarm-lab v5.27.0
+
+Coverage 99.1%, store 100%, 125 tests.
+
 # swarm-lab v5.26.0
 
 Renew stale coverage, 122 tests, 98.7%.

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.27.0] — 2026-11-16
+
+Coverage 99%.
+
+### Добавлено
+- claim rollback/exception, PG notify failure; store 100%, total 99,1%, 125 тестов.
+
 ## [5.26.0] — 2026-11-16
 
 Renew stale coverage.

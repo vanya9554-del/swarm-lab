@@ -146,6 +146,34 @@ class StoreTests(unittest.TestCase):
             finally:
                 store.close()
 
+    def test_claim_exception(self) -> None:
+        from unittest.mock import patch
+        self.store.submit("x", {})
+        with patch.object(self.store, "_one", side_effect=RuntimeError("boom")):
+            with self.assertRaises(RuntimeError):
+                self.store.claim("a1", "x")
+
+    def test_claim_rollback(self) -> None:
+        self.store.submit("x", {})
+        real = self.store.conn
+
+        class Flaky:
+            def __init__(self, conn):
+                self._conn = conn
+            def execute(self, sql, *args, **kwargs):
+                if str(sql).startswith("BEGIN"):
+                    raise RuntimeError("db locked")
+                return self._conn.execute(sql, *args, **kwargs)
+            def __getattr__(self, name):
+                return getattr(self._conn, name)
+
+        self.store.conn = Flaky(real)
+        try:
+            with self.assertRaises(RuntimeError):
+                self.store.claim("a1", "x")
+        finally:
+            self.store.conn = real
+
     def test_guards(self) -> None:
         t = self.store.submit("x", {})
         claimed = self.store.claim("a1", "x")
