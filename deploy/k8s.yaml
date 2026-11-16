@@ -29,13 +29,14 @@ spec:
     metadata:
       labels: {app: swarmlab}
     spec:
+      terminationGracePeriodSeconds: 10
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
       containers:
         - name: swarmlab
-          image: swarmlab:1.0.0
+          image: swarmlab:5.31.0
           ports: [{containerPort: 8788, name: http}]
           env:
             - name: SWARMLAB_TOKEN
@@ -43,6 +44,10 @@ spec:
                 secretKeyRef: {name: swarmlab-secrets, key: token}
             - name: SWARMLAB_RATE_RPS
               value: "50"
+          startupProbe:
+            httpGet: {path: /ready, port: http}
+            failureThreshold: 12
+            periodSeconds: 5
           readinessProbe:
             httpGet: {path: /ready, port: http}
             initialDelaySeconds: 3

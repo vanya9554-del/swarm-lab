@@ -12,8 +12,8 @@ def check() -> list[str]:
     for name, text, needles in [
         ("Dockerfile", docker, ["HEALTHCHECK", "USER app", "EXPOSE 8788"]),
         ("compose", compose, ["healthcheck", "postgres", "/health"]),
-        ("k8s", k8s, ["/ready", "runAsNonRoot", "resources", "PodDisruptionBudget", "NetworkPolicy"]),
-        ("k8s-postgres", pg, ["HorizontalPodAutoscaler", "/ready", "replicas: 2"]),
+        ("k8s", k8s, ["/ready", "startupProbe", "terminationGracePeriodSeconds", "runAsNonRoot", "resources", "PodDisruptionBudget", "NetworkPolicy"]),
+        ("k8s-postgres", pg, ["HorizontalPodAutoscaler", "/ready", "startupProbe", "terminationGracePeriodSeconds", "replicas: 2"]),
     ]:
         for needle in needles:
             if needle not in text:

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.0.0] — 2026-11-16
+
+Milestone 6.0: K8s lifecycle hardening.
+
+### Добавлено
+- startupProbe, terminationGracePeriodSeconds; image 5.31.0; validator обновлён.
+
 ## [5.31.0] — 2026-11-16
 
 Coverage 100%.

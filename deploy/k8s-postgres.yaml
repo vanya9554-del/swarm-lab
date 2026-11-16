@@ -19,19 +19,24 @@ spec:
     metadata:
       labels: {app: swarmlab-pg}
     spec:
+      terminationGracePeriodSeconds: 10
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
       containers:
         - name: swarmlab
-          image: swarmlab:2.3.0
+          image: swarmlab:5.31.0
           args: ["python", "-m", "swarmlab", "serve", "--db", "$(MVP_DSN)", "--host", "0.0.0.0", "--port", "8788"]
           ports: [{containerPort: 8788, name: http}]
           env:
             - name: MVP_DSN
               valueFrom:
                 secretKeyRef: {name: swarmlab-pg, key: dsn}
+          startupProbe:
+            httpGet: {path: /ready, port: http}
+            failureThreshold: 12
+            periodSeconds: 5
           readinessProbe:
             httpGet: {path: /ready, port: http}
             initialDelaySeconds: 3

@@ -1,3 +1,7 @@
+# swarm-lab v6.0.0
+
+Milestone 6.0: K8s startup probes/lifecycle, 100% coverage, 132 tests.
+
 # swarm-lab v5.31.0
 
 100% coverage, 132 tests.
