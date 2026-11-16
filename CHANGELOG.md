@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.3.0] — 2026-11-16
+
+Graceful SIGTERM.
+
+### Добавлено
+- SIGTERM → server.shutdown для K8s/Docker; 133 теста.
+
 ## [6.2.0] — 2026-11-16
 
 Chaos validation.

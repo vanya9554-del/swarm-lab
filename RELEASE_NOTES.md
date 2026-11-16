@@ -1,3 +1,7 @@
+# swarm-lab v6.3.0
+
+Graceful SIGTERM, 133 tests.
+
 # swarm-lab v6.2.0
 
 Chaos/load 4/4, exactly-once, reconnect.

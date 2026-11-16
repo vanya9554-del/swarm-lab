@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
+import threading
 
 from . import __version__, open_store
 
@@ -36,6 +38,14 @@ def main(argv: list[str] | None = None) -> int:
         from .api import build_server
         store = open_store(args.db)
         server = build_server(store, args.host, args.port, args.token)
+
+        def _term(_signum: int, _frame: object) -> None:
+            threading.Thread(target=server.shutdown, daemon=True).start()
+
+        try:
+            signal.signal(signal.SIGTERM, _term)
+        except (ValueError, AttributeError, OSError):
+            pass
         print(f"swarm-lab on http://{args.host}:{server.server_address[1]} db={args.db}", flush=True)
         try:
             server.serve_forever()
