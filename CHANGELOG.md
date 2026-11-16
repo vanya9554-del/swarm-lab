@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.26.0] — 2026-11-16
+
+Renew stale coverage.
+
+### Добавлено
+- renew stale/missing; coverage 98,7%, 122 теста.
+
 ## [5.25.0] — 2026-11-16
 
 Connect retry failure.

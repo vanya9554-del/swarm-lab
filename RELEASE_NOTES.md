@@ -1,3 +1,7 @@
+# swarm-lab v5.26.0
+
+Renew stale coverage, 122 tests, 98.7%.
+
 # swarm-lab v5.25.0
 
 PG connect failure path, 121 tests, 98.6%.

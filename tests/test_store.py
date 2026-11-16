@@ -58,6 +58,14 @@ class StoreTests(unittest.TestCase):
         self.store.conn.commit()
         self.assertEqual(self.store.get("badr")["result"], "not-json")
 
+    def test_renew_stale(self) -> None:
+        t = self.store.submit("x", {})
+        self.store.claim("a1", "x")
+        with self.assertRaises(SwarmError):
+            self.store.renew(t["task_id"], "a1", fence=999)
+        with self.assertRaises(SwarmError):
+            self.store.renew("missing", "a1")
+
     def test_stale_event_decode(self) -> None:
         import time
         t = self.store.submit("x", {})
