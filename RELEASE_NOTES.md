@@ -1,3 +1,7 @@
+# swarm-lab v10.4.0
+
+Default-deny NetworkPolicy ingress; 172 tests.
+
 # swarm-lab v10.3.0
 
 Audit filters by action/actor; 172 tests.

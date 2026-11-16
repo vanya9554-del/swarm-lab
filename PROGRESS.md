@@ -142,3 +142,5 @@ python -m swarmlab serve --port 8788
 - **S124**: audit retention prune; release 10.2.0.
 
 - **S125**: audit filters; release 10.3.0.
+
+- **S126**: default-deny NetworkPolicy; release 10.4.0.

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [10.4.0] — 2026-11-16
+
+NetworkPolicy hardening.
+
+### Добавлено
+- default-deny ingress (same-namespace only); `allowAllIngress` для отладки.
+- 172 теста, CI green.
+
 ## [10.3.0] — 2026-11-16
 
 Audit filters.
