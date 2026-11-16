@@ -63,9 +63,8 @@ class ClientTests(unittest.TestCase):
         resp = MagicMock()
         resp.__enter__.return_value = resp
         resp.read.return_value = b'{"ok": false, "error": {"code": "X"}}'
-        with patch("swarmlab.client.urllib.request.urlopen", return_value=resp):
-            with self.assertRaises(SwarmClientError):
-                authed._request("GET", "/v1/stats")
+        with patch("swarmlab.client.urllib.request.urlopen", return_value=resp), self.assertRaises(SwarmClientError):
+            authed._request("GET", "/v1/stats")
 
     def test_stream(self) -> None:
         self.client.register("a1", ["x"])
