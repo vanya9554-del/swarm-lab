@@ -40,7 +40,6 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(idem.get("idempotent"))
 
     def test_prune(self) -> None:
-        import time
         t = self.store.submit("x", {})
         self.store.claim("a1", "x")
         self.store.complete(t["task_id"], "a1", {}, fence=self.store.get(t["task_id"])["lease_epoch"])
