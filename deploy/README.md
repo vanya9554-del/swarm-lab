@@ -76,3 +76,15 @@ Restore требует остановленный сервер (WAL sidecar-фа
 kubectl apply -f deploy/argocd/staging.yaml
 kubectl apply -f deploy/argocd/prod.yaml
 ```
+
+## NetworkPolicy
+
+По умолчанию ingress разрешён только pod'ам того же namespace (`podSelector: {}`).
+Для ingress-controller задайте `networkPolicy.ingress`:
+```yaml
+networkPolicy:
+  ingress:
+    - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}}
+      podSelector: {matchLabels: {app.kubernetes.io/name: ingress-nginx}}
+```
+`allowAllIngress: true` — только для отладки.

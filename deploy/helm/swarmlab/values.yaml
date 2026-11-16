@@ -62,7 +62,10 @@ pdb:
 
 networkPolicy:
   enabled: true
+  # Explicit sources allowed to reach :8788. Empty => only same-namespace pods.
   ingress: []
+  # true restores allow-all ingress (не рекомендуется).
+  allowAllIngress: false
 
 persistence:
   enabled: true

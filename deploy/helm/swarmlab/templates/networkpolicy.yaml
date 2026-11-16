@@ -14,9 +14,13 @@ spec:
     - ports:
         - protocol: TCP
           port: {{ .Values.service.targetPort }}
-      {{- with .Values.networkPolicy.ingress }}
+      {{- if not .Values.networkPolicy.allowAllIngress }}
       from:
+        {{- with .Values.networkPolicy.ingress }}
         {{- toYaml . | nindent 8 }}
+        {{- else }}
+        - podSelector: {}
+        {{- end }}
       {{- end }}
   egress:
     - ports:
