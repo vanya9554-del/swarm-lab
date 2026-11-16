@@ -2,11 +2,11 @@
 
 ## Итог
 
-- **v9.3.0**, tags v1.0.0…v9.3.0
+- **v9.4.0**, tags v1.0.0…v9.4.0
 - **149/149 тестов**, coverage **100,0%**, ruff **0**
 - **CI green** (ruff, manifests, SQLite coverage ≥90)
 - GitHub: https://github.com/vanya9554-del/swarm-lab
-- Локальный сервер: `http://127.0.0.1:8788`, MCP `9.3.0`
+- Локальный сервер: `http://127.0.0.1:8788`, MCP `9.4.0`
 - Harness: health/soak каждые 5с, smoke-тесты каждые 15мин, до 16.11 12:00
 
 ## Что реализовано

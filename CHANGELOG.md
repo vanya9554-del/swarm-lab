@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [9.4.0] — 2026-11-16
+
+Production infra hardening.
+
+### Добавлено
+- Trivy image scan, kubeconform rendered manifests, GHCR release workflow.
+- ArgoCD staging/prod, RUNBOOK, backup/restore scripts + test.
+- 155 тестов, 100% coverage.
+
 ## [9.3.0] — 2026-11-16
 
 Backup/restore + CD.

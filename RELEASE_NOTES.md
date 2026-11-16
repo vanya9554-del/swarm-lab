@@ -1,3 +1,7 @@
+# swarm-lab v9.4.0
+
+Trivy, kubeconform, GHCR, ArgoCD, RUNBOOK, backup/restore; 155 tests.
+
 # swarm-lab v9.3.0
 
 Backup/restore, GHCR CD, ArgoCD, kubeconform, fuzz; 155 tests.

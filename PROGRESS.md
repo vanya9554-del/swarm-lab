@@ -122,3 +122,5 @@ python -m swarmlab serve --port 8788
 - **S114**: JWT security + Helm wiring; release 9.2.0.
 
 - **S115**: backup/restore, GHCR CD, ArgoCD, kubeconform, fuzz; release 9.3.0.
+
+- **S116**: Trivy/kubeconform/GHCR/ArgoCD/RUNBOOK/backup; release 9.4.0.
