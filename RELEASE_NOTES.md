@@ -1,3 +1,7 @@
+# swarm-lab v10.2.0
+
+Audit retention prune; 170 tests.
+
 # swarm-lab v10.1.0
 
 Audit log (/v1/audit, MCP), schema v11; 170 tests.

@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [10.2.0] — 2026-11-16
+
+Audit retention.
+
+### Добавлено
+- `prune` удаляет старые audit-записи; 170 тестов, 100% coverage.
+
 ## [10.1.0] — 2026-11-16
 
 Audit log.

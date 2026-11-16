@@ -457,8 +457,10 @@ class PgSwarmStore:
                 tasks = cur.rowcount
                 cur.execute("DELETE FROM events WHERE created_at < %s", (cutoff,))
                 events = cur.rowcount
+                cur.execute("DELETE FROM audit WHERE created_at < %s", (cutoff,))
+                audits = cur.rowcount
             self.conn.commit()
-        return {"ok": True, "tasks": int(tasks or 0), "events": int(events or 0), "cutoff": cutoff}
+        return {"ok": True, "tasks": int(tasks or 0), "events": int(events or 0), "audits": int(audits or 0), "cutoff": cutoff}
 
     def vacuum(self) -> dict[str, Any]:
         with self.lock:
