@@ -1,0 +1,129 @@
+replicaCount: 1
+
+image:
+  repository: swarmlab
+  tag: "8.3.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8788
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: swarmlab.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  ingress: []
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  existingClaim: ""
+
+postgresql:
+  enabled: false
+  # Secret with key dsn, e.g. postgresql://user:pass@postgres:5432/swarm
+  existingSecret: ""
+  dsnKey: dsn
+
+auth:
+  enabled: true
+  # Use an existing secret instead of creating one with the token below.
+  existingSecret: ""
+  tokenKey: token
+  token: "change-me"
+  tokens: ""
+
+config:
+  rateRps: 0
+  maxPending: 0
+  leaseS: 60
+  agentTtl: 90
+  streamKeepaliveS: 1
+  maxBody: 1048576
+  pgAttempts: 2
+
+startupProbe:
+  enabled: true
+  failureThreshold: 12
+  periodSeconds: 5
+  timeoutSeconds: 3
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 3
+  periodSeconds: 10
+  timeoutSeconds: 3
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  timeoutSeconds: 3
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  labels: {}
+
+backup:
+  enabled: false
+  schedule: "0 3 * * *"
+  retentionDays: 7
+  storage:
+    size: 5Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

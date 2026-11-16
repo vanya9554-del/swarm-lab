@@ -1,0 +1,31 @@
+postgresql:
+  enabled: true
+  existingSecret: swarmlab-pg
+  dsnKey: dsn
+persistence:
+  enabled: false
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+backup:
+  enabled: true
+  retentionDays: 3
+serviceMonitor:
+  enabled: true
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: swarm.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: swarmlab-tls
+      hosts: [swarm.example.com]
+auth:
+  enabled: true
+  existingSecret: swarmlab-auth
+  tokenKey: token

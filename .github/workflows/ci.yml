@@ -13,3 +13,24 @@ jobs:
       - run: python scripts/validate_manifests.py
       - run: python -m coverage run --source=swarmlab --omit=swarmlab/pg.py -m unittest discover -s tests -v
       - run: python -m coverage report --fail-under=90
+
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t swarmlab:ci .
+      - run: docker run --rm swarmlab:ci python -m swarmlab --version
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+      - run: helm lint deploy/helm/swarmlab
+      - run: helm template sqlite deploy/helm/swarmlab > /tmp/sqlite.yaml
+      - run: helm template pg deploy/helm/swarmlab -f deploy/helm/swarmlab/ci/postgres-values.yaml > /tmp/pg.yaml
+      - run: grep -q "kind: HorizontalPodAutoscaler" /tmp/pg.yaml
+      - run: grep -q "kind: ServiceMonitor" /tmp/pg.yaml

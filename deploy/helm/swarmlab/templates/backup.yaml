@@ -1,0 +1,86 @@
+{{- if .Values.backup.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "swarmlab.fullname" . }}-backup
+  labels:
+    {{- include "swarmlab.labels" . | nindent 4 }}
+spec:
+  accessModes: [{{ .Values.backup.storage.accessMode }}]
+  {{- if .Values.backup.storage.storageClass }}
+  storageClassName: {{ .Values.backup.storage.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backup.storage.size }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "swarmlab.fullname" . }}-backup
+  labels:
+    {{- include "swarmlab.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "swarmlab.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: backup
+              {{- if .Values.postgresql.enabled }}
+              image: postgres:16
+              env:
+                - name: DSN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "postgresql.existingSecret is required when postgresql.enabled" .Values.postgresql.existingSecret }}
+                      key: {{ .Values.postgresql.dsnKey }}
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  pg_dump "$DSN" > /backup/swarm-$(date -u +%Y%m%dT%H%M%SZ).sql
+                  find /backup -name 'swarm-*.sql' -mtime +{{ .Values.backup.retentionDays }} -delete
+              {{- else }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command: ["python", "-c"]
+              args:
+                - |
+                  import datetime, glob, os, sqlite3
+                  out = f"/backup/swarm-{datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.db"
+                  src = sqlite3.connect("/data/swarm.db")
+                  src.execute("VACUUM INTO ?", (out,))
+                  src.close()
+                  for path in glob.glob("/backup/swarm-*.db"):
+                      if os.path.getmtime(path) < datetime.datetime.now().timestamp() - {{ .Values.backup.retentionDays }} * 86400:
+                          os.remove(path)
+              {{- end }}
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: data
+              {{- if .Values.persistence.enabled }}
+              persistentVolumeClaim:
+                claimName: {{ default (printf "%s-data" (include "swarmlab.fullname" .)) .Values.persistence.existingClaim }}
+              {{- else }}
+              emptyDir: {}
+              {{- end }}
+            - name: backup
+              persistentVolumeClaim:
+                claimName: {{ include "swarmlab.fullname" . }}-backup
+{{- end }}

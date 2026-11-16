@@ -1,0 +1,22 @@
+{{- if .Values.auth.enabled }}
+WARNING: default auth token is "change-me" unless auth.existingSecret/token is overridden.
+{{- end }}
+Swarmlab installed as {{ include "swarmlab.fullname" . }}.
+
+Endpoints (through Service):
+  http://{{ include "swarmlab.fullname" . }}:{{ .Values.service.port }}/ready
+  http://{{ include "swarmlab.fullname" . }}:{{ .Values.service.port }}/v1/capabilities
+  http://{{ include "swarmlab.fullname" . }}:{{ .Values.service.port }}/metrics
+
+{{- if .Values.ingress.enabled }}
+Ingress hosts:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- end }}
+
+Database mode: {{ ternary "PostgreSQL" "SQLite" .Values.postgresql.enabled }}.
+{{- if .Values.postgresql.enabled }}
+
+WARNING: set replicaCount/autoscaling for >1 replica only with PostgreSQL.
+{{- end }}

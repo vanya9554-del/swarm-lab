@@ -15,3 +15,5 @@ data/bench_server.log
 data/race_server.log
 data/race_server.log.err
 benchmarks/*.json
+
+.tools/
