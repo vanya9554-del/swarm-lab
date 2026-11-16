@@ -115,6 +115,10 @@ serviceMonitor:
   interval: 30s
   labels: {}
 
+prometheusRule:
+  enabled: false
+  labels: {}
+
 backup:
   enabled: false
   schedule: "0 3 * * *"

@@ -135,6 +135,49 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             del self.store.tasks
 
+    def test_log_message_json(self) -> None:
+        import contextlib
+        import io
+        import json
+        import os
+
+        from swarmlab.api import SwarmHandler
+        handler = object.__new__(SwarmHandler)
+        handler.request_id = "req"
+        handler.address_string = lambda: "127.0.0.1"
+        os.environ["SWARMLAB_LOG_FORMAT"] = "json"
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                handler.log_message("hello %s", "world")
+        finally:
+            os.environ.pop("SWARMLAB_LOG_FORMAT", None)
+        record = json.loads(buf.getvalue().strip())
+        self.assertEqual(record["msg"], "hello world")
+        self.assertEqual(record["request_id"], "req")
+
+    def test_json_logs(self) -> None:
+        import contextlib
+        import io
+        import json
+        import os
+        os.environ["SWARMLAB_LOG_FORMAT"] = "json"
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                _req("GET", self.base + "/health")
+        finally:
+            os.environ.pop("SWARMLAB_LOG_FORMAT", None)
+        records = []
+        for line in buf.getvalue().splitlines():
+            try:
+                records.append(json.loads(line))
+            except ValueError:
+                pass
+        matches = [r for r in records if r.get("path") == "/health" and r.get("status") == 200]
+        self.assertTrue(matches)
+        self.assertTrue(matches[0].get("request_id"))
+
     def test_stream_disconnect(self) -> None:
         import socket
         import time

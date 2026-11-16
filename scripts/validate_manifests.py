@@ -22,6 +22,16 @@ def check() -> list[str]:
         for needle in needles:
             if needle not in text:
                 errors.append(f"{name}: missing {needle}")
+    obs = (ROOT / "deploy" / "observability")
+    for name, rel, needles in [
+        ("prometheus-rules", "prometheus-rules.yaml", ["SwarmlabHighErrorRate", "SwarmlabHighLatencyP95"]),
+        ("grafana-dashboard", "grafana-dashboard.json", ['"uid": "swarmlab"', "swarmlab_http_request_duration_seconds_bucket"]),
+        ("slo", "SLO.md", ["99,9%", "p95"]),
+    ]:
+        text = (obs / rel).read_text(encoding="utf-8")
+        for needle in needles:
+            if needle not in text:
+                errors.append(f"{name}: missing {needle}")
     return errors
 
 

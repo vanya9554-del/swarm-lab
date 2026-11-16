@@ -83,6 +83,7 @@ class HardeningTests(unittest.TestCase):
             status, _, body = _get(self.base + "/metrics")
             self.assertEqual(status, 200)
             self.assertIn(b"swarmlab_http_requests_total", body)
+            self.assertIn(b"swarmlab_http_request_duration_seconds_bucket", body)
         finally:
             del self.store.stats
 

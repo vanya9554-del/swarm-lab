@@ -1,0 +1,42 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "swarmlab.fullname" . }}
+  labels:
+    {{- include "swarmlab.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: swarmlab
+      rules:
+        - alert: SwarmlabDown
+          expr: up{job="{{ include "swarmlab.fullname" . }}"} == 0
+          for: 2m
+          labels: {severity: critical}
+          annotations:
+            summary: "swarm-lab target is down"
+        - alert: SwarmlabHighErrorRate
+          expr: |
+            sum(rate(swarmlab_http_requests_total{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(swarmlab_http_requests_total[5m])), 1) > 0.05
+          for: 5m
+          labels: {severity: warning}
+          annotations:
+            summary: "swarm-lab 5xx rate > 5%"
+        - alert: SwarmlabHighLatencyP95
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m]))) > 0.5
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "swarm-lab p95 > 500ms"
+        - alert: SwarmlabBacklogHigh
+          expr: sum(swarmlab_tasks{status="pending"}) > 1000
+          for: 15m
+          labels: {severity: warning}
+          annotations:
+            summary: "pending backlog > 1000"
+{{- end }}

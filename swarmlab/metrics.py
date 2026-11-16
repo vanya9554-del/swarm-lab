@@ -59,6 +59,17 @@ class SwarmMetrics:
             lines.append(f"swarmlab_events_total {(stats.get('events') or {}).get('total', 0)}")
         except Exception:  # noqa: BLE001, S110
             pass
+        with self._lock:
+            lat_count = self._lat_count
+            lat_sum = self._lat_sum
+            lat_buckets = list(self._lat_buckets)
+        lines.append("# HELP swarmlab_http_request_duration_seconds HTTP latency")
+        lines.append("# TYPE swarmlab_http_request_duration_seconds histogram")
+        for bound, value in zip(BUCKETS, lat_buckets):
+            lines.append(f'swarmlab_http_request_duration_seconds_bucket{{le="{bound:g}"}} {value}')
+        lines.append(f'swarmlab_http_request_duration_seconds_bucket{{le="+Inf"}} {lat_count}')
+        lines.append(f"swarmlab_http_request_duration_seconds_sum {lat_sum:.6f}")
+        lines.append(f"swarmlab_http_request_duration_seconds_count {lat_count}")
         lines.append("# HELP swarmlab_uptime_seconds Uptime")
         lines.append("# TYPE swarmlab_uptime_seconds gauge")
         lines.append(f"swarmlab_uptime_seconds {time.time() - self._started:.1f}")

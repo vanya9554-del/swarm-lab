@@ -1,0 +1,80 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests by status",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {"expr": "sum by (status) (rate(swarmlab_http_requests_total[5m]))", "legendFormat": "{{status}}"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "5xx rate",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {"expr": "sum(rate(swarmlab_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(swarmlab_http_requests_total[5m])), 1)", "legendFormat": "5xx"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0.05}]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Uptime",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "max(swarmlab_uptime_seconds)", "legendFormat": "uptime"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p50/p95/p99",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p99"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasks by status",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+      "targets": [{"expr": "swarmlab_tasks", "legendFormat": "{{status}}"}]
+    },
+    {
+      "type": "stat",
+      "title": "Agents",
+      "gridPos": {"h": 7, "w": 6, "x": 0, "y": 17},
+      "targets": [{"expr": "swarmlab_agents", "legendFormat": "agents"}]
+    },
+    {
+      "type": "stat",
+      "title": "Events",
+      "gridPos": {"h": 7, "w": 6, "x": 6, "y": 17},
+      "targets": [{"expr": "swarmlab_events_total", "legendFormat": "events"}]
+    },
+    {
+      "type": "stat",
+      "title": "Rate limited",
+      "gridPos": {"h": 7, "w": 6, "x": 12, "y": 17},
+      "targets": [{"expr": "sum(rate(swarmlab_http_requests_total{status=\"429\"}[5m]))", "legendFormat": "429/s"}]
+    },
+    {
+      "type": "stat",
+      "title": "Ready",
+      "gridPos": {"h": 7, "w": 6, "x": 18, "y": 17},
+      "targets": [{"expr": "probe_success{job=\"swarmlab-ready\"}", "legendFormat": "ready"}],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}}
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["swarmlab", "agents"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "swarm-lab",
+  "uid": "swarmlab",
+  "version": 1
+}

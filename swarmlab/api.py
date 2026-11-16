@@ -100,7 +100,27 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self._started = time.perf_counter()
         super().handle_one_request()
 
+    def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
+        if os.environ.get("SWARMLAB_LOG_FORMAT", "text") == "json":
+            elapsed = round((time.perf_counter() - getattr(self, "_started", time.perf_counter())) * 1000, 3)
+            print(json.dumps({
+                "ts": round(time.time(), 3),
+                "level": "info",
+                "request_id": getattr(self, "request_id", ""),
+                "remote": self.address_string(),
+                "method": getattr(self, "command", ""),
+                "path": getattr(self, "path", ""),
+                "status": code,
+                "bytes": size,
+                "duration_ms": elapsed,
+            }, ensure_ascii=False), flush=True)
+            return
+        super().log_request(code, size)
+
     def log_message(self, fmt: str, *args: Any) -> None:
+        if os.environ.get("SWARMLAB_LOG_FORMAT", "text") == "json":
+            print(json.dumps({"ts": round(time.time(), 3), "level": "info", "request_id": getattr(self, "request_id", ""), "msg": fmt % args}, ensure_ascii=False), flush=True)
+            return
         if os.environ.get("SWARMLAB_LOG", "1") != "0":
             print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
 

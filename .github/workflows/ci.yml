@@ -34,4 +34,5 @@ jobs:
       - run: helm template pg deploy/helm/swarmlab -f deploy/helm/swarmlab/ci/postgres-values.yaml > /tmp/pg.yaml
       - run: 'grep -q "kind: HorizontalPodAutoscaler" /tmp/pg.yaml'
       - run: 'grep -q "kind: ServiceMonitor" /tmp/pg.yaml'
+      - run: 'grep -q "kind: PrometheusRule" /tmp/pg.yaml'
 

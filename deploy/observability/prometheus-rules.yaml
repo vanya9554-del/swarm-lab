@@ -1,0 +1,77 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: swarmlab
+  labels:
+    app.kubernetes.io/name: swarmlab
+spec:
+  groups:
+    - name: swarmlab.availability
+      rules:
+        - alert: SwarmlabDown
+          expr: up{job="swarmlab"} == 0
+          for: 2m
+          labels: {severity: critical}
+          annotations:
+            summary: "swarm-lab target is down"
+            description: "Prometheus cannot scrape {{ $labels.instance }} for 2 minutes."
+        - alert: SwarmlabNotReady
+          expr: probe_success{job="swarmlab-ready"} == 0
+          for: 2m
+          labels: {severity: critical}
+          annotations:
+            summary: "swarm-lab /ready is failing"
+        - alert: SwarmlabHighErrorRate
+          expr: |
+            sum(rate(swarmlab_http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(swarmlab_http_requests_total[5m])), 1)
+            > 0.05
+          for: 5m
+          labels: {severity: warning}
+          annotations:
+            summary: "swarm-lab 5xx rate > 5%"
+            description: "5xx ratio is {{ $value | humanizePercentage }} over 5m."
+    - name: swarmlab.latency
+      rules:
+        - alert: SwarmlabHighLatencyP95
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m]))
+            ) > 0.5
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "swarm-lab p95 latency > 500ms"
+            description: "p95 is {{ $value | humanizeDuration }} over 5m."
+        - alert: SwarmlabHighLatencyP99
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum by (le) (rate(swarmlab_http_request_duration_seconds_bucket[5m]))
+            ) > 2
+          for: 10m
+          labels: {severity: critical}
+          annotations:
+            summary: "swarm-lab p99 latency > 2s"
+    - name: swarmlab.market
+      rules:
+        - alert: SwarmlabNoAgents
+          expr: swarmlab_agents == 0
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "no agents discovered"
+        - alert: SwarmlabBacklogHigh
+          expr: sum(swarmlab_tasks{status="pending"}) > 1000
+          for: 15m
+          labels: {severity: warning}
+          annotations:
+            summary: "pending task backlog > 1000"
+        - alert: SwarmlabRateLimited
+          expr: sum(rate(swarmlab_http_requests_total{status="429"}[5m])) > 1
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "clients are being rate-limited"
