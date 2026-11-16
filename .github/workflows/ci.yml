@@ -70,19 +70,38 @@ jobs:
       - uses: azure/setup-helm@v4
       - name: Install chart
         run: |
-          helm install ci deploy/helm/swarmlab             --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never             --set persistence.enabled=false --set auth.enabled=false             --set networkPolicy.enabled=false --set pdb.enabled=false             --set serviceMonitor.enabled=false --set prometheusRule.enabled=false             --wait --timeout 180s
+          helm install ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=false --set auth.enabled=false \
+            --set networkPolicy.enabled=false --set pdb.enabled=false \
+            --set serviceMonitor.enabled=false --set prometheusRule.enabled=false \
+            --timeout 180s
+          sleep 5
+          kubectl get pods -o wide
+          kubectl describe pod -l app.kubernetes.io/instance=ci || true
+          kubectl logs -l app.kubernetes.io/instance=ci --tail=100 || true
+          kubectl get events --sort-by=.lastTimestamp | tail -20 || true
+          kubectl rollout status deploy/ci-swarmlab --timeout=120s
       - name: Server-side validation
         run: |
-          helm template ci deploy/helm/swarmlab             --set image.repository=swarmlab --set image.tag=test             --set persistence.enabled=false --set auth.enabled=false             --set networkPolicy.enabled=false --set pdb.enabled=false > /tmp/render.yaml
+          helm template ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test \
+            --set persistence.enabled=false --set auth.enabled=false \
+            --set networkPolicy.enabled=false --set pdb.enabled=false > /tmp/render.yaml
           kubectl apply --dry-run=server -f /tmp/render.yaml
       - name: Smoke
         run: |
-          kubectl rollout status deploy/ci-swarmlab --timeout=120s
           kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf.log 2>&1 &
           sleep 3
           curl -fsS --retry 10 --retry-delay 2 http://127.0.0.1:8788/ready
-          curl -fsS -X POST -H 'Content-Type: application/json'             -d '{"capability":"echo","payload":{"x":1}}'             http://127.0.0.1:8788/v1/tasks
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d '{"capability":"echo","payload":{"x":1}}' \
+            http://127.0.0.1:8788/v1/tasks
       - name: Rolling upgrade
         run: |
-          helm upgrade ci deploy/helm/swarmlab             --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never             --set persistence.enabled=false --set auth.enabled=false             --set networkPolicy.enabled=false --set pdb.enabled=false             --set config.rateRps=10 --wait --timeout 120s
+          helm upgrade ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=false --set auth.enabled=false \
+            --set networkPolicy.enabled=false --set pdb.enabled=false \
+            --set config.rateRps=10 --timeout 120s
           kubectl rollout status deploy/ci-swarmlab --timeout=120s
