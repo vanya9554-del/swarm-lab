@@ -1,3 +1,7 @@
+# swarm-lab v9.3.0
+
+Backup/restore, GHCR CD, ArgoCD, kubeconform, fuzz; 155 tests.
+
 # swarm-lab v9.2.0
 
 HS256 JWT auth, issuer/audience, 152 tests.

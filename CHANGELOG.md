@@ -1,5 +1,15 @@
 # Changelog — swarm-lab
 
+## [9.3.0] — 2026-11-16
+
+Backup/restore + CD.
+
+### Добавлено
+- `scripts/backup.py`/`restore.py` с integrity check и restore test.
+- `release.yml`: Docker build/push GHCR по git tag.
+- ArgoCD staging/prod applications; kubeconform в CI.
+- Fuzz/property test; 155 тестов, 100% coverage.
+
 ## [9.2.0] — 2026-11-16
 
 JWT security.
