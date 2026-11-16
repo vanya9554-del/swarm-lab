@@ -1,3 +1,7 @@
+# swarm-lab v9.6.0
+
+RS256 JWT, optional OIDC dependency; 158 tests.
+
 # swarm-lab v9.5.0
 
 Schema versioning, PG migrations, rolling upgrade; 157 tests.

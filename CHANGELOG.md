@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [9.6.0] — 2026-11-16
+
+OIDC RS256 JWT.
+
+### Добавлено
+- RS256 verification via `SWARMLAB_JWT_PUBLIC_KEY`; optional `cryptography` (`[oidc]`).
+- Helm `jwtPublicKey`; 158 тестов, 100% coverage.
+
 ## [9.5.0] — 2026-11-16
 
 Schema versioning/migrations.

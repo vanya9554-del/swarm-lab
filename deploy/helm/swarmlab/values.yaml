@@ -90,6 +90,9 @@ auth:
   jwtSecret:
     existingSecret: ""
     key: jwt-secret
+  jwtPublicKey:
+    existingSecret: ""
+    key: jwt-public.pem
 
 config:
   rateRps: 0

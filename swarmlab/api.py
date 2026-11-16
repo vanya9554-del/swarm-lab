@@ -185,15 +185,31 @@ class SwarmHandler(BaseHTTPRequestHandler):
 
     def _jwt_scopes(self, token: str) -> set[str] | None:
         secret = os.environ.get("SWARMLAB_JWT_SECRET", "")
-        if not secret or not token or token.count(".") != 2:
+        public_key = os.environ.get("SWARMLAB_JWT_PUBLIC_KEY", "")
+        if (not secret and not public_key) or not token or token.count(".") != 2:
             return None
         try:
             head_b64, body_b64, sig_b64 = token.split(".")
             head = json.loads(_b64url_decode(head_b64))
-            if head.get("alg") != "HS256":
-                return None
-            expected = hmac.new(secret.encode(), f"{head_b64}.{body_b64}".encode(), hashlib.sha256).digest()
-            if not hmac.compare_digest(expected, _b64url_decode(sig_b64)):
+            signing_input = f"{head_b64}.{body_b64}".encode()
+            signature = _b64url_decode(sig_b64)
+            if head.get("alg") == "HS256":
+                if not secret:
+                    return None
+                expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
+                if not hmac.compare_digest(expected, signature):
+                    return None
+            elif head.get("alg") == "RS256":
+                if not public_key:
+                    return None
+                try:
+                    from cryptography.hazmat.primitives import hashes, serialization
+                    from cryptography.hazmat.primitives.asymmetric import padding
+                    key = serialization.load_pem_public_key(public_key.encode())
+                    key.verify(signature, signing_input, padding.PKCS1v15(), hashes.SHA256())
+                except Exception:  # noqa: BLE001
+                    return None
+            else:
                 return None
             payload = json.loads(_b64url_decode(body_b64))
             now = int(time.time())
@@ -232,7 +248,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
             if header != f"Bearer {self.swarm.token}" and jwt_scopes is None:
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
-        elif os.environ.get("SWARMLAB_JWT_SECRET") and jwt_scopes is None:
+        elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY")) and jwt_scopes is None:
             self._error(401, "UNAUTHORIZED", "JWT required")
             return False
         if jwt_scopes is not None:

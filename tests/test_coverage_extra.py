@@ -326,6 +326,14 @@ class ExtraApiTests(unittest.TestCase):
             none_head = b64(json.dumps({"alg": "none", "typ": "JWT"}).encode())
             self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{none_head}.e30.e30")[0], 401)
             self.assertEqual(_req("GET", self.base + "/v1/stats", None, "a.b.c")[0], 401)
+            rs_head = b64(json.dumps({"alg": "RS256", "typ": "JWT"}).encode())
+            rs_body = b64(json.dumps({"exp": int(time.time()) + 60}).encode())
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{rs_head}.{rs_body}.e30")[0], 401)
+            os.environ["SWARMLAB_JWT_PUBLIC_KEY"] = "not-a-pem"
+            try:
+                self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{rs_head}.{rs_body}.e30")[0], 401)
+            finally:
+                os.environ.pop("SWARMLAB_JWT_PUBLIC_KEY", None)
             import os as _os
             _os.environ["SWARMLAB_JWT_ISSUER"] = "issuer"
             _os.environ["SWARMLAB_JWT_AUDIENCE"] = "swarm"
@@ -345,6 +353,35 @@ class ExtraApiTests(unittest.TestCase):
                 _os.environ.pop("SWARMLAB_JWT_AUDIENCE", None)
         finally:
             os.environ.pop("SWARMLAB_JWT_SECRET", None)
+
+    def test_jwt_rs256(self) -> None:
+        import base64
+        import json
+        import os
+        import time
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import padding, rsa
+
+        def b64(value: bytes) -> str:
+            return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+        private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        public_pem = private.public_key().public_bytes(
+            serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+        head = b64(json.dumps({"alg": "RS256", "typ": "JWT"}).encode())
+        body = b64(json.dumps({"sub": "rsa", "exp": int(time.time()) + 60}).encode())
+        signature = private.sign(f"{head}.{body}".encode(), padding.PKCS1v15(), hashes.SHA256())
+        token = f"{head}.{body}.{b64(signature)}"
+        os.environ["SWARMLAB_JWT_PUBLIC_KEY"] = public_pem
+        try:
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 200)
+            hs_head = b64(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
+            hs_body = b64(json.dumps({"exp": int(time.time()) + 60}).encode())
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{hs_head}.{hs_body}.e30")[0], 401)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, f"{head}.{body}.{b64(b'bad')}")[0], 401)
+        finally:
+            os.environ.pop("SWARMLAB_JWT_PUBLIC_KEY", None)
 
     def test_delete_auth(self) -> None:
         from swarmlab.api import build_server

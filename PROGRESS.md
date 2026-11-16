@@ -126,3 +126,5 @@ python -m swarmlab serve --port 8788
 - **S116**: Trivy/kubeconform/GHCR/ArgoCD/RUNBOOK/backup; release 9.4.0.
 
 - **S117**: schema version/migrations, rolling upgrade; release 9.5.0.
+
+- **S118**: RS256 JWT/OIDC, 158 тестов; release 9.6.0.

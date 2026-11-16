@@ -32,6 +32,9 @@ auth:
   jwtSecret:
     existingSecret: swarmlab-jwt
     key: jwt-secret
+  jwtPublicKey:
+    existingSecret: swarmlab-jwt-public
+    key: jwt-public.pem
   jwtIssuer: "https://issuer.example"
   jwtAudience: "swarm"
 prometheusRule:

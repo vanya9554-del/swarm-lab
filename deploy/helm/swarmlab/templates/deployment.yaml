@@ -51,6 +51,13 @@ spec:
                   name: {{ .Values.auth.jwtSecret.existingSecret }}
                   key: {{ .Values.auth.jwtSecret.key }}
             {{- end }}
+            {{- if .Values.auth.jwtPublicKey.existingSecret }}
+            - name: SWARMLAB_JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.jwtPublicKey.existingSecret }}
+                  key: {{ .Values.auth.jwtPublicKey.key }}
+            {{- end }}
             {{- if .Values.auth.jwtIssuer }}
             - name: SWARMLAB_JWT_ISSUER
               value: {{ .Values.auth.jwtIssuer | quote }}
