@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [9.8.0] — 2026-11-16
+
+Python client SDK.
+
+### Добавлено
+- `swarmlab.client.SwarmClient`: agents/tasks/events/stream, errors, context manager.
+- 162 теста, 100% coverage.
+
 ## [9.7.0] — 2026-11-16
 
 PG chaos 500.

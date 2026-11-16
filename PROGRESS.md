@@ -130,3 +130,5 @@ python -m swarmlab serve --port 8788
 - **S118**: RS256 JWT/OIDC, 158 тестов; release 9.6.0.
 
 - **S119**: PG chaos 500/500; release 9.7.0.
+
+- **S120**: Python client SDK, 162 теста; release 9.8.0.

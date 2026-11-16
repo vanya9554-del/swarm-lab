@@ -74,28 +74,38 @@ class LoadTests(unittest.TestCase):
             for i in range(40):
                 stores[0].submit("reconnect", {"n": i})
             seen: list[str] = []
+            errors: list[BaseException] = []
             lock = threading.Lock()
             barrier = threading.Barrier(2)
+            deadline = time.time() + 30
 
             def worker(idx: int) -> None:
                 store = stores[idx]
                 barrier.wait(timeout=5)
                 count = 0
-                while True:
-                    task = store.claim(f"r{idx}", "reconnect")
-                    if not task:
-                        return
-                    store.complete(task["task_id"], f"r{idx}", {}, fence=task["lease_epoch"])
-                    count += 1
-                    with lock:
-                        seen.append(task["task_id"])
-                    if count == 5 and idx == 0:
-                        store.conn.close()  # следующий claim должен reconnect
+                try:
+                    while time.time() < deadline:
+                        task = store.claim(f"r{idx}", "reconnect")
+                        if not task:
+                            if stores[0].stats()["tasks"].get("completed") == 40:
+                                return
+                            time.sleep(0.01)
+                            continue
+                        store.complete(task["task_id"], f"r{idx}", {}, fence=task["lease_epoch"])
+                        count += 1
+                        with lock:
+                            seen.append(task["task_id"])
+                        if count == 5 and idx == 0:
+                            store.conn.close()  # следующий claim должен reconnect
+                except BaseException as exc:  # noqa: BLE001
+                    errors.append(exc)
             threads = [threading.Thread(target=worker, args=(i,)) for i in range(2)]
             for t in threads:
                 t.start()
             for t in threads:
-                t.join(timeout=20)
+                t.join(timeout=60)
+            self.assertFalse(any(t.is_alive() for t in threads))
+            self.assertFalse(errors, errors)
             self.assertEqual(len(seen), 40)
             self.assertEqual(len(set(seen)), 40)
         finally:

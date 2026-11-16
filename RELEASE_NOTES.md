@@ -1,3 +1,7 @@
+# swarm-lab v9.8.0
+
+Python client SDK; 162 tests.
+
 # swarm-lab v9.7.0
 
 PG chaos 500/500 exactly-once.

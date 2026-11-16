@@ -59,6 +59,18 @@ docker run -p 8788:8788 -e SWARMLAB_TOKEN=secret swarm-lab
 
 ## Статус
 
-**v9.7.0** — 158 тестов, coverage **95,0%**, ruff 0; релиз-артефакты в `release/v4.7.0/`.
+**v9.8.0** — 162 теста, coverage **95,0%**, ruff 0; релиз-артефакты в `release/v4.7.0/`.
 План — `PLAN.md`, протокол — `SPEC.md`, качество — `QUALITY.md`,
 автономный runbook — `../NIGHT_SHIFT.md`.
+
+## Python client
+
+```python
+from swarmlab.client import SwarmClient
+
+with SwarmClient("http://127.0.0.1:8788", token="...") as c:
+    c.register("agent-1", ["echo"])
+    task = c.submit("echo", {"msg": "hi"})
+    claimed = c.claim("agent-1", "echo")
+    c.complete(claimed["task_id"], "agent-1", {"ok": True}, claimed["lease_epoch"])
+```
