@@ -140,3 +140,5 @@ python -m swarmlab serve --port 8788
 - **S123**: audit log, schema v11, 170 тестов; release 10.1.0.
 
 - **S124**: audit retention prune; release 10.2.0.
+
+- **S125**: audit filters; release 10.3.0.

@@ -21,7 +21,7 @@
 
 | Критерий | Статус | Значение |
 |---|---|---|
-| unit/integration tests | ✅ | **170/170 OK** |
+| unit/integration tests | ✅ | **172/172 OK** |
 | coverage | ✅ | **100,0%** |
 | ruff | ✅ | 0 |
 | CI (test/docker/trivy/helm/kubeconform) | ✅ | green |

@@ -103,7 +103,11 @@ class McpDispatcher:
     def _call(self, name: Any, args: dict[str, Any]) -> dict[str, Any]:
         try:
             if name == "swarm_audit":
-                return _text(self.store.audits(int(args.get("limit") or 100)))
+                return _text(self.store.audits(
+                    int(args.get("limit") or 100),
+                    str(args.get("action") or ""),
+                    str(args.get("actor") or ""),
+                ))
             if name == "swarm_stats":
                 return _text(self.store.stats())
             if name == "swarm_discover":

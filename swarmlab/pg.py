@@ -411,8 +411,16 @@ class PgSwarmStore:
             )
             self.conn.commit()
 
-    def audits(self, limit: int = 100) -> list[dict[str, Any]]:
-        rows = self._all("SELECT * FROM audit ORDER BY id DESC LIMIT %s", (max(1, min(500, int(limit))),))
+    def audits(self, limit: int = 100, action: str = "", actor: str = "") -> list[dict[str, Any]]:
+        where, params = "", []
+        if action:
+            where += " AND action = %s"
+            params.append(action)
+        if actor:
+            where += " AND actor = %s"
+            params.append(actor)
+        params.append(max(1, min(500, int(limit))))
+        rows = self._all(f"SELECT * FROM audit WHERE 1=1{where} ORDER BY id DESC LIMIT %s", tuple(params))
         for row in rows:
             try:
                 row["detail"] = json.loads(row.get("detail") or "{}")

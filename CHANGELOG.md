@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [10.3.0] — 2026-11-16
+
+Audit filters.
+
+### Добавлено
+- `GET /v1/audit?action=&actor=`; MCP args; 172 теста, 100% coverage.
+
 ## [10.2.0] — 2026-11-16
 
 Audit retention.

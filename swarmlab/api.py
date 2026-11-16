@@ -316,7 +316,11 @@ class SwarmHandler(BaseHTTPRequestHandler):
             return
         try:
             if path == "/v1/audit":
-                self._send(200, {"ok": True, "data": self.swarm.store.audits(int((query.get("limit") or ["100"])[0]))})
+                self._send(200, {"ok": True, "data": self.swarm.store.audits(
+                    int((query.get("limit") or ["100"])[0]),
+                    (query.get("action") or [""])[0],
+                    (query.get("actor") or [""])[0],
+                )})
             elif path == "/ready":
                 try:
                     stats = self.swarm.store.stats()

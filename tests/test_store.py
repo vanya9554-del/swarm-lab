@@ -73,6 +73,12 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(rows[0]["action"], "login")
         self.assertEqual(rows[0]["detail"], {"ok": 1})
 
+    def test_audit_filter(self) -> None:
+        self.store.audit("a", "actor1")
+        self.store.audit("b", "actor2")
+        self.assertEqual(len(self.store.audits(action="a")), 1)
+        self.assertEqual(self.store.audits(actor="actor2")[0]["action"], "b")
+
     def test_audit_invalid_detail(self) -> None:
         self.store.conn.execute("INSERT INTO audit(created_at, action, detail) VALUES (0, 'x', 'bad')")
         self.assertEqual(self.store.audits()[0]["detail"], "bad")

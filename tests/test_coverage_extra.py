@@ -491,6 +491,12 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             self.store.audit = original
 
+    def test_audit_filter_api(self) -> None:
+        _req("POST", self.base + "/v1/tasks", {"capability": "au2"})
+        status, body, _ = _req("GET", self.base + "/v1/audit?action=api.mutation&limit=1")
+        self.assertEqual(status, 200)
+        self.assertEqual(len(body["data"]), 1)
+
     def test_audit_api(self) -> None:
         _req("POST", self.base + "/v1/tasks", {"capability": "au"})
         status, body, _ = _req("GET", self.base + "/v1/audit")

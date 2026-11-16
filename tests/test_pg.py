@@ -388,7 +388,10 @@ class PgTests(unittest.TestCase):
         s = PgSwarmStore(self.dsn)
         try:
             s.audit("login", "actor", "/x", {"ok": 1}, "127.0.0.1")
-            self.assertEqual(s.audits()[0]["action"], "login")
+            s.audit("other", "actor2", "/y")
+            self.assertEqual(s.audits()[0]["action"], "other")
+            self.assertEqual(len(s.audits(action="login")), 1)
+            self.assertEqual(s.audits(actor="actor2")[0]["action"], "other")
         finally:
             s.close()
 

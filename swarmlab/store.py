@@ -398,8 +398,16 @@ class SwarmStore:
                 (time.time(), actor, action, target, json.dumps(detail or {}), ip),
             )
 
-    def audits(self, limit: int = 100) -> list[dict[str, Any]]:
-        rows = self._all("SELECT * FROM audit ORDER BY id DESC LIMIT ?", (max(1, min(500, int(limit))),))
+    def audits(self, limit: int = 100, action: str = "", actor: str = "") -> list[dict[str, Any]]:
+        where, params = "", []
+        if action:
+            where += " AND action = ?"
+            params.append(action)
+        if actor:
+            where += " AND actor = ?"
+            params.append(actor)
+        params.append(max(1, min(500, int(limit))))
+        rows = self._all(f"SELECT * FROM audit WHERE 1=1{where} ORDER BY id DESC LIMIT ?", tuple(params))
         for row in rows:
             try:
                 row["detail"] = json.loads(row.get("detail") or "{}")
