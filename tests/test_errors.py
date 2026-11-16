@@ -32,6 +32,24 @@ class ErrorTests(unittest.TestCase):
         with patch.dict(sys.modules, {"psycopg": None}), self.assertRaises(RuntimeError):
             pg.PgSwarmStore("postgresql://x")
 
+    def test_pg_connect_failure(self) -> None:
+        import sys
+        from unittest.mock import patch
+        import swarmlab.pg as pg
+        import types
+        pkg = types.ModuleType("psycopg")
+        pkg.__path__ = []
+        rows = types.ModuleType("psycopg.rows")
+        rows.dict_row = lambda **kwargs: None
+
+        def fail(*args, **kwargs):
+            raise OSError("down")
+
+        pkg.connect = fail
+        with patch.dict(sys.modules, {"psycopg": pkg, "psycopg.rows": rows}):
+            with self.assertRaises(RuntimeError):
+                pg.PgSwarmStore("postgresql://x")
+
     def test_events_import_error(self) -> None:
         from unittest.mock import patch
 

@@ -1,3 +1,7 @@
+# swarm-lab v5.25.0
+
+PG connect failure path, 121 tests, 98.6%.
+
 # swarm-lab v5.24.0
 
 Coverage 98.1%, 120 tests.

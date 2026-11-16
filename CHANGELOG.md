@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.25.0] — 2026-11-16
+
+Connect retry failure.
+
+### Добавлено
+- PG connect attempts failure; coverage 98,6%, 121 тест.
+
 ## [5.24.0] — 2026-11-16
 
 Coverage 98%.
