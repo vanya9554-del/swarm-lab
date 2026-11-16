@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [10.5.0] — 2026-11-16
+
+Dependency audit.
+
+### Добавлено
+- CI job `pip-audit` для Python-зависимостей; 172 теста.
+
 ## [10.4.0] — 2026-11-16
 
 NetworkPolicy hardening.

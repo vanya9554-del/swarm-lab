@@ -144,3 +144,5 @@ python -m swarmlab serve --port 8788
 - **S125**: audit filters; release 10.3.0.
 
 - **S126**: default-deny NetworkPolicy; release 10.4.0.
+
+- **S127**: pip-audit CI; release 10.5.0.

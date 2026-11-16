@@ -1,3 +1,7 @@
+# swarm-lab v10.5.0
+
+CI dependency audit (pip-audit); 172 tests.
+
 # swarm-lab v10.4.0
 
 Default-deny NetworkPolicy ingress; 172 tests.
