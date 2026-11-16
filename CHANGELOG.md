@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [9.5.0] — 2026-11-16
+
+Schema versioning/migrations.
+
+### Добавлено
+- `schema_version` (SQLite/PG), PG additive migrations; rolling upgrade docs.
+- 157 тестов, 100% coverage.
+
 ## [9.4.0] — 2026-11-16
 
 Production infra hardening.

@@ -75,3 +75,12 @@ ArgoCD prod: `argocd app rollback swarmlab-prod <id>`; staging — revert main.
 ## Блокеры
 
 Live K8s, внешний аудит/пентест, KMS/S3 — см. `NIGHT_SHIFT.md`.
+
+## Schema migrations / rolling upgrade
+
+- Schema version: **9** (`PRAGMA user_version`, `schema_meta`).
+- SQLite: `ALTER TABLE` идемпотентны при старте; **остановить** перед restore.
+- PostgreSQL: `ADD COLUMN IF NOT EXISTS` + `INSERT ... ON CONFLICT` на старте; безопасно для rolling upgrade.
+- Rolling: обновлять поды по одному; readiness `/ready`; не откатывать схему назад старой версией.
+- Перед апгрейдом: backup (SQLite/PG dump); проверить `/ready`.
+- Откат приложения: helm rollback; схема остаётся совместимой (аддитивные колонки).

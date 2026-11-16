@@ -1,3 +1,7 @@
+# swarm-lab v9.5.0
+
+Schema versioning, PG migrations, rolling upgrade; 157 tests.
+
 # swarm-lab v9.4.0
 
 Trivy, kubeconform, GHCR, ArgoCD, RUNBOOK, backup/restore; 155 tests.

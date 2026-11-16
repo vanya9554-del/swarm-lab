@@ -10,6 +10,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+SCHEMA_VERSION = 9
+
 SCHEMA = """
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
@@ -92,6 +94,7 @@ class SwarmStore:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
             if "max_attempts" not in cols:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3")
+            self.conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
 
     def close(self) -> None:
         with self.lock:
@@ -420,6 +423,10 @@ class SwarmStore:
         with self.lock:
             row = self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
         return {"ok": True, "checkpoint": list(row) if row else []}
+
+    def schema_version(self) -> int:
+        row = self._one("PRAGMA user_version")
+        return int(next(iter(row.values()))) if row else 0
 
     def check(self) -> dict[str, Any]:
         row = self._one("PRAGMA quick_check")

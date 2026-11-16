@@ -8,6 +8,10 @@ import uuid
 from typing import Any
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS schema_meta (
+    id INTEGER PRIMARY KEY,
+    version INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS agents (
     agent_id TEXT PRIMARY KEY,
     capabilities TEXT NOT NULL DEFAULT '[]',
@@ -87,6 +91,17 @@ class PgSwarmStore:
             try:
                 self.conn = psycopg.connect(self.dsn, row_factory=self._row_factory)
                 self.conn.execute(SCHEMA)
+                for migration in (
+                    "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS expires_at DOUBLE PRECISION",
+                    "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS depends_on TEXT",
+                    "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0",
+                    "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS max_attempts INTEGER NOT NULL DEFAULT 3",
+                ):
+                    self.conn.execute(migration)
+                self.conn.execute(
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 9) "
+                    "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
+                )
                 self.conn.commit()
                 return
             except Exception as exc:  # noqa: BLE001
@@ -423,6 +438,10 @@ class PgSwarmStore:
         with self.lock:
             self.conn.commit()
         return {"ok": True}
+
+    def schema_version(self) -> int:
+        row = self._one("SELECT version FROM schema_meta WHERE id=1")
+        return int(row["version"]) if row else 0
 
     def check(self) -> dict[str, Any]:
         row = self._one("SELECT 1 AS ok")

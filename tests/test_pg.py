@@ -383,6 +383,14 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_schema_version(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            self.assertEqual(s.schema_version(), 9)
+        finally:
+            s.close()
+
     def test_check(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
