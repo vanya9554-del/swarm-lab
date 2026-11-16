@@ -1,3 +1,7 @@
+# swarm-lab v6.1.0
+
+2000/2000 HTTP soak, 529.7 tasks/s.
+
 # swarm-lab v6.0.0
 
 Milestone 6.0: K8s startup probes/lifecycle, 100% coverage, 132 tests.

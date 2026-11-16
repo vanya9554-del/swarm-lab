@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.1.0] — 2026-11-16
+
+2000-task soak.
+
+### Добавлено
+- HTTP 2000/2000, 529.7 tasks/s, p50 24.7 ms; 132 теста, 100% coverage.
+
 ## [6.0.0] — 2026-11-16
 
 Milestone 6.0: K8s lifecycle hardening.
