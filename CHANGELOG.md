@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [5.31.0] — 2026-11-16
+
+Coverage 100%.
+
+### Добавлено
+- MCP value error, PG cancel missing; unreachable except удалён; **100% coverage**, 132 теста.
+
 ## [5.30.0] — 2026-11-16
 
 Test suite 130.

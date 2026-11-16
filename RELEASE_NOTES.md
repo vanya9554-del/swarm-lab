@@ -1,3 +1,7 @@
+# swarm-lab v5.31.0
+
+100% coverage, 132 tests.
+
 # swarm-lab v5.30.0
 
 130 tests, 99.7% coverage.

@@ -166,8 +166,6 @@ class McpDispatcher:
                         results.append({"ok": False, "code": getattr(exc, "code", "ERROR"), "message": str(exc)})
                 return _text(results)
             return _err("UNKNOWN_TOOL", f"unknown tool {name}")
-        except McpError as exc:
-            return _err("INVALID_ARGUMENTS", exc.message)
         except SwarmError as exc:
             return _err(exc.code, exc.message)
         except (ValueError, TypeError) as exc:

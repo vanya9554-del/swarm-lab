@@ -247,6 +247,15 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_cancel_missing(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            with self.assertRaises(RuntimeError):
+                s.cancel("missing-cancel")
+        finally:
+            s.close()
+
     def test_notify_failure(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
