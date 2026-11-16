@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [7.0.0] — 2026-11-16
+
+Milestone 7.0: security headers.
+
+### Добавлено
+- X-Frame-Options, Permissions-Policy, CSP (default-src none); 140 тестов.
+
 ## [6.9.0] — 2026-11-16
 
 WAL checkpoint/vacuum.

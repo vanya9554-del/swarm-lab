@@ -88,3 +88,7 @@ python -m swarmlab serve --port 8788
 - Heartbeat выделен в `SwarmStore.heartbeat` (не upsert через discover).
 
 - **Night harness**: `scripts/night_harness.py` запущен detached; JSONL `data/night_harness.jsonl`; health/soak каждые 5с, тесты каждые 15мин.
+
+- **S96**: GitHub Release v6.9.0 + assets (checksums, sbom, notes).
+
+- **S97**: security headers, milestone 7.0.0.

@@ -105,12 +105,16 @@ class HardeningTests(unittest.TestCase):
         self.assertIn(b'"ready":true', body)
         self.assertIn(b'"quick_check":"ok"', body)
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertEqual(headers.get("X-Frame-Options"), "DENY")
+        self.assertIn("default-src", headers.get("Content-Security-Policy", ""))
 
     def test_metrics_and_headers(self) -> None:
         status, headers, body = _get(self.base + "/metrics")
         self.assertEqual(status, 200)
         self.assertIn("swarmlab_http_requests_total", body.decode())
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertEqual(headers.get("X-Frame-Options"), "DENY")
+        self.assertIn("default-src", headers.get("Content-Security-Policy", ""))
         self.assertIn("swarmlab_http_requests_total_all", body.decode())
 
     def test_rate_limit_post(self) -> None:

@@ -1,3 +1,7 @@
+# swarm-lab v7.0.0
+
+Milestone 7.0: security headers, 140 tests, 100% coverage.
+
 # swarm-lab v6.9.0
 
 Vacuum/WAL checkpoint, 140 tests, 100%.
