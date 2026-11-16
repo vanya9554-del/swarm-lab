@@ -1,5 +1,12 @@
 # Changelog — swarm-lab
 
+## [6.8.0] — 2026-11-16
+
+Readiness integrity.
+
+### Добавлено
+- `/ready` включает `quick_check` (SQLite) / `SELECT 1` (PG); 136 тестов.
+
 ## [6.7.0] — 2026-11-16
 
 SQLite tuning.

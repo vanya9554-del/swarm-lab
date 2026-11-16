@@ -389,6 +389,10 @@ class PgSwarmStore:
                     pass
         return rows
 
+    def check(self) -> dict[str, Any]:
+        row = self._one("SELECT 1 AS ok")
+        return {"ok": bool(row and row.get("ok") == 1)}
+
     def stats(self) -> dict[str, Any]:
         agents = self._one("SELECT COUNT(*) AS n FROM agents") or {}
         tasks = self._all("SELECT status, COUNT(*) AS n FROM tasks GROUP BY status")

@@ -103,6 +103,7 @@ class HardeningTests(unittest.TestCase):
         status, headers, body = _get(self.base + "/ready")
         self.assertEqual(status, 200)
         self.assertIn(b'"ready":true', body)
+        self.assertIn(b'"quick_check":"ok"', body)
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
 
     def test_metrics_and_headers(self) -> None:

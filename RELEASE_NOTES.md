@@ -1,3 +1,7 @@
+# swarm-lab v6.8.0
+
+Readiness integrity check, 136 tests.
+
 # swarm-lab v6.7.0
 
 SQLite pragmas tuned; 500/500 soak.

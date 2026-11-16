@@ -196,7 +196,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
             if path == "/ready":
                 try:
                     stats = self.swarm.store.stats()
-                    self._send(200, {"ok": True, "ready": True, "backend": getattr(self.swarm.store, "backend", "sqlite"), "stats": stats})
+                    check = self.swarm.store.check() if hasattr(self.swarm.store, "check") else {"ok": True}
+                    self._send(200, {"ok": True, "ready": True, "backend": getattr(self.swarm.store, "backend", "sqlite"), "check": check, "stats": stats})
                 except Exception as exc:  # noqa: BLE001
                     self._send(503, {"ok": False, "ready": False, "error": str(exc)})
             elif path == "/metrics":
