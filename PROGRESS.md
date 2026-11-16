@@ -112,3 +112,5 @@ python -m swarmlab serve --port 8788
 - **S107**: final verification; 149 тестов, 100%, CI green, harness 8676 tasks/0 errors.
 
 - **S110**: pre-return final check; 149 тестов, 100%, CI green.
+
+- **S111**: shift complete; 149 тестов, 100%, CI green, server/harness stable.
