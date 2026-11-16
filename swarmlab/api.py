@@ -87,7 +87,7 @@ class SwarmHTTPServer(ThreadingHTTPServer):
 
 class SwarmHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
-    server_version = "swarm-lab/0.1"
+    server_version = "swarm-lab/" + __version__
 
     @property
     def swarm(self) -> SwarmHTTPServer:  # type: ignore[override]
