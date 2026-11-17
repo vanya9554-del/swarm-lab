@@ -140,6 +140,20 @@ backup:
     size: 5Gi
     storageClass: ""
     accessMode: ReadWriteOnce
+  # S3-compatible upload for SQLite (maintenance image with boto3).
+  s3:
+    enabled: false
+    image:
+      repository: swarmlab-maintenance
+      tag: ""
+      pullPolicy: IfNotPresent
+    bucket: ""
+    keyPrefix: swarmlab
+    endpoint: ""
+    region: us-east-1
+    existingSecret: ""
+    accessKeyKey: access-key
+    secretKeyKey: secret-key
 
 nodeSelector: {}
 tolerations: []

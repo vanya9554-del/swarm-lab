@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t swarmlab:ci .
       - run: docker run --rm swarmlab:ci python -m swarmlab --version
+      - run: docker build -f Dockerfile.maintenance -t swarmlab-maintenance:ci .
+      - run: docker run --rm swarmlab-maintenance:ci --help
       - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: swarmlab:ci
@@ -42,6 +44,13 @@ jobs:
       - run: 'grep -q "kind: HorizontalPodAutoscaler" /tmp/pg.yaml'
       - run: 'grep -q "kind: ServiceMonitor" /tmp/pg.yaml'
       - run: 'grep -q "kind: PrometheusRule" /tmp/pg.yaml'
+      - run: |
+          helm template s3 deploy/helm/swarmlab \
+            --set backup.enabled=true --set backup.s3.enabled=true \
+            --set backup.s3.bucket=backups --set backup.s3.existingSecret=s3 \
+            --set backup.s3.image.tag=test > /tmp/s3.yaml
+          grep -q "scripts/backup_s3.py" /tmp/s3.yaml
+          ! grep -q "swarmlab-backup" /tmp/s3.yaml
       - run: |
           curl -sSLo /tmp/kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
           tar -xzf /tmp/kubeconform.tar.gz -C /tmp

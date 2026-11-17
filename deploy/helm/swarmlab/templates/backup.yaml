@@ -1,4 +1,8 @@
 {{- if .Values.backup.enabled }}
+{{- if and .Values.postgresql.enabled .Values.backup.s3.enabled }}
+{{- fail "backup.s3 supports SQLite only; use PVC pg_dump for PostgreSQL" }}
+{{- end }}
+{{- if not .Values.backup.s3.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -14,6 +18,7 @@ spec:
     requests:
       storage: {{ .Values.backup.storage.size }}
 ---
+{{- end }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -39,7 +44,32 @@ spec:
             fsGroup: 1000
           containers:
             - name: backup
-              {{- if .Values.postgresql.enabled }}
+              {{- if .Values.backup.s3.enabled }}
+              image: "{{ .Values.backup.s3.image.repository }}:{{ .Values.backup.s3.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.backup.s3.image.pullPolicy }}
+              env:
+                - name: SWARMLAB_S3_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ required "backup.s3.existingSecret is required" .Values.backup.s3.existingSecret }}
+                      key: {{ .Values.backup.s3.accessKeyKey }}
+                - name: SWARMLAB_S3_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.backup.s3.existingSecret }}
+                      key: {{ .Values.backup.s3.secretKeyKey }}
+                - name: SWARMLAB_S3_REGION
+                  value: {{ .Values.backup.s3.region | quote }}
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  python scripts/backup_s3.py --db /data/swarm.db \
+                    --bucket {{ .Values.backup.s3.bucket | quote }} \
+                    --key "{{ .Values.backup.s3.keyPrefix }}/swarm-$(date -u +%Y%m%dT%H%M%SZ).db" \
+                    --endpoint {{ .Values.backup.s3.endpoint | quote }} \
+                    --region {{ .Values.backup.s3.region | quote }}
+              {{- else if .Values.postgresql.enabled }}
               image: postgres:16
               env:
                 - name: DSN
@@ -70,8 +100,10 @@ spec:
               volumeMounts:
                 - name: data
                   mountPath: /data
+                {{- if not .Values.backup.s3.enabled }}
                 - name: backup
                   mountPath: /backup
+                {{- end }}
           volumes:
             - name: data
               {{- if .Values.persistence.enabled }}
@@ -80,7 +112,9 @@ spec:
               {{- else }}
               emptyDir: {}
               {{- end }}
+            {{- if not .Values.backup.s3.enabled }}
             - name: backup
               persistentVolumeClaim:
                 claimName: {{ include "swarmlab.fullname" . }}-backup
+            {{- end }}
 {{- end }}
