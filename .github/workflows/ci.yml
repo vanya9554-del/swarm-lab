@@ -47,6 +47,7 @@ jobs:
       - run: |
           helm template s3 deploy/helm/swarmlab \
             --set backup.enabled=true --set backup.s3.enabled=true \
+            --set persistence.enabled=false \
             --set backup.s3.bucket=backups --set backup.s3.existingSecret=s3 \
             --set backup.s3.image.tag=test > /tmp/s3.yaml
           grep -q "scripts/backup_s3.py" /tmp/s3.yaml
