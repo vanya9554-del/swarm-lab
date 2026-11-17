@@ -199,3 +199,68 @@ jobs:
           path: zap/report.json
       - run: docker logs swarmlab-dast || true
         if: always()
+
+  kind-pg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: swarmlab-pg
+      - run: docker build -t swarmlab:test .
+      - run: kind load docker-image swarmlab:test --name swarmlab-pg
+      - uses: azure/setup-helm@v4
+      - name: PostgreSQL
+        run: |
+          kubectl apply -f - <<'EOF'
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata: {name: pg}
+          spec:
+            replicas: 1
+            selector: {matchLabels: {app: pg}}
+            template:
+              metadata: {labels: {app: pg}}
+              spec:
+                containers:
+                  - name: pg
+                    image: postgres:16
+                    env:
+                      - {name: POSTGRES_PASSWORD, value: pass}
+                      - {name: POSTGRES_DB, value: swarm}
+                    ports: [{containerPort: 5432}]
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata: {name: pg}
+          spec:
+            selector: {app: pg}
+            ports: [{port: 5432, targetPort: 5432}]
+          EOF
+          kubectl rollout status deploy/pg --timeout=180s
+          kubectl create secret generic pg-dsn --from-literal=dsn='postgresql://postgres:pass@pg:5432/swarm'
+      - name: Metrics server
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+          kubectl -n kube-system patch deploy metrics-server --type=json \
+            -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+          kubectl -n kube-system rollout status deploy/metrics-server --timeout=180s
+      - name: Install PG chart + HPA
+        run: |
+          helm install ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set postgresql.enabled=true --set postgresql.existingSecret=pg-dsn \
+            --set persistence.enabled=false --set auth.enabled=false \
+            --set networkPolicy.enabled=false --set serviceMonitor.enabled=false \
+            --set prometheusRule.enabled=false --set pdb.enabled=true --set pdb.minAvailable=1 \
+            --set autoscaling.enabled=true --set autoscaling.minReplicas=2 --set autoscaling.maxReplicas=4 \
+            --wait --timeout 240s
+          kubectl get hpa
+          kubectl rollout status deploy/ci-swarmlab --timeout=120s
+      - name: Smoke PG
+        run: |
+          kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf-pg.log 2>&1 &
+          sleep 3
+          curl -fsS --retry 10 --retry-delay 2 http://127.0.0.1:8788/ready
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d '{"capability":"echo","payload":{"x":1}}' http://127.0.0.1:8788/v1/tasks
