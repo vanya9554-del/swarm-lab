@@ -1,5 +1,16 @@
 # Changelog — swarm-lab
 
+## [11.3.0] — 2026-11-18
+
+Live PG/HPA.
+
+### Исправлено
+- Runtime-образ не содержал `psycopg`/`cryptography`: PostgreSQL и RS256 в контейнере не работали. Добавлены зависимости.
+
+### Добавлено
+- CI `kind-pg`: live PostgreSQL, HPA (metrics-server), 2 реплики, smoke.
+- 174 теста, 9 CI jobs green.
+
 ## [11.2.0] — 2026-11-18
 
 TLS ingress + S3 maintenance.

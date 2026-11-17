@@ -1,3 +1,7 @@
+# swarm-lab v11.3.0
+
+Runtime psycopg/cryptography fix; live PG/HPA kind test; 174 tests.
+
 # swarm-lab v11.2.0
 
 Live TLS ingress, S3 maintenance image/CronJob, signed maintenance image.

@@ -39,7 +39,7 @@
 | Trivy scan образа | ✅ | CI |
 | Helm chart | ✅ | `deploy/helm/swarmlab`, CI lint/template/kubeconform |
 | TLS ingress | ✅ | chart ingress/tls |
-| HPA/PDB/NetworkPolicy | ✅ | chart |
+| HPA/PDB/NetworkPolicy | ✅ | chart + live kind PG/HPA |
 | Backup/restore + S3 | ✅ | scripts + CI moto S3 + Helm backup.s3 |
 | Migrations/rolling upgrade | ✅ | schema v11, RUNBOOK |
 | ArgoCD staging/prod | ✅ | `deploy/argocd` |

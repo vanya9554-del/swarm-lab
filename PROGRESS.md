@@ -158,3 +158,5 @@ python -m swarmlab serve --port 8788
 - **S132**: DAST ZAP, cosign, multi-arch, SBOM; release 11.1.0.
 
 - **S133**: live TLS kind, maintenance image/Helm S3; release 11.2.0.
+
+- **S134**: runtime psycopg/crypto fix, live PG/HPA kind; release 11.3.0.
