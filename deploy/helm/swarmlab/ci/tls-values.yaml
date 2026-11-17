@@ -1,0 +1,14 @@
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned
+  hosts:
+    - host: swarm.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: swarmlab-tls
+      hosts:
+        - swarm.local

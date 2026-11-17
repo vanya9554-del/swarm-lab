@@ -114,6 +114,32 @@ jobs:
             --set networkPolicy.enabled=false --set pdb.enabled=false \
             --set config.rateRps=10 --timeout 120s
           kubectl rollout status deploy/ci-swarmlab --timeout=120s
+      - name: Install ingress and cert-manager
+        run: |
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add jetstack https://charts.jetstack.io
+          helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace \
+            --set controller.service.type=ClusterIP --wait --timeout 180s
+          helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace \
+            --set crds.enabled=true --wait --timeout 180s
+          kubectl apply -f - <<'EOF'
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: selfsigned
+          spec:
+            selfSigned: {}
+          EOF
+      - name: TLS ingress smoke
+        run: |
+          helm upgrade ci deploy/helm/swarmlab -f deploy/helm/swarmlab/ci/tls-values.yaml \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=false --set auth.enabled=false \
+            --set networkPolicy.enabled=false --set pdb.enabled=false --wait --timeout 180s
+          kubectl wait --for=condition=Ready certificate/swarmlab-tls --timeout=120s
+          kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8443:443 >/tmp/ingress-pf.log 2>&1 &
+          sleep 5
+          curl -kfsS --resolve swarm.local:8443:127.0.0.1 https://swarm.local:8443/ready
 
   bandit:
     runs-on: ubuntu-latest
