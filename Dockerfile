@@ -2,6 +2,7 @@
 FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
+RUN pip install --no-cache-dir "psycopg[binary]>=3.1" "cryptography>=42"
 COPY swarmlab ./swarmlab
 COPY README.md SPEC.md ./
 RUN addgroup --system app && adduser --system --ingroup app app && mkdir -p /data && chown -R app:app /app /data

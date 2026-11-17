@@ -254,7 +254,12 @@ jobs:
             --set networkPolicy.enabled=false --set serviceMonitor.enabled=false \
             --set prometheusRule.enabled=false --set pdb.enabled=true --set pdb.minAvailable=1 \
             --set autoscaling.enabled=true --set autoscaling.minReplicas=2 --set autoscaling.maxReplicas=4 \
-            --wait --timeout 240s
+            --timeout 240s
+          sleep 8
+          kubectl get pods -o wide
+          kubectl describe pod -l app.kubernetes.io/instance=ci || true
+          kubectl logs -l app.kubernetes.io/instance=ci --tail=120 || true
+          kubectl get events --sort-by=.lastTimestamp | tail -20 || true
           kubectl get hpa
           kubectl rollout status deploy/ci-swarmlab --timeout=120s
       - name: Smoke PG
