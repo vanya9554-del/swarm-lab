@@ -1,3 +1,7 @@
+# swarm-lab v11.2.0
+
+Live TLS ingress, S3 maintenance image/CronJob, signed maintenance image.
+
 # swarm-lab v11.1.0
 
 DAST ZAP, cosign signing, multi-arch, SBOM.

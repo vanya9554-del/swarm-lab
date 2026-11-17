@@ -1,5 +1,15 @@
 # Changelog — swarm-lab
 
+## [11.2.0] — 2026-11-18
+
+TLS ingress + S3 maintenance.
+
+### Добавлено
+- Live kind TLS: ingress-nginx + cert-manager + HTTPS smoke.
+- `Dockerfile.maintenance` (boto3), Helm `backup.s3` CronJob.
+- Release workflow собирает/подписывает maintenance-образ.
+- 174 теста, CI green.
+
 ## [11.1.0] — 2026-11-16
 
 Supply chain + DAST.
