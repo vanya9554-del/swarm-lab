@@ -269,3 +269,47 @@ jobs:
           curl -fsS --retry 10 --retry-delay 2 http://127.0.0.1:8788/ready
           curl -fsS -X POST -H 'Content-Type: application/json' \
             -d '{"capability":"echo","payload":{"x":1}}' http://127.0.0.1:8788/v1/tasks
+
+  kind-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: swarmlab-backup
+      - run: docker build -t swarmlab:test .
+      - run: kind load docker-image swarmlab:test --name swarmlab-backup
+      - uses: azure/setup-helm@v4
+      - name: local-path storage
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
+          kubectl -n local-path-storage rollout status deploy/local-path-provisioner --timeout=120s
+          kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+      - name: Install with backup
+        run: |
+          helm install ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=true --set persistence.size=1Gi \
+            --set backup.enabled=true --set backup.storage.size=1Gi \
+            --set auth.enabled=false --set networkPolicy.enabled=false \
+            --set pdb.enabled=false --set serviceMonitor.enabled=false \
+            --set prometheusRule.enabled=false --wait --timeout 240s
+      - name: Create task and backup
+        run: |
+          kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf-backup.log 2>&1 &
+          sleep 3
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d '{"capability":"backup","payload":{"n":1}}' http://127.0.0.1:8788/v1/tasks
+          kubectl create job --from=cronjob/ci-swarmlab-backup backup-1
+          kubectl wait --for=condition=complete job/backup-1 --timeout=120s
+          kubectl logs job/backup-1
+      - name: Verify + restore drill
+        run: |
+          cat > /tmp/check.json <<'EOF'
+          {"spec":{"containers":[{"name":"c","image":"swarmlab:test","imagePullPolicy":"Never","command":["python","-c","import glob,shutil,sqlite3; f=sorted(glob.glob('/backup/*.db'))[-1]; print('backup',f); shutil.copy(f,'/data/restored.db'); c=sqlite3.connect('/data/restored.db'); print('tasks',c.execute('select count(*) from tasks').fetchone()[0]); assert c.execute('pragma quick_check').fetchone()[0]=='ok'"],"volumeMounts":[{"name":"data","mountPath":"/data"},{"name":"backup","mountPath":"/backup"}]}],"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"ci-swarmlab-data"}},{"name":"backup","persistentVolumeClaim":{"claimName":"ci-swarmlab-backup"}}]}}
+          EOF
+          kubectl run backup-check --image=swarmlab:test --image-pull-policy=Never --restart=Never --overrides="$(cat /tmp/check.json)"
+          kubectl wait --for=condition=Ready pod/backup-check --timeout=120s || true
+          kubectl logs backup-check
+          kubectl get pod backup-check -o jsonpath='{.status.phase}' | grep Succeeded
+          kubectl delete pod backup-check
