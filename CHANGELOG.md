@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.4.0] — 2026-11-18
+
+Live backup/S3 drill.
+
+### Добавлено
+- kind CI: local-path PVC, backup CronJob, restore verification (SQLite).
+- kind CI: moto S3, Helm `backup.s3`, maintenance image Job, проверка объекта.
+- 11 CI jobs green; 174 теста, 100% coverage.
+
 ## [11.3.0] — 2026-11-18
 
 Live PG/HPA.

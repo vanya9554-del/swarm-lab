@@ -2,12 +2,12 @@
 
 ## Итог
 
-- **Версия:** 11.3.0; теги `v1.0.0`…`v11.3.0`.
+- **Версия:** 11.4.0; теги `v1.0.0`…`v11.4.0`.
 - **Тесты:** 174/174 OK; coverage **100,0%**; ruff **0**.
 - **CI:** green — test, docker build, Trivy, Helm lint/template, kubeconform.
 - **CD:** GHCR image по тегу; ArgoCD staging/prod.
 - GitHub: https://github.com/vanya9554-del/swarm-lab
-- Локальный сервер: `http://127.0.0.1:8788`, MCP **11.3.0**.
+- Локальный сервер: `http://127.0.0.1:8788`, MCP **11.4.0**.
 
 ## Что реализовано
 
@@ -65,7 +65,7 @@
 | Observability | ~85% |
 | Security | ~75% (нет внешнего аудита/KMS) |
 | Backup/DR | ~70% (нет restore drill на live) |
-| **Production infra** | **~99%** |
+| **Production infra** | **99%** |
 
 ## Проверки
 

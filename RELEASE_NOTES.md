@@ -1,3 +1,7 @@
+# swarm-lab v11.4.0
+
+Live backup/restore + S3 CronJob in kind; 11 CI jobs.
+
 # swarm-lab v11.3.0
 
 Runtime psycopg/cryptography fix; live PG/HPA kind test; 174 tests.

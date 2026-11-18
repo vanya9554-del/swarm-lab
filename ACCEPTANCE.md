@@ -40,7 +40,7 @@
 | Helm chart | ✅ | `deploy/helm/swarmlab`, CI lint/template/kubeconform |
 | TLS ingress | ✅ | chart ingress/tls |
 | HPA/PDB/NetworkPolicy | ✅ | chart + live kind PG/HPA |
-| Backup/restore + S3 | ✅ | scripts + CI moto S3 + Helm backup.s3 |
+| Backup/restore + S3 | ✅ | live kind: CronJob + restore + S3 object |
 | Migrations/rolling upgrade | ✅ | schema v11, RUNBOOK |
 | ArgoCD staging/prod | ✅ | `deploy/argocd` |
 | GHCR push по тегу | ✅ | release workflow |

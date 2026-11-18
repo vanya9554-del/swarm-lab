@@ -160,3 +160,5 @@ python -m swarmlab serve --port 8788
 - **S133**: live TLS kind, maintenance image/Helm S3; release 11.2.0.
 
 - **S134**: runtime psycopg/crypto fix, live PG/HPA kind; release 11.3.0.
+
+- **S135**: live backup/restore + S3 CronJob; release 11.4.0.
