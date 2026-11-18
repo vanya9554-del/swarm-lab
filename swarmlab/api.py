@@ -24,6 +24,66 @@ from .openapi import spec as openapi_spec
 from .store import SwarmError, SwarmStore
 
 MAX_BODY = int(os.environ.get("SWARMLAB_MAX_BODY") or (1 << 20))
+DASHBOARD = """<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>swarm-lab __VERSION__</title>
+<style>
+body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:#0f1420;color:#e6edf7;margin:0;padding:24px}
+h1{margin:0 0 4px;font-size:26px}h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:#8aa4c8;margin:22px 0 10px}
+.sub{color:#8aa4c8;margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:#171f30;border:1px solid #26344d;border-radius:10px;padding:14px}.card b{display:block;margin-bottom:6px}
+a.btn,button{display:inline-block;margin:4px 6px 4px 0;padding:7px 11px;border-radius:7px;background:#2563eb;color:#fff;text-decoration:none;border:0;font-size:13px;cursor:pointer}
+a.btn.alt{background:#25324a}a.btn.green{background:#15803d}a.btn.warn{background:#a16207}
+.ok{color:#4ade80}.bad{color:#f87171}.muted{color:#8aa4c8;font-size:13px}
+code{background:#0b101a;padding:2px 5px;border-radius:4px;color:#c7d7f0}
+</style></head><body>
+<h1>swarm-lab <span class="muted">__VERSION__</span></h1>
+<div class="sub">Agent-native swarm runtime · API/MCP · <span id="health">проверяю...</span></div>
+<div class="grid">
+<div class="card"><b>Локальный API</b>
+<a class="btn" href="/ready" target="_blank">/ready</a>
+<a class="btn" href="/v1/capabilities" target="_blank">/capabilities</a>
+<a class="btn" href="/v1/openapi" target="_blank">/openapi</a>
+<a class="btn" href="/metrics" target="_blank">/metrics</a>
+<a class="btn" href="/v1/stats" target="_blank">/stats</a>
+<a class="btn" href="/v1/audit" target="_blank">/audit</a>
+</div>
+<div class="card"><b>GitHub / CI</b>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab" target="_blank">Репозиторий</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/actions" target="_blank">Actions (12 jobs)</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/releases" target="_blank">Releases</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/pkgs/container/swarm-lab" target="_blank">GHCR image</a>
+</div>
+<div class="card"><b>Cloud: создать кластер</b>
+<a class="btn" href="https://console.aws.amazon.com/eks/home" target="_blank">AWS EKS</a>
+<a class="btn" href="https://console.cloud.google.com/kubernetes" target="_blank">GCP GKE</a>
+<a class="btn" href="https://portal.azure.com/#create/Microsoft.AKS" target="_blank">Azure AKS</a>
+<div class="muted">после создания: <code>aws eks update-kubeconfig</code> / <code>gcloud container clusters get-credentials</code> / <code>az aks get-credentials</code></div>
+</div>
+<div class="card"><b>KMS / секреты</b>
+<a class="btn" href="https://console.aws.amazon.com/kms" target="_blank">AWS KMS</a>
+<a class="btn" href="https://console.cloud.google.com/security/kms" target="_blank">GCP KMS</a>
+<a class="btn" href="https://developer.hashicorp.com/vault" target="_blank">Vault</a>
+<a class="btn" href="https://external-secrets.io" target="_blank">External Secrets</a>
+<div class="muted">live-путь Vault+ESO уже проверен в CI.</div>
+</div>
+<div class="card"><b>Пентест</b>
+<a class="btn warn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/PENTEST.md" target="_blank">Scope / чеклист</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/actions/workflows/ci.yml" target="_blank">DAST/SAST отчёты</a>
+<div class="muted">внешний исполнитель; автотесты уже в CI.</div>
+</div>
+<div class="card"><b>Production runbook</b>
+<a class="btn green" href="https://github.com/vanya9554-del/swarm-lab/blob/main/PRODUCTION.md" target="_blank">Пошаговый деплой</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/deploy/RUNBOOK.md" target="_blank">RUNBOOK</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/SECURITY.md" target="_blank">SECURITY</a>
+</div>
+</div>
+<script>
+Promise.all([fetch('/ready').then(r=>r.json()),fetch('/v1/capabilities').then(r=>r.json())])
+ .then(([r,c])=>{document.getElementById('health').innerHTML='<span class="ok">ready</span> · backend '+r.backend+' · '+(c.data&&c.data.features?Object.keys(c.data.features).length+' features':'')})
+ .catch(()=>{document.getElementById('health').innerHTML='<span class="bad">not ready</span>'});
+</script></body></html>"""
+
 _JWKS_LOCK = threading.Lock()
 _JWKS_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 _JWKS_TTL_S = 300.0
@@ -47,6 +107,8 @@ def _fetch_jwks(url: str) -> list[dict[str, Any]]:
     return result
 ROUTES = {
     ("GET", "/"),
+    ("GET", "/"),
+    ("GET", "/dashboard"),
     ("GET", "/health"),
     ("GET", "/ready"),
     ("GET", "/v1/stats"),
@@ -155,6 +217,23 @@ class SwarmHandler(BaseHTTPRequestHandler):
             return
         if os.environ.get("SWARMLAB_LOG", "1") != "0":
             print(f"[swarmlab] {self.address_string()} {fmt % args}", flush=True)
+
+    def _send_html(self, html: str) -> None:
+        path = urlparse(self.path).path
+        self.swarm.metrics.observe(self.command, path, 200, time.perf_counter() - getattr(self, "_started", time.perf_counter()))
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; frame-ancestors 'none'")
+        self.send_header("X-Request-Id", getattr(self, "request_id", ""))
+        self.end_headers()
+        if not getattr(self, "_head", False):
+            self.wfile.write(body)
 
     def _send(self, status: int, payload: Any, headers: dict[str, str] | None = None) -> None:
         path = urlparse(self.path).path
@@ -348,33 +427,15 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path, query = parsed.path, parse_qs(parsed.query)
-        public = path in ("/", "/health", "/ready", "/metrics")
+        public = path in ("/", "/dashboard", "/health", "/ready", "/metrics")
         if not public and not self._auth():
             return
         if not self._rate_ok():
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
         try:
-            if path == "/":
-                self._send(200, {
-                    "ok": True,
-                    "service": "swarm-lab",
-                    "version": __version__,
-                    "message": "API-only service. Use the endpoints below.",
-                    "endpoints": {
-                        "health": "/health",
-                        "ready": "/ready",
-                        "capabilities": "/v1/capabilities",
-                        "openapi": "/v1/openapi",
-                        "metrics": "/metrics",
-                        "stats": "/v1/stats",
-                        "audit": "/v1/audit",
-                        "agents": "/v1/agents",
-                        "tasks": "/v1/tasks",
-                        "stream": "/v1/stream",
-                        "mcp": "POST /mcp",
-                    },
-                })
+            if path in ("/", "/dashboard"):
+                self._send_html(DASHBOARD.replace("__VERSION__", __version__))
             elif path == "/v1/audit":
                 self._send(200, {"ok": True, "data": self.swarm.store.audits(
                     int((query.get("limit") or ["100"])[0]),

@@ -1,3 +1,7 @@
+# swarm-lab v11.7.0
+
+Clickable dashboard + production/pentest handoff.
+
 # swarm-lab v11.6.0
 
 Root discovery endpoint; 175 tests.

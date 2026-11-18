@@ -554,8 +554,13 @@ class ExtraApiTests(unittest.TestCase):
     def test_root(self) -> None:
         status, body, _ = _req("GET", self.base + "/")
         self.assertEqual(status, 200)
-        self.assertEqual(body["service"], "swarm-lab")
-        self.assertIn("endpoints", body)
+        self.assertIn("swarm-lab", body.get("raw", ""))
+        self.assertIn("/ready", body.get("raw", ""))
+
+    def test_dashboard(self) -> None:
+        status, body, _ = _req("GET", self.base + "/dashboard")
+        self.assertEqual(status, 200)
+        self.assertIn("production", body.get("raw", "").lower())
 
     def test_audit_api(self) -> None:
         _req("POST", self.base + "/v1/tasks", {"capability": "au"})

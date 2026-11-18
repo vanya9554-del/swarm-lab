@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.7.0] — 2026-11-18
+
+Clickable dashboard + handoff docs.
+
+### Добавлено
+- `GET /` и `/dashboard`: HTML-панель со ссылками на API/GitHub/Cloud/KMS/пентест.
+- `PRODUCTION.md`, `PENTEST.md`.
+- 176 тестов, 100% coverage.
+
 ## [11.6.0] — 2026-11-18
 
 Root discovery endpoint.

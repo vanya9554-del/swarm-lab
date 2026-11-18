@@ -166,3 +166,5 @@ python -m swarmlab serve --port 8788
 - **S136**: Vault+ESO external secrets live; release 11.5.0.
 
 - **S137**: root discovery endpoint; release 11.6.0.
+
+- **S138**: dashboard + PRODUCTION/PENTEST; release 11.7.0.
