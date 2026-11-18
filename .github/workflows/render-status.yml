@@ -25,6 +25,9 @@ jobs:
           echo "URL=$url"
           curl -sS "$url/ready"
           echo
+          echo "HEALTH:"; curl -sS "$url/health"
+          echo
+          echo "LLMS:"; curl -sS "$url/llms.txt" | head -3
           curl -sS "$url/llms.txt" | head -5
           echo
           curl -sS "$url/agents.json" | head -c 300
