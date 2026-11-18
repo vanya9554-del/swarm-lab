@@ -373,3 +373,76 @@ jobs:
             python -c "import boto3; c=boto3.client('s3',endpoint_url='http://moto:5000',aws_access_key_id='minio',aws_secret_access_key='minio123',region_name='us-east-1'); r=c.list_objects_v2(Bucket='backups'); print(r); assert r.get('KeyCount',0)>0"
           kubectl wait --for=condition=complete job/s3check --timeout=120s
           kubectl logs job/s3check
+
+  kind-vault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: swarmlab-vault
+      - run: docker build -t swarmlab:test .
+      - run: kind load docker-image swarmlab:test --name swarmlab-vault
+      - uses: azure/setup-helm@v4
+      - name: Vault dev + ESO
+        run: |
+          helm repo add hashicorp https://helm.releases.hashicorp.com
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm install vault hashicorp/vault -n vault --create-namespace \
+            --set server.dev.enabled=true --wait --timeout 180s
+          helm install external-secrets external-secrets/external-secrets \
+            -n external-secrets --create-namespace --wait --timeout 180s
+          kubectl create secret generic vault-token --from-literal=token=root
+          kubectl apply -f - <<'EOF'
+          apiVersion: external-secrets.io/v1beta1
+          kind: SecretStore
+          metadata:
+            name: vault
+          spec:
+            provider:
+              vault:
+                server: http://vault.vault.svc:8200
+                path: secret
+                version: v2
+                auth:
+                  tokenSecretRef:
+                    name: vault-token
+                    key: token
+          ---
+          apiVersion: external-secrets.io/v1beta1
+          kind: ExternalSecret
+          metadata:
+            name: swarmlab-auth
+          spec:
+            refreshInterval: 1m
+            secretStoreRef:
+              name: vault
+              kind: SecretStore
+            target:
+              name: ci-auth
+              creationPolicy: Owner
+            data:
+              - secretKey: token
+                remoteRef:
+                  key: swarmlab
+                  property: token
+          EOF
+          kubectl -n vault exec vault-0 -- vault kv put secret/swarmlab token="s3cr3t"
+          sleep 5
+          kubectl get externalsecret swarmlab-auth -o wide
+          kubectl get secret ci-auth
+      - name: Install with external secret
+        run: |
+          helm install ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=false --set auth.enabled=true \
+            --set auth.existingSecret=ci-auth --set auth.tokenKey=token \
+            --set networkPolicy.enabled=false --set pdb.enabled=false \
+            --set serviceMonitor.enabled=false --set prometheusRule.enabled=false \
+            --wait --timeout 180s
+      - name: Auth smoke
+        run: |
+          TOKEN=$(kubectl get secret ci-auth -o jsonpath='{.data.token}' | base64 -d)
+          kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf-vault.log 2>&1 &
+          sleep 3
+          curl -fsS -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8788/v1/stats
