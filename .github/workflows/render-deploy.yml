@@ -91,6 +91,17 @@ jobs:
           code=$(curl -sS -o /tmp/patch.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/services/$svc_id" -d "$patch")
           echo "image_patch_http=$code"
           cat /tmp/patch.json
+          code=$(curl -sS -o /tmp/deploy2.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc_id/deploys" -d '{}')
+          echo "deploy2_http=$code"
+          cat /tmp/deploy2.json
+          for i in $(seq 1 60); do
+            dlist=$(curl -sS "${auth[@]}" "$api/services/$svc_id/deploys?limit=1" || true)
+            ds=$(printf '%s' "$dlist" | jq -r '.[0]? | (.deploy // .) | .status // empty' 2>/dev/null || true)
+            echo "DEPLOY2_STATUS=$ds"
+            if [ "$ds" = "live" ]; then break; fi
+            if [ "$ds" = "build_failed" ] || [ "$ds" = "update_failed" ]; then exit 1; fi
+            sleep 10
+          done
 
           echo "ENV_KEYS:"
           env_list=$(curl -sS "${auth[@]}" "$api/services/$svc_id/env-vars" || true)
