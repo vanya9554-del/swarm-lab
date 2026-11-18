@@ -176,3 +176,5 @@ python -m swarmlab serve --port 8788
 - **S141**: actual Docker DB env fix; release 11.10.0.
 
 - **S142**: English dashboard/README + agent discovery; release 11.11.0.
+
+- **S143**: PG migration advisory lock; release 11.12.0.

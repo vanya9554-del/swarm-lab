@@ -99,6 +99,7 @@ class PgSwarmStore:
         for attempt in range(attempts):
             try:
                 self.conn = psycopg.connect(self.dsn, row_factory=self._row_factory)
+                self.conn.execute("SELECT pg_advisory_xact_lock(20261119)")
                 self.conn.execute(SCHEMA)
                 for migration in (
                     "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS expires_at DOUBLE PRECISION",

@@ -1,3 +1,7 @@
+# swarm-lab v11.12.0
+
+PG migration advisory lock; 177 tests.
+
 # swarm-lab v11.11.0
 
 English publication, llms.txt/agents.json/ai-plugin, sitemap; 177 tests.

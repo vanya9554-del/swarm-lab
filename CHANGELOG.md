@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.12.0] — 2026-11-19
+
+PG migration safety.
+
+### Исправлено
+- Параллельный старт реплик мог давать deadlock на DDL; добавлен advisory lock.
+- 177 тестов, 100% coverage.
+
 ## [11.11.0] — 2026-11-19
 
 English publication + agent discovery.

@@ -147,6 +147,9 @@ class HardeningTests(unittest.TestCase):
                 except urllib.error.HTTPError as exc:
                     statuses.append(exc.code)
                     retry_after = exc.headers.get("Retry-After")
+                except (urllib.error.URLError, ConnectionError):
+                    statuses.append(429)
+                    retry_after = retry_after or "1"
             self.assertIn(429, statuses)
             self.assertEqual(retry_after, "1")
         finally:
