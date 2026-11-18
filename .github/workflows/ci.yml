@@ -314,3 +314,65 @@ jobs:
           kubectl logs backup-check
           kubectl get pod backup-check -o jsonpath='{.status.phase}' | grep Succeeded
           kubectl delete pod backup-check
+
+  kind-s3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: swarmlab-s3
+      - run: |
+          docker build -t swarmlab:test .
+          docker build -f Dockerfile.maintenance -t swarmlab-maintenance:test .
+          docker build -t moto:test - <<'EOF'
+          FROM python:3.12-slim
+          RUN pip install --no-cache-dir "moto[server]"
+          CMD ["python", "-m", "moto.server", "-H", "0.0.0.0", "-p", "5000"]
+          EOF
+          kind load docker-image swarmlab:test --name swarmlab-s3
+          kind load docker-image swarmlab-maintenance:test --name swarmlab-s3
+          kind load docker-image moto:test --name swarmlab-s3
+      - uses: azure/setup-helm@v4
+      - name: local-path + moto
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
+          kubectl -n local-path-storage rollout status deploy/local-path-provisioner --timeout=120s
+          kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+          kubectl create deployment moto --image=moto:test --image-pull-policy=Never
+          kubectl expose deployment moto --port=5000
+          kubectl rollout status deploy/moto --timeout=120s
+          kubectl create secret generic s3-creds \
+            --from-literal=access-key=minio --from-literal=secret-key=minio123
+      - name: Install S3 backup chart
+        run: |
+          helm install ci deploy/helm/swarmlab \
+            --set image.repository=swarmlab --set image.tag=test --set image.pullPolicy=Never \
+            --set persistence.enabled=true --set persistence.size=1Gi \
+            --set backup.enabled=true --set backup.s3.enabled=true \
+            --set backup.s3.bucket=backups --set backup.s3.endpoint=http://moto:5000 \
+            --set backup.s3.existingSecret=s3-creds \
+            --set backup.s3.image.repository=swarmlab-maintenance \
+            --set backup.s3.image.tag=test --set backup.s3.image.pullPolicy=Never \
+            --set auth.enabled=false --set networkPolicy.enabled=false \
+            --set pdb.enabled=false --set serviceMonitor.enabled=false \
+            --set prometheusRule.enabled=false --timeout 240s
+          kubectl rollout status deploy/ci-swarmlab --timeout=180s
+      - name: Run S3 backup job
+        run: |
+          kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf-s3.log 2>&1 &
+          sleep 3
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d '{"capability":"s3","payload":{"n":1}}' http://127.0.0.1:8788/v1/tasks
+          kubectl create job --from=cronjob/ci-swarmlab-backup backup-s3
+          kubectl wait --for=condition=complete job/backup-s3 --timeout=180s
+          kubectl logs job/backup-s3
+      - name: Verify S3 object
+        run: |
+          kubectl run s3check --image=swarmlab-maintenance:test --image-pull-policy=Never --restart=Never \
+            --env=SWARMLAB_S3_ENDPOINT=http://moto:5000 \
+            --env=SWARMLAB_S3_ACCESS_KEY=minio --env=SWARMLAB_S3_SECRET_KEY=minio123 \
+            --command -- python -c "import boto3; c=boto3.client('s3',endpoint_url='http://moto:5000',aws_access_key_id='minio',aws_secret_access_key='minio123',region_name='us-east-1'); r=c.list_objects_v2(Bucket='backups'); print(r); assert r.get('KeyCount',0)>0"
+          kubectl wait --for=condition=Ready pod/s3check --timeout=60s || true
+          kubectl logs s3check
+          kubectl get pod s3check -o jsonpath='{.status.phase}' | grep Succeeded
