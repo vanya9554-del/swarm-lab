@@ -55,3 +55,13 @@ jobs:
           done
           echo "SERVICE_URL=$url"
           echo "DASHBOARD=https://dashboard.render.com/web/$svc_id"
+          if [ -n "$url" ]; then
+            code="000"
+            for i in $(seq 1 60); do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url/ready" || true)
+              if [ "$code" = "200" ]; then break; fi
+              sleep 5
+            done
+            echo "READY_HTTP=$code"
+            curl -sS "$url/health" || true
+          fi
