@@ -1,0 +1,25 @@
+name: render-status
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Status
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          echo "service=$svc"
+          curl -fsS "${auth[@]}" "$api/services/$svc" | jq '{name,imagePath,serviceDetails:{url:.serviceDetails.url,plan:.serviceDetails.plan,status:.serviceDetails.status}}'
+          echo "DEPLOYS"
+          curl -fsS "${auth[@]}" "$api/services/$svc/deploys?limit=5" | jq '.[] | (.deploy // .) | {id,status,trigger,createdAt,updatedAt}'
