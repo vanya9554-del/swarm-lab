@@ -72,6 +72,13 @@ jobs:
           echo "deploy_http=$code"
           cat /tmp/deploy.json
 
+          echo "ENV_KEYS:"
+          env_list=$(curl -sS "${auth[@]}" "$api/services/$svc_id/env-vars" || true)
+          printf '%s' "$env_list" | jq -r '.[]? | (.envVar // .) | .key' || true
+          echo "DEPLOYS:"
+          deploys=$(curl -sS "${auth[@]}" "$api/services/$svc_id/deploys?limit=5" || true)
+          printf '%s' "$deploys" | jq -r '.[]? | (.deploy // .) | [.id,.status,.createdAt] | @tsv' || true
+
           url=""
           for i in $(seq 1 60); do
             svc=$(curl -sS "${auth[@]}" "$api/services/$svc_id" || true)
