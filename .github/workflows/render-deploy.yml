@@ -90,5 +90,12 @@ jobs:
               sleep 5
             done
             echo "READY_HTTP=$code"
-            curl -sS "$url/health" || true
+            backend=""
+            for i in $(seq 1 60); do
+              ready=$(curl -sS "$url/ready" || true)
+              backend=$(printf '%s' "$ready" | jq -r '.backend // empty' 2>/dev/null || true)
+              if [ "$backend" = "postgres" ]; then echo "BACKEND=$backend"; echo "$ready"; break; fi
+              sleep 5
+            done
+            if [ "$backend" != "postgres" ]; then echo "BACKEND=$backend"; echo "not postgres"; fi
           fi
