@@ -45,6 +45,33 @@ jobs:
             echo "service_exists=$svc_id"
           fi
 
+          pg_list=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner")
+          db_id=$(printf '%s' "$pg_list" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          if [ -z "$db_id" ]; then
+            payload=$(jq -n --arg o "$owner" '{name:"swarmlab-db",ownerId:$o,plan:"free",region:"frankfurt",version:"16",databaseName:"swarm",databaseUser:"swarm"}')
+            code=$(curl -sS -o /tmp/pg.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/postgres" -d "$payload")
+            echo "pg_create_http=$code"
+            cat /tmp/pg.json
+            if [ "$code" != "201" ] && [ "$code" != "200" ]; then exit 1; fi
+            db_id=$(jq -r '(.postgres // .).id' /tmp/pg.json)
+          fi
+          echo "db_id=$db_id"
+          internal=""
+          for i in $(seq 1 60); do
+            conn=$(curl -sS "${auth[@]}" "$api/postgres/$db_id/connection-info" || true)
+            internal=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).internalConnectionString // empty' 2>/dev/null || true)
+            if [ -n "$internal" ]; then break; fi
+            sleep 5
+          done
+          if [ -z "$internal" ]; then echo "no internal db"; exit 1; fi
+          envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok}]')
+          code=$(curl -sS -o /tmp/env.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc_id/env-vars" -d "$envs")
+          echo "env_update_http=$code"
+          cat /tmp/env.json
+          code=$(curl -sS -o /tmp/deploy.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc_id/deploys" -d '{}')
+          echo "deploy_http=$code"
+          cat /tmp/deploy.json
+
           url=""
           for i in $(seq 1 60); do
             svc=$(curl -sS "${auth[@]}" "$api/services/$svc_id" || true)
