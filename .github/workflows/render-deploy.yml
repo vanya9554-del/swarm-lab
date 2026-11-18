@@ -22,40 +22,24 @@ jobs:
           owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
           echo "owner=$owner"
 
-          pg_list=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner")
-          db_id=$(printf '%s' "$pg_list" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
-          if [ -z "$db_id" ]; then
-            payload=$(jq -n --arg o "$owner" '{name:"swarmlab-db",ownerId:$o,plan:"free",region:"frankfurt",version:"16",databaseName:"swarm",databaseUser:"swarm"}')
-            resp=$(curl -fsS "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/postgres" -d "$payload")
-            db_id=$(printf '%s' "$resp" | jq -r '(.postgres // .).id')
-          fi
-          echo "db_id=$db_id"
-
-          internal=""
-          for i in $(seq 1 60); do
-            conn=$(curl -sS "${auth[@]}" "$api/postgres/$db_id/connection-info" || true)
-            internal=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).internalConnectionString // empty' 2>/dev/null || true)
-            if [ -n "$internal" ]; then break; fi
-            sleep 5
-          done
-          if [ -z "$internal" ]; then echo "no internal connection string"; exit 1; fi
-
           svc_list=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner")
           svc_id=$(printf '%s' "$svc_list" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
           if [ -z "$svc_id" ]; then
             payload=$(jq -n \
               --arg o "$owner" \
               --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.8.0" \
-              --arg db "$internal" \
               --arg tok "$SWARMLAB_TOKEN" \
               '{type:"web_service",name:"swarmlab",ownerId:$o,
                 image:{ownerId:$o,imagePath:$img},
                 autoDeploy:"no",
                 serviceDetails:{env:"image",runtime:"image",plan:"free",region:"frankfurt",
                   healthCheckPath:"/ready",numInstances:1,
-                  envVars:[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok}]}}')
-            resp=$(curl -fsS "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services" -d "$payload")
-            svc_id=$(printf '%s' "$resp" | jq -r '(.service // .).id')
+                  envVars:[{key:"SWARMLAB_TOKEN",value:$tok}]}}')
+            code=$(curl -sS -o /tmp/service.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services" -d "$payload")
+            echo "create_http=$code"
+            cat /tmp/service.json
+            if [ "$code" != "201" ] && [ "$code" != "200" ]; then exit 1; fi
+            svc_id=$(jq -r '(.service // .).id' /tmp/service.json)
             echo "service_created=$svc_id"
           else
             echo "service_exists=$svc_id"
