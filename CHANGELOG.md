@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.9.0] — 2026-11-18
+
+Container DB env fix.
+
+### Исправлено
+- Docker CMD игнорировал `SWARMLAB_DB`; Render/PaaS не переключались на Postgres.
+- 176 тестов, 100% coverage.
+
 ## [11.8.0] — 2026-11-18
 
 Simple deploy path.

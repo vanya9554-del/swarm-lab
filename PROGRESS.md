@@ -170,3 +170,5 @@ python -m swarmlab serve --port 8788
 - **S138**: dashboard + PRODUCTION/PENTEST; release 11.7.0.
 
 - **S139**: START_HERE/Render, PORT support; release 11.8.0.
+
+- **S140**: Docker DB env fix; release 11.9.0.

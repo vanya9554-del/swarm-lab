@@ -428,7 +428,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path, query = parsed.path, parse_qs(parsed.query)
-        public = path in ("/", "/dashboard", "/health", "/ready", "/metrics")
+        public = path in ("/", "/dashboard", "/health", "/ready", "/metrics", "/v1/capabilities")
         if not public and not self._auth():
             return
         if not self._rate_ok():
