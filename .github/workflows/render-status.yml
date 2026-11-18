@@ -21,5 +21,13 @@ jobs:
           svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
           echo "service=$svc"
           curl -fsS "${auth[@]}" "$api/services/$svc" | jq '{name,imagePath,serviceDetails:{url:.serviceDetails.url,plan:.serviceDetails.plan,status:.serviceDetails.status}}'
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          echo "URL=$url"
+          curl -sS "$url/ready"
+          echo
+          curl -sS "$url/llms.txt" | head -5
+          echo
+          curl -sS "$url/agents.json" | head -c 300
+          echo
           echo "DEPLOYS"
           curl -fsS "${auth[@]}" "$api/services/$svc/deploys?limit=5" | jq '.[] | (.deploy // .) | {id,status,trigger,createdAt,updatedAt}'
