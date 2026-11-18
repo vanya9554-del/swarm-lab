@@ -293,7 +293,8 @@ jobs:
             --set backup.enabled=true --set backup.storage.size=1Gi \
             --set auth.enabled=false --set networkPolicy.enabled=false \
             --set pdb.enabled=false --set serviceMonitor.enabled=false \
-            --set prometheusRule.enabled=false --wait --timeout 240s
+            --set prometheusRule.enabled=false --timeout 240s
+          kubectl rollout status deploy/ci-swarmlab --timeout=180s
       - name: Create task and backup
         run: |
           kubectl port-forward svc/ci-swarmlab 8788:80 >/tmp/pf-backup.log 2>&1 &
