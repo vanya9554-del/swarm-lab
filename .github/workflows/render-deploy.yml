@@ -56,6 +56,13 @@ jobs:
             db_id=$(jq -r '(.postgres // .).id' /tmp/pg.json)
           fi
           echo "db_id=$db_id"
+          for i in $(seq 1 60); do
+            pg=$(curl -sS "${auth[@]}" "$api/postgres/$db_id" || true)
+            ps=$(printf '%s' "$pg" | jq -r '(.postgres // .).status // empty' 2>/dev/null || true)
+            echo "PG_STATUS=$ps"
+            if [ "$ps" = "available" ]; then break; fi
+            sleep 10
+          done
           internal=""
           for i in $(seq 1 60); do
             conn=$(curl -sS "${auth[@]}" "$api/postgres/$db_id/connection-info" || true)
@@ -71,6 +78,14 @@ jobs:
           code=$(curl -sS -o /tmp/deploy.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc_id/deploys" -d '{}')
           echo "deploy_http=$code"
           cat /tmp/deploy.json
+          for i in $(seq 1 60); do
+            dlist=$(curl -sS "${auth[@]}" "$api/services/$svc_id/deploys?limit=1" || true)
+            ds=$(printf '%s' "$dlist" | jq -r '.[0]? | (.deploy // .) | .status // empty' 2>/dev/null || true)
+            echo "DEPLOY_STATUS=$ds"
+            if [ "$ds" = "live" ]; then break; fi
+            if [ "$ds" = "build_failed" ] || [ "$ds" = "update_failed" ] || [ "$ds" = "canceled" ]; then echo "deploy failed"; exit 1; fi
+            sleep 10
+          done
 
           echo "ENV_KEYS:"
           env_list=$(curl -sS "${auth[@]}" "$api/services/$svc_id/env-vars" || true)
