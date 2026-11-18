@@ -103,6 +103,11 @@ jobs:
             sleep 10
           done
 
+          code=$(curl -sS -o /tmp/restart.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc_id/restart")
+          echo "restart_http=$code"
+          cat /tmp/restart.json
+          sleep 20
+
           echo "ENV_KEYS:"
           env_list=$(curl -sS "${auth[@]}" "$api/services/$svc_id/env-vars" || true)
           printf '%s' "$env_list" | jq -r '.[]? | (.envVar // .) | .key' || true
