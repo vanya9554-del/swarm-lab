@@ -12,6 +12,7 @@ def spec() -> dict[str, Any]:
         "info": {"title": "swarm-lab", "version": __version__, "description": "Agent-native swarm runtime"},
         "servers": [{"url": "/"}],
         "paths": {
+            "/": {"get": {"summary": "Service discovery"}},
             "/health": {"get": {"summary": "Liveness"}},
             "/ready": {"get": {"summary": "Readiness + stats"}},
             "/metrics": {"get": {"summary": "Prometheus metrics"}},

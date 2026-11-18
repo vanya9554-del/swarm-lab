@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.6.0] — 2026-11-18
+
+Root discovery endpoint.
+
+### Добавлено
+- `GET /` — JSON с версией и ссылками на endpoints (раньше был 404).
+- 175 тестов, 100% coverage.
+
 ## [11.5.0] — 2026-11-18
 
 Vault/ESO external secrets.

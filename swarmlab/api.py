@@ -46,6 +46,7 @@ def _fetch_jwks(url: str) -> list[dict[str, Any]]:
         _JWKS_CACHE[url] = (now, result)
     return result
 ROUTES = {
+    ("GET", "/"),
     ("GET", "/health"),
     ("GET", "/ready"),
     ("GET", "/v1/stats"),
@@ -347,14 +348,34 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
         path, query = parsed.path, parse_qs(parsed.query)
-        public = path in ("/health", "/ready", "/metrics")
+        public = path in ("/", "/health", "/ready", "/metrics")
         if not public and not self._auth():
             return
         if not self._rate_ok():
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
         try:
-            if path == "/v1/audit":
+            if path == "/":
+                self._send(200, {
+                    "ok": True,
+                    "service": "swarm-lab",
+                    "version": __version__,
+                    "message": "API-only service. Use the endpoints below.",
+                    "endpoints": {
+                        "health": "/health",
+                        "ready": "/ready",
+                        "capabilities": "/v1/capabilities",
+                        "openapi": "/v1/openapi",
+                        "metrics": "/metrics",
+                        "stats": "/v1/stats",
+                        "audit": "/v1/audit",
+                        "agents": "/v1/agents",
+                        "tasks": "/v1/tasks",
+                        "stream": "/v1/stream",
+                        "mcp": "POST /mcp",
+                    },
+                })
+            elif path == "/v1/audit":
                 self._send(200, {"ok": True, "data": self.swarm.store.audits(
                     int((query.get("limit") or ["100"])[0]),
                     (query.get("action") or [""])[0],

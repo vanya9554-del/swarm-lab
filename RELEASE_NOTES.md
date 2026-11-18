@@ -1,3 +1,7 @@
+# swarm-lab v11.6.0
+
+Root discovery endpoint; 175 tests.
+
 # swarm-lab v11.5.0
 
 Vault+ESO external secrets live; 12 CI jobs green.

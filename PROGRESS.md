@@ -164,3 +164,5 @@ python -m swarmlab serve --port 8788
 - **S135**: live backup/restore + S3 CronJob; release 11.4.0.
 
 - **S136**: Vault+ESO external secrets live; release 11.5.0.
+
+- **S137**: root discovery endpoint; release 11.6.0.
