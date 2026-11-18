@@ -339,9 +339,9 @@ jobs:
           kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
           kubectl -n local-path-storage rollout status deploy/local-path-provisioner --timeout=120s
           kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-          kubectl create deployment moto --image=moto:test --image-pull-policy=Never
-          kubectl expose deployment moto --port=5000
-          kubectl rollout status deploy/moto --timeout=120s
+          kubectl run moto --image=moto:test --image-pull-policy=Never --restart=Never --port=5000
+          kubectl wait --for=condition=Ready pod/moto --timeout=120s
+          kubectl expose pod moto --port=5000
           kubectl create secret generic s3-creds \
             --from-literal=access-key=minio --from-literal=secret-key=minio123
       - name: Install S3 backup chart
