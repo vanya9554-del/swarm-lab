@@ -370,8 +370,6 @@ jobs:
       - name: Verify S3 object
         run: |
           kubectl run s3check --image=swarmlab-maintenance:test --image-pull-policy=Never --restart=Never \
-            --env=SWARMLAB_S3_ENDPOINT=http://moto:5000 \
-            --env=SWARMLAB_S3_ACCESS_KEY=minio --env=SWARMLAB_S3_SECRET_KEY=minio123 \
             --command -- python -c "import boto3; c=boto3.client('s3',endpoint_url='http://moto:5000',aws_access_key_id='minio',aws_secret_access_key='minio123',region_name='us-east-1'); r=c.list_objects_v2(Bucket='backups'); print(r); assert r.get('KeyCount',0)>0"
           kubectl wait --for=condition=Ready pod/s3check --timeout=60s || true
           kubectl logs s3check
