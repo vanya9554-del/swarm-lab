@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.10.0] — 2026-11-18
+
+Docker DB env fix (actual).
+
+### Исправлено
+- CMD теперь читает `SWARMLAB_DB` и `$PORT`; Render/PaaS используют PostgreSQL.
+- 176 тестов, 100% coverage.
+
 ## [11.9.0] — 2026-11-18
 
 Container DB env fix.

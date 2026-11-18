@@ -172,3 +172,5 @@ python -m swarmlab serve --port 8788
 - **S139**: START_HERE/Render, PORT support; release 11.8.0.
 
 - **S140**: Docker DB env fix; release 11.9.0.
+
+- **S141**: actual Docker DB env fix; release 11.10.0.

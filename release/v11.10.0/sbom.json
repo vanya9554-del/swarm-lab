@@ -1,0 +1,39 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "name": "swarm-lab",
+      "version": "11.10.0",
+      "type": "application"
+    },
+    "tools": [
+      {
+        "name": "release.py"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "swarm-lab",
+      "version": "11.10.0",
+      "type": "application"
+    },
+    {
+      "name": "python",
+      "version": "3.12.14",
+      "type": "runtime"
+    },
+    {
+      "name": "sqlite",
+      "version": "stdlib",
+      "type": "library"
+    },
+    {
+      "name": "psycopg",
+      "version": "optional",
+      "type": "library"
+    }
+  ]
+}

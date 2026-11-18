@@ -9,4 +9,4 @@ RUN addgroup --system app && adduser --system --ingroup app app && mkdir -p /dat
 USER app
 EXPOSE 8788
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8788/health',timeout=2)"
-CMD ["python","-m","swarmlab","serve","--db","/data/swarm.db","--host","0.0.0.0","--port","8788"]
+CMD ["sh", "-c", "exec python -m swarmlab serve --db \"${SWARMLAB_DB:-/data/swarm.db}\" --host 0.0.0.0 --port ${PORT:-8788}"]

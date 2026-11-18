@@ -1,3 +1,7 @@
+# swarm-lab v11.10.0
+
+Docker DB env/PORT support; 176 tests.
+
 # swarm-lab v11.9.0
 
 Docker SWARMLAB_DB support; 176 tests.
