@@ -53,7 +53,7 @@
 | Bearer/scopes | ✅ | tests |
 | JWT HS256/RS256, iss/aud/exp/nbf | ✅ | tests |
 | Rate limit/body limit/headers | ✅ | tests |
-| Secrets via K8s/ESO | ✅ | Helm values/existingSecret |
+| Secrets via K8s/ESO | ✅ | live kind: Vault + ExternalSecret |
 | Пентест-чеклист + SAST | ✅ | SECURITY.md, bandit |
 | Audit log | ✅ | `/v1/audit`, MCP `swarm_audit` |
 | Trivy | ✅ | CI |

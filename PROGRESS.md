@@ -162,3 +162,5 @@ python -m swarmlab serve --port 8788
 - **S134**: runtime psycopg/crypto fix, live PG/HPA kind; release 11.3.0.
 
 - **S135**: live backup/restore + S3 CronJob; release 11.4.0.
+
+- **S136**: Vault+ESO external secrets live; release 11.5.0.

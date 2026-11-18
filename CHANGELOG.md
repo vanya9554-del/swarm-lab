@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.5.0] — 2026-11-18
+
+Vault/ESO external secrets.
+
+### Добавлено
+- live kind: HashiCorp Vault (dev) + External Secrets Operator; ExternalSecret → secret для auth.
+- CI 12 jobs: + kind-vault; все зелёные.
+- 174 теста, 100% coverage.
+
 ## [11.4.0] — 2026-11-18
 
 Live backup/S3 drill.

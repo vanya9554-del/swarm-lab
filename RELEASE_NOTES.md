@@ -1,3 +1,7 @@
+# swarm-lab v11.5.0
+
+Vault+ESO external secrets live; 12 CI jobs green.
+
 # swarm-lab v11.4.0
 
 Live backup/restore + S3 CronJob in kind; 11 CI jobs.
