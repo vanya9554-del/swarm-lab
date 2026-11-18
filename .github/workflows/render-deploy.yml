@@ -27,7 +27,7 @@ jobs:
           if [ -z "$svc_id" ]; then
             payload=$(jq -n \
               --arg o "$owner" \
-              --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.9.0" \
+              --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.10.0" \
               --arg tok "$SWARMLAB_TOKEN" \
               '{type:"web_service",name:"swarmlab",ownerId:$o,
                 image:{ownerId:$o,imagePath:$img},
@@ -87,7 +87,7 @@ jobs:
             sleep 10
           done
 
-          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.9.0" '{image:{ownerId:$o,imagePath:$img}}')
+          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.10.0" '{image:{ownerId:$o,imagePath:$img}}')
           code=$(curl -sS -o /tmp/patch.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/services/$svc_id" -d "$patch")
           echo "image_patch_http=$code"
           cat /tmp/patch.json
