@@ -396,7 +396,7 @@ jobs:
           kubectl wait --for=condition=Established crd/secretstores.external-secrets.io --timeout=120s
           kubectl create secret generic vault-token --from-literal=token=root
           kubectl apply -f - <<'EOF'
-          apiVersion: external-secrets.io/v1beta1
+          apiVersion: external-secrets.io/v1
           kind: SecretStore
           metadata:
             name: vault
@@ -411,7 +411,7 @@ jobs:
                     name: vault-token
                     key: token
           ---
-          apiVersion: external-secrets.io/v1beta1
+          apiVersion: external-secrets.io/v1
           kind: ExternalSecret
           metadata:
             name: swarmlab-auth
