@@ -10,11 +10,64 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Owners
-        run: |
-          set -euo pipefail
-          curl -fsS -H "Authorization: Bearer $RENDER_API_KEY" \
-            https://api.render.com/v1/owners | tee owners.json
-          jq -r '.[].owner.id' owners.json
+      - name: Deploy to Render
+        shell: bash
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          echo "owner=$owner"
+
+          pg_list=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner")
+          db_id=$(printf '%s' "$pg_list" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          if [ -z "$db_id" ]; then
+            payload=$(jq -n --arg o "$owner" '{name:"swarmlab-db",ownerId:$o,plan:"free",region:"frankfurt",version:"16",databaseName:"swarm",databaseUser:"swarm"}')
+            resp=$(curl -fsS "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/postgres" -d "$payload")
+            db_id=$(printf '%s' "$resp" | jq -r '(.postgres // .).id')
+          fi
+          echo "db_id=$db_id"
+
+          internal=""
+          for i in $(seq 1 60); do
+            conn=$(curl -sS "${auth[@]}" "$api/postgres/$db_id/connection-info" || true)
+            internal=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).internalConnectionString // empty' 2>/dev/null || true)
+            if [ -n "$internal" ]; then break; fi
+            sleep 5
+          done
+          if [ -z "$internal" ]; then echo "no internal connection string"; exit 1; fi
+
+          svc_list=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner")
+          svc_id=$(printf '%s' "$svc_list" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          if [ -z "$svc_id" ]; then
+            payload=$(jq -n \
+              --arg o "$owner" \
+              --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.8.0" \
+              --arg db "$internal" \
+              --arg tok "$SWARMLAB_TOKEN" \
+              '{type:"web_service",name:"swarmlab",ownerId:$o,
+                image:{ownerId:$o,imagePath:$img},
+                autoDeploy:"no",
+                serviceDetails:{env:"image",runtime:"image",plan:"free",region:"frankfurt",
+                  healthCheckPath:"/ready",numInstances:1,
+                  envVars:[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok}]}}')
+            resp=$(curl -fsS "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services" -d "$payload")
+            svc_id=$(printf '%s' "$resp" | jq -r '(.service // .).id')
+            echo "service_created=$svc_id"
+          else
+            echo "service_exists=$svc_id"
+          fi
+
+          url=""
+          for i in $(seq 1 60); do
+            svc=$(curl -sS "${auth[@]}" "$api/services/$svc_id" || true)
+            url=$(printf '%s' "$svc" | jq -r '(.serviceDetails.url // .service.serviceDetails.url // empty)' 2>/dev/null || true)
+            status=$(printf '%s' "$svc" | jq -r '(.suspended // .service.suspended // empty)' 2>/dev/null || true)
+            if [ -n "$url" ] && [ "$status" != "suspended" ]; then break; fi
+            sleep 5
+          done
+          echo "SERVICE_URL=$url"
+          echo "DASHBOARD=https://dashboard.render.com/web/$svc_id"
