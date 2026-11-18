@@ -1,3 +1,7 @@
+# swarm-lab v11.8.0
+
+Simple Render deploy, PORT support; 176 tests.
+
 # swarm-lab v11.7.0
 
 Clickable dashboard + production/pentest handoff.

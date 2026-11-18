@@ -168,3 +168,5 @@ python -m swarmlab serve --port 8788
 - **S137**: root discovery endpoint; release 11.6.0.
 
 - **S138**: dashboard + PRODUCTION/PENTEST; release 11.7.0.
+
+- **S139**: START_HERE/Render, PORT support; release 11.8.0.

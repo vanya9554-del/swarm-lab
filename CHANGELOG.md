@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.8.0] — 2026-11-18
+
+Simple deploy path.
+
+### Добавлено
+- `START_HERE.md`: Render-деплой без инженерных знаний.
+- Контейнер слушает `$PORT` (совместимость с Render/PaaS).
+- 176 тестов, 100% coverage.
+
 ## [11.7.0] — 2026-11-18
 
 Clickable dashboard + handoff docs.

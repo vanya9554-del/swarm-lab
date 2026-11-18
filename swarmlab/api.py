@@ -73,7 +73,8 @@ code{background:#0b101a;padding:2px 5px;border-radius:4px;color:#c7d7f0}
 <div class="muted">внешний исполнитель; автотесты уже в CI.</div>
 </div>
 <div class="card"><b>Production runbook</b>
-<a class="btn green" href="https://github.com/vanya9554-del/swarm-lab/blob/main/PRODUCTION.md" target="_blank">Пошаговый деплой</a>
+<a class="btn green" href="https://github.com/vanya9554-del/swarm-lab/blob/main/START_HERE.md" target="_blank">Простой старт</a>
+<a class="btn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/PRODUCTION.md" target="_blank">Пошаговый деплой</a>
 <a class="btn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/deploy/RUNBOOK.md" target="_blank">RUNBOOK</a>
 <a class="btn" href="https://github.com/vanya9554-del/swarm-lab/blob/main/SECURITY.md" target="_blank">SECURITY</a>
 </div>
