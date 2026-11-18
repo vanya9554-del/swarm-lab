@@ -1,0 +1,20 @@
+name: render-deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Owners
+        run: |
+          set -euo pipefail
+          curl -fsS -H "Authorization: Bearer $RENDER_API_KEY" \
+            https://api.render.com/v1/owners | tee owners.json
+          jq -r '.[].owner.id' owners.json
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
