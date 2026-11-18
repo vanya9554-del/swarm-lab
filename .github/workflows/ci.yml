@@ -391,7 +391,9 @@ jobs:
           helm install vault hashicorp/vault -n vault --create-namespace \
             --set server.dev.enabled=true --wait --timeout 180s
           helm install external-secrets external-secrets/external-secrets \
-            -n external-secrets --create-namespace --wait --timeout 180s
+            -n external-secrets --create-namespace --set installCRDs=true --wait --timeout 180s
+          kubectl wait --for=condition=Established crd/externalsecrets.external-secrets.io --timeout=120s
+          kubectl wait --for=condition=Established crd/secretstores.external-secrets.io --timeout=120s
           kubectl create secret generic vault-token --from-literal=token=root
           kubectl apply -f - <<'EOF'
           apiVersion: external-secrets.io/v1beta1
