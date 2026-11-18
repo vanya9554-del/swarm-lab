@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.11.0] — 2026-11-19
+
+English publication + agent discovery.
+
+### Добавлено
+- English dashboard/README.
+- `/llms.txt`, `/agents.json`, `/.well-known/ai-plugin.json`, `/robots.txt`, `/sitemap.xml`.
+- 177 тестов, 100% coverage.
+
 ## [11.10.0] — 2026-11-18
 
 Docker DB env fix (actual).

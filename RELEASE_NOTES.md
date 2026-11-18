@@ -1,3 +1,7 @@
+# swarm-lab v11.11.0
+
+English publication, llms.txt/agents.json/ai-plugin, sitemap; 177 tests.
+
 # swarm-lab v11.10.0
 
 Docker DB env/PORT support; 176 tests.

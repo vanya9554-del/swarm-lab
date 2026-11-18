@@ -14,6 +14,11 @@ def spec() -> dict[str, Any]:
         "paths": {
             "/": {"get": {"summary": "Dashboard / service discovery"}},
             "/dashboard": {"get": {"summary": "Dashboard"}},
+            "/llms.txt": {"get": {"summary": "LLM/agent index"}},
+            "/robots.txt": {"get": {"summary": "Robots"}},
+            "/sitemap.xml": {"get": {"summary": "Sitemap"}},
+            "/agents.json": {"get": {"summary": "Agent discovery manifest"}},
+            "/.well-known/ai-plugin.json": {"get": {"summary": "AI plugin manifest"}},
             "/health": {"get": {"summary": "Liveness"}},
             "/ready": {"get": {"summary": "Readiness + stats"}},
             "/metrics": {"get": {"summary": "Prometheus metrics"}},

@@ -1,67 +1,50 @@
 # swarm-lab
 
-Agent-native swarm runtime и benchmark. **Без UI**: только HTTP/JSON, batch, SSE, MCP и CLI.
-Reference implementation для быстрого обмена задачами, знаниями и событиями между агентами.
+**Agent-native swarm runtime.** No UI. HTTP/JSON, batch RPC, SSE, MCP and a CLI.
+A reference implementation for fast task, knowledge and event exchange between autonomous agents.
 
-## Принципы
+- Documentation: [`SPEC.md`](SPEC.md), [`PRODUCTION.md`](PRODUCTION.md), [`SECURITY.md`](SECURITY.md)
+- Releases: https://github.com/vanya9554-del/swarm-lab/releases
+- Live demo: https://swarmlab-z705.onrender.com
+- Agent index: https://swarmlab-z705.onrender.com/llms.txt
 
-- Агент — первый клиент: минимум RTT, batch, SSE, gzip, компактные ответы.
-- Никакого SPA/человеческого UI в критическом пути.
-- SQLite по умолчанию; PostgreSQL — для multi-replica.
-- Everything is measured: latency/throughput/lease/fencing/chaos.
+## Why
 
-## Возможности
+- **Agent-first**: low RTT, batch, SSE, gzip, compact JSON.
+- **No human UI** on the critical path.
+- **SQLite by default**, PostgreSQL for multi-replica.
+- Everything measured: latency, throughput, leases, fencing, chaos.
+
+## Features
 
 - **Task market**: priority, affinity, dedup, lease/fencing (`lease_epoch`), backpressure.
-- **TTL/expiry**: `ttl_s`, `expire`, maintenance endpoint.
-- **Dependencies**: `depends_on` — claim только после completed.
-- **Retry**: `attempts`/`max_attempts` → dead-letter `failed`; `requeue`.
-- **Lifecycle**: cancel, requeue, get task by id.
+- **TTL/expiry**, **dependencies** (`depends_on`), **retry** (`attempts`/`max_attempts`) and dead-letter.
+- **Lifecycle**: cancel, requeue, task event history.
+- **Agents**: register, discover, heartbeat, profile, deregister.
 - **PostgreSQL**: `FOR UPDATE SKIP LOCKED`, reconnect, `LISTEN/NOTIFY` SSE, multi-replica.
-- **MCP 2024-11-05**: tools/resources/prompts over stdio и HTTP `/mcp`.
-- **Observability**: Prometheus `/metrics`, `/health` (version/uptime), `/ready`, request-id, latency histogram.
-- **Discovery**: `/v1/capabilities`, `/v1/version`, OpenAPI 3.1 `/v1/openapi`.
-- **Hardening**: bearer tokens/scopes, rate limit + `Retry-After`, body limit, security headers.
-- **Transport**: HTTP/1.1, keep-alive, `TCP_NODELAY`, gzip, `request_queue_size=128`.
-- **Deploy**: Docker, compose (SQLite + PG profile), K8s (SQLite/PDB/NetworkPolicy, PG/HPA).
+- **MCP 2024-11-05**: tools/resources/prompts over stdio and HTTP `/mcp`.
+- **Observability**: Prometheus `/metrics`, `/health`, `/ready`, request-id, latency histogram.
+- **Discovery**: `/`, `/llms.txt`, `/agents.json`, `/v1/capabilities`, OpenAPI 3.1 `/v1/openapi`.
+- **Security**: bearer tokens/scopes, JWT HS256/RS256/JWKS, rate limit, body limit, security headers, audit log.
+- **Deploy**: Docker, compose, Helm/Kubernetes, Render, GHCR image.
 
-## Быстрый старт
+## Quick start
 
 ```bash
 python -m unittest discover -s tests
-python -m swarmlab --help
-python -m swarmlab serve --port 8788              # SQLite
-python -m swarmlab serve --db postgresql://...   # PG multi-replica
-python -m swarmlab mcp            # MCP stdio
-# MCP HTTP: POST /mcp (initialize/tools/list/tools/call/resources/prompts)
-curl -sS -X POST localhost:8788/v1/agents -H 'Content-Type: application/json' \
+python -m swarmlab serve --port 8788
+python -m swarmlab mcp
+```
+
+```bash
+curl -sS -X POST localhost:8788/v1/agents \
+  -H 'Content-Type: application/json' \
   -d '{"agent_id":"a1","capabilities":["search"]}'
-curl -sS -X POST localhost:8788/v1/tasks -H 'Content-Type: application/json' \
+
+curl -sS -X POST localhost:8788/v1/tasks \
+  -H 'Content-Type: application/json' \
   -d '{"capability":"search","payload":{"q":"x"},"ttl_s":60,"max_attempts":3}'
 ```
-
-## Benchmark
-
-```bash
-python scripts/bench.py --backend sqlite --tasks 200 --workers 8
-python scripts/http_bench.py --tasks 300 --workers 8
-```
-
-- SQLite engine: **5412 tasks/s**, p50 **1.09 ms** (`BENCH.md`).
-- HTTP: **300/300**, **586,7 tasks/s**, p50 **9,2 ms**, p95 **31,5 ms**, 0 errors (`HTTP_BENCH.md`).
-
-## Docker
-
-```bash
-docker build -t swarm-lab .
-docker run -p 8788:8788 -e SWARMLAB_TOKEN=secret swarm-lab
-```
-
-## Статус
-
-**v11.9.0** — 176 тестов, coverage **95,0%**, ruff 0; релиз-артефакты в `release/v4.7.0/`.
-План — `PLAN.md`, протокол — `SPEC.md`, качество — `QUALITY.md`,
-автономный runbook — `../NIGHT_SHIFT.md`.
 
 ## Python client
 
@@ -74,3 +57,46 @@ with SwarmClient("http://127.0.0.1:8788", token="...") as c:
     claimed = c.claim("agent-1", "echo")
     c.complete(claimed["task_id"], "agent-1", {"ok": True}, claimed["lease_epoch"])
 ```
+
+## MCP
+
+- stdio: `python -m swarmlab mcp`
+- HTTP: `POST /mcp` with MCP JSON-RPC (`initialize`, `tools/list`, `tools/call`, `resources/*`, `prompts/*`).
+
+## Deployment
+
+| Mode | Doc |
+|---|---|
+| Render / PaaS | [`START_HERE.md`](START_HERE.md) |
+| Kubernetes / Helm | [`PRODUCTION.md`](PRODUCTION.md) |
+| Local Docker | `docker run -p 8788:8788 -e SWARMLAB_TOKEN=secret ghcr.io/vanya9554-del/swarm-lab:latest` |
+
+Helm chart: [`deploy/helm/swarmlab`](deploy/helm/swarmlab) — TLS ingress, HPA, PDB, NetworkPolicy, ServiceMonitor, backup CronJob.
+
+## Observability
+
+- `/metrics` Prometheus counters + latency histogram
+- `/health`, `/ready`
+- JSON access logs: `SWARMLAB_LOG_FORMAT=json`
+- Prometheus rules / Grafana dashboard: [`deploy/observability`](deploy/observability)
+- SLO: [`deploy/observability/SLO.md`](deploy/observability/SLO.md)
+
+## Security
+
+- Static bearer tokens, scoped tokens, JWT HS256/RS256, JWKS discovery.
+- Audit log: `/v1/audit`, MCP `swarm_audit`.
+- Trivy, bandit, pip-audit, OWASP ZAP baseline in CI.
+- See [`SECURITY.md`](SECURITY.md) and [`PENTEST.md`](PENTEST.md).
+
+## Status
+
+- **Version 11.10.0**
+- **176 tests**, 100% coverage, ruff clean
+- 12 CI jobs: tests, Docker, Trivy, Helm, kubeconform, kind, kind-pg, kind-backup, kind-s3, kind-vault, DAST, SAST
+- License: MIT
+
+## Search keywords
+
+agent-native runtime, multi-agent task market, MCP server, SSE task stream, agent discovery,
+SQLite task queue, PostgreSQL task queue, lease fencing, exactly-once task execution,
+OpenAPI agent API, LLM agent infrastructure.

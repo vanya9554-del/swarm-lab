@@ -557,6 +557,18 @@ class ExtraApiTests(unittest.TestCase):
         self.assertIn("swarm-lab", body.get("raw", ""))
         self.assertIn("/ready", body.get("raw", ""))
 
+    def test_discovery(self) -> None:
+        for path in ("/llms.txt", "/robots.txt", "/sitemap.xml"):
+            status, body, _ = _req("GET", self.base + path)
+            self.assertEqual(status, 200)
+            self.assertTrue(body.get("raw"))
+        status, body, _ = _req("GET", self.base + "/agents.json")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["name"], "swarm-lab")
+        status, body, _ = _req("GET", self.base + "/.well-known/ai-plugin.json")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["api"]["type"], "openapi")
+
     def test_dashboard(self) -> None:
         status, body, _ = _req("GET", self.base + "/dashboard")
         self.assertEqual(status, 200)
