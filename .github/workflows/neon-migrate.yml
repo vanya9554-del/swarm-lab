@@ -32,10 +32,17 @@ jobs:
           old=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).externalConnectionString // empty')
           [ -n "$old" ] || { echo "no Render external DSN"; exit 1; }
           echo "source=render target=neon"
+          psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'SELECT current_database(), version();' >/dev/null
+          before=$(psql "$old" -At -c "SELECT COALESCE(SUM(n),0) FROM (SELECT COUNT(*) AS n FROM agents UNION ALL SELECT COUNT(*) FROM tasks UNION ALL SELECT COUNT(*) FROM messages UNION ALL SELECT COUNT(*) FROM artifacts) s")
+          echo "render_rows=$before"
           pg_dump --no-owner --no-acl --clean --if-exists "$old" > /tmp/swarm.sql
+          test -s /tmp/swarm.sql
           psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;' >/dev/null
           psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f /tmp/swarm.sql >/dev/null
           echo "restore_ok"
+          after=$(psql "$NEON_DATABASE_URL" -At -c "SELECT COALESCE(SUM(n),0) FROM (SELECT COUNT(*) AS n FROM agents UNION ALL SELECT COUNT(*) FROM tasks UNION ALL SELECT COUNT(*) FROM messages UNION ALL SELECT COUNT(*) FROM artifacts) s")
+          echo "neon_rows=$after"
+          [ "$after" -ge 0 ] || exit 1
           envs=$(jq -n --arg db "$NEON_DATABASE_URL" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
           curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs"
           curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc/deploys" -d '{}'
@@ -55,4 +62,4 @@ jobs:
             curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc/deploys" -d '{}'
             exit 1
           fi
-          echo "NEON_OK"
+          echo "NEON_OK before=$before after=$after"
