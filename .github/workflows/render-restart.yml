@@ -1,0 +1,29 @@
+name: render-restart
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          image=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.imagePath')
+          echo "image=$image"
+          curl -sS -o /tmp/r.json -w 'restart=%{http_code}\n' "${auth[@]}" -X POST "$api/services/$svc/restart"
+          sleep 45
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          echo "URL=$url"
+          curl -sS "$url/health"; echo
+          curl -sS -o /dev/null -w 'channels=%{http_code}\n' "$url/v1/channels"
