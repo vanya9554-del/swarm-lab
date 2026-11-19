@@ -700,6 +700,30 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(_req("GET", self.base + "/v1/artifacts/nope")[0], 404)
         self.assertEqual(_req("DELETE", self.base + "/v1/artifacts/doc")[0], 200)
 
+    def test_reputation_api(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            def reg(name):
+                status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                    "agent_id": name, "capabilities": ["rep"], "join_code": "join-me",
+                })
+                return body["data"]["token"]
+            t1 = reg("rep1")
+            t2 = reg("rep2")
+            status, body, _ = _req("POST", self.base + "/v1/reputation/feedback", {
+                "to_agent": "rep2", "score": 1, "comment": "ok",
+            }, t1)
+            self.assertEqual(status, 201)
+            status, body, _ = _req("GET", self.base + "/v1/reputation/rep2", None, t2)
+            self.assertEqual(body["data"]["feedback_count"], 1)
+            self.assertEqual(_req("GET", self.base + "/v1/reputation", None, t2)[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/reputation/feedback", {"to_agent": "rep2", "score": 9}, t1)[0], 400)
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
     def test_roles_api(self) -> None:
         import os
         self.server.token = "admin"

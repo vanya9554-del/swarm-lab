@@ -1,3 +1,7 @@
+# swarm-lab v11.19.0
+
+Reputation/trust + leaderboard; 200 tests.
+
 # swarm-lab v11.18.0
 
 Lease-based coordination roles; 197 tests.

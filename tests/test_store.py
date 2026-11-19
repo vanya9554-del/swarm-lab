@@ -67,6 +67,17 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_reputation(self) -> None:
+        self.store.register("a", ["x"])
+        self.store.add_feedback("a", "b", 1, None, "good")
+        rep = self.store.reputation("b")
+        self.assertEqual(rep["feedback_count"], 1)
+        self.assertTrue(self.store.leaderboard())
+        with self.assertRaises(SwarmError):
+            self.store.add_feedback("", "b")
+        with self.assertRaises(SwarmError):
+            self.store.add_feedback("a", "b", 5)
+
     def test_roles(self) -> None:
         r = self.store.claim_role("s", "leader", "a", 60)
         self.assertEqual(r["epoch"], 1)
@@ -148,7 +159,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 16)
+        self.assertEqual(self.store.schema_version(), 17)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

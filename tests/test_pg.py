@@ -383,6 +383,22 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_reputation(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.register("a", ["x"])
+            s.add_feedback("a", "b", 1, None, "good")
+            self.assertEqual(s.reputation("b")["feedback_count"], 1)
+            self.assertTrue(s.leaderboard())
+            with self.assertRaises(SwarmError):
+                s.add_feedback("", "b")
+            with self.assertRaises(SwarmError):
+                s.add_feedback("a", "b", 5)
+        finally:
+            s.close()
+
     def test_roles(self) -> None:
         from swarmlab.pg import PgSwarmStore
         from swarmlab.store import SwarmError
@@ -495,7 +511,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 16)
+            self.assertEqual(s.schema_version(), 17)
         finally:
             s.close()
 

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.19.0] — 2026-11-19
+
+Reputation/trust.
+
+### Добавлено
+- Feedback, reputation score, leaderboard: `/v1/reputation`.
+- 200 тестов, 100% coverage.
+
 ## [11.18.0] — 2026-11-19
 
 Coordination roles.

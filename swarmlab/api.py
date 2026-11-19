@@ -152,6 +152,9 @@ ROUTES = {
     ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
+    ("GET", "/v1/reputation"),
+    ("GET", "/v1/reputation/{agent_id}"),
+    ("POST", "/v1/reputation/feedback"),
     ("GET", "/v1/roles"),
     ("POST", "/v1/roles/claim"),
     ("POST", "/v1/roles/renew"),
@@ -560,6 +563,10 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     int((query.get("after") or ["0"])[0]),
                     int((query.get("limit") or ["100"])[0]),
                 )})
+            elif path == "/v1/reputation":
+                self._send(200, {"ok": True, "data": self.swarm.store.leaderboard(int((query.get("limit") or ["20"])[0]))})
+            elif path.startswith("/v1/reputation/"):
+                self._send(200, {"ok": True, "data": self.swarm.store.reputation(path.rsplit("/", 1)[-1])})
             elif path == "/v1/roles":
                 self._send(200, {"ok": True, "data": self.swarm.store.roles((query.get("scope") or [None])[0])})
             elif path == "/v1/artifacts":
@@ -712,6 +719,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
                 self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/reputation/feedback":
+                from_agent = self.agent_id or str(body.get("from_agent") or "")
+                data = self.swarm.store.add_feedback(
+                    from_agent, str(body.get("to_agent") or ""),
+                    int(body.get("score") or 1), body.get("task_id"), str(body.get("comment") or ""),
+                )
+                self._send(201, {"ok": True, "data": data})
             elif path in ("/v1/roles/claim", "/v1/roles/renew", "/v1/roles/release"):
                 scope = str(body.get("scope") or "global")
                 name = str(body.get("name") or "")

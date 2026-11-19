@@ -53,6 +53,15 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     created_at DOUBLE PRECISION NOT NULL,
     revoked INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS feedback (
+    id BIGSERIAL PRIMARY KEY,
+    from_agent TEXT NOT NULL,
+    to_agent TEXT NOT NULL,
+    task_id TEXT,
+    score INTEGER NOT NULL,
+    comment TEXT NOT NULL DEFAULT '',
+    created_at DOUBLE PRECISION NOT NULL
+);
 CREATE TABLE IF NOT EXISTS roles (
     scope TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -156,7 +165,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 16) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 17) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -465,6 +474,43 @@ class PgSwarmStore:
         digest = hashlib.sha256(token.encode()).hexdigest()
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=%s AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
+
+    def add_feedback(self, from_agent: str, to_agent: str, score: int = 1, task_id: str | None = None, comment: str = "") -> dict[str, Any]:
+        if not str(from_agent).strip() or not str(to_agent).strip():
+            raise SwarmError("BAD_REQUEST", "from_agent and to_agent are required")
+        if int(score) not in (-1, 0, 1):
+            raise SwarmError("BAD_REQUEST", "score must be -1, 0 or 1")
+        with self.lock:
+            row = self._one(
+                "INSERT INTO feedback(from_agent, to_agent, task_id, score, comment, created_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING *",
+                (str(from_agent), str(to_agent), task_id, int(score), str(comment), time.time()),
+            )
+        return row or {}
+
+    def reputation(self, agent_id: str) -> dict[str, Any]:
+        tasks = self._all("SELECT status, COUNT(*) AS n FROM tasks WHERE claimed_by=%s GROUP BY status", (str(agent_id),))
+        counts = {str(r["status"]): int(r["n"]) for r in tasks}
+        fb = self._one("SELECT COUNT(*) AS n, COALESCE(SUM(score), 0) AS s FROM feedback WHERE to_agent=%s", (str(agent_id),)) or {}
+        feedback_count = int(fb.get("n") or 0)
+        feedback_sum = int(fb.get("s") or 0)
+        completed = counts.get("completed", 0)
+        failed = counts.get("failed", 0)
+        score = (feedback_sum + completed - failed) / max(1, feedback_count + completed + failed)
+        return {
+            "agent_id": str(agent_id),
+            "completed": completed,
+            "failed": failed,
+            "feedback_count": feedback_count,
+            "feedback_sum": feedback_sum,
+            "score": round(float(score), 4),
+        }
+
+    def leaderboard(self, limit: int = 20) -> list[dict[str, Any]]:
+        ids = {str(r["agent_id"]) for r in self._all("SELECT agent_id FROM agents")}
+        ids.update(str(r["to_agent"]) for r in self._all("SELECT DISTINCT to_agent FROM feedback"))
+        result = [self.reputation(agent_id) for agent_id in ids]
+        result.sort(key=lambda row: (-row["score"], -row["completed"], row["agent_id"]))
+        return result[: max(1, min(100, int(limit)))]
 
     def claim_role(self, scope: str, name: str, agent_id: str, ttl_s: float = 60) -> dict[str, Any]:
         if not str(scope).strip() or not str(name).strip() or not str(agent_id).strip():

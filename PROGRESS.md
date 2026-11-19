@@ -190,3 +190,5 @@ python -m swarmlab serve --port 8788
 - **S148**: shared artifacts; release 11.17.0.
 
 - **S149**: coordination roles; release 11.18.0.
+
+- **S150**: reputation/trust; release 11.19.0.
