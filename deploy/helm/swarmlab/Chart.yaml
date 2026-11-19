@@ -3,7 +3,7 @@ name: swarmlab
 description: Agent-native swarm runtime (HTTP/JSON, SSE, MCP, SQLite/PostgreSQL)
 type: application
 version: 0.1.0
-appVersion: "11.12.0"
+appVersion: "11.13.0"
 keywords: [agents, swarm, task-market, mcp]
 home: https://github.com/vanya9554-del/swarm-lab
 sources: [https://github.com/vanya9554-del/swarm-lab]

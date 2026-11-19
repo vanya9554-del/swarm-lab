@@ -67,6 +67,13 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_agent_tokens(self) -> None:
+        token = self.store.issue_agent_token("a1")
+        self.assertEqual(self.store.token_scopes(token), {"read", "write"})
+        self.store.revoke_agent_tokens("a1")
+        self.assertIsNone(self.store.token_scopes(token))
+        self.assertIsNone(self.store.token_scopes(""))
+
     def test_audit(self) -> None:
         self.store.audit("login", "actor", "/x", {"ok": 1}, "127.0.0.1")
         rows = self.store.audits()
@@ -88,7 +95,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 11)
+        self.assertEqual(self.store.schema_version(), 12)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

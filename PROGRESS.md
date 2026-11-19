@@ -178,3 +178,5 @@ python -m swarmlab serve --port 8788
 - **S142**: English dashboard/README + agent discovery; release 11.11.0.
 
 - **S143**: PG migration advisory lock; release 11.12.0.
+
+- **S144**: self-registration/per-agent tokens; release 11.13.0.

@@ -383,6 +383,18 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_agent_tokens(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        s = PgSwarmStore(self.dsn)
+        try:
+            token = s.issue_agent_token("a1")
+            self.assertEqual(s.token_scopes(token), {"read", "write"})
+            s.revoke_agent_tokens("a1")
+            self.assertIsNone(s.token_scopes(token))
+            self.assertIsNone(s.token_scopes(""))
+        finally:
+            s.close()
+
     def test_audit(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
@@ -409,7 +421,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 11)
+            self.assertEqual(s.schema_version(), 12)
         finally:
             s.close()
 

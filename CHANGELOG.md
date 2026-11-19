@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.13.0] — 2026-11-19
+
+Agent self-onboarding.
+
+### Добавлено
+- Public `POST /v1/agents/register` с join code; выпуск per-agent токенов.
+- Per-agent tokens в SQLite/PG, revoke при deregister; dynamic auth.
+- 181 тест, 100% coverage.
+
 ## [11.12.0] — 2026-11-19
 
 PG migration safety.

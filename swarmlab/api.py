@@ -139,6 +139,7 @@ ROUTES = {
     ("GET", "/v1/openapi"),
     ("GET", "/v1/audit"),
     ("POST", "/v1/agents"),
+    ("POST", "/v1/agents/register"),
     ("DELETE", "/v1/agents/{agent_id}"),
     ("GET", "/v1/agents"),
     ("GET", "/v1/agents/{agent_id}"),
@@ -412,24 +413,27 @@ class SwarmHandler(BaseHTTPRequestHandler):
         token = header[7:] if header.startswith("Bearer ") else ""
         self.audit_actor = f"token:{hashlib.sha256(token.encode()).hexdigest()[:12]}" if token else "anonymous"
         jwt_scopes = self._jwt_scopes(token)
+        dynamic_scopes = self.swarm.store.token_scopes(token)
         scopes: set[str] | None = None
         if self.swarm.tokens:
             scopes = set(self.swarm.tokens.get(token, set())) or None
-            if scopes is None and jwt_scopes is None:
+            if scopes is None and jwt_scopes is None and dynamic_scopes is None:
                 self._record_audit("auth.denied", self.path)
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
         elif self.swarm.token:
-            if header != f"Bearer {self.swarm.token}" and jwt_scopes is None:
+            if header != f"Bearer {self.swarm.token}" and jwt_scopes is None and dynamic_scopes is None:
                 self._record_audit("auth.denied", self.path)
                 self._error(401, "UNAUTHORIZED", "invalid bearer token")
                 return False
-        elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY") or os.environ.get("SWARMLAB_JWT_JWKS_URL")) and jwt_scopes is None:
+        elif (os.environ.get("SWARMLAB_JWT_SECRET") or os.environ.get("SWARMLAB_JWT_PUBLIC_KEY") or os.environ.get("SWARMLAB_JWT_JWKS_URL")) and jwt_scopes is None and dynamic_scopes is None:
             self._record_audit("auth.denied", self.path)
             self._error(401, "UNAUTHORIZED", "JWT required")
             return False
         if jwt_scopes is not None:
             scopes = jwt_scopes
+        elif dynamic_scopes is not None:
+            scopes = dynamic_scopes
         if scopes is None:
             scopes = {"read", "write"}
         needed = "write" if self.command == "POST" else "read"
@@ -609,12 +613,36 @@ class SwarmHandler(BaseHTTPRequestHandler):
             self._error(400, "BAD_REQUEST", str(exc))
 
     def do_POST(self) -> None:
+        path = urlparse(self.path).path
+        if path == "/v1/agents/register":
+            if not self._rate_ok():
+                self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
+                return
+            try:
+                body = self._body()
+                join = os.environ.get("SWARMLAB_JOIN_CODE", "")
+                if not join:
+                    raise SwarmError("FORBIDDEN", "registration is closed")
+                if str(body.get("join_code") or "") != join:
+                    raise SwarmError("FORBIDDEN", "invalid join code")
+                caps = body.get("capabilities") or []
+                if not isinstance(caps, list):
+                    raise SwarmError("BAD_REQUEST", "capabilities must be array")
+                agent = self.swarm.store.register(str(body.get("agent_id") or ""), caps, body.get("endpoint"))
+                token = self.swarm.store.issue_agent_token(agent["agent_id"])
+                self._record_audit("agent.self_registered", agent["agent_id"])
+                self._send(201, {"ok": True, "data": {"agent": agent, "token": token}})
+            except SwarmError as exc:
+                status = 403 if exc.code == "FORBIDDEN" else 400
+                self._error(status, exc.code, exc.message)
+            except (ValueError, TypeError) as exc:
+                self._error(400, "BAD_REQUEST", str(exc))
+            return
         if not self._auth():
             return
         if not self._rate_ok():
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
             return
-        path = urlparse(self.path).path
         try:
             body = self._body()
             if path == "/v1/agents":

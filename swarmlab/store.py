@@ -1,8 +1,10 @@
 """swarm-lab: agent-native task market (SQLite)."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import secrets
 import sqlite3
 import threading
 import time
@@ -10,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -56,6 +58,13 @@ CREATE TABLE IF NOT EXISTS events (
     type       TEXT NOT NULL,
     payload    TEXT,
     created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS agent_tokens (
+    token_hash TEXT PRIMARY KEY,
+    agent_id   TEXT NOT NULL,
+    scopes     TEXT NOT NULL DEFAULT 'read write',
+    created_at REAL NOT NULL,
+    revoked    INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS audit (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -163,6 +172,7 @@ class SwarmStore:
     def deregister(self, agent_id: str) -> dict[str, Any]:
         with self.lock:
             deleted = self.conn.execute("DELETE FROM agents WHERE agent_id=?", (agent_id,)).rowcount
+            self.conn.execute("UPDATE agent_tokens SET revoked=1 WHERE agent_id=?", (agent_id,))
         if deleted:
             self.event("agent.deregistered", {"agent_id": agent_id})
         return {"agent_id": agent_id, "deleted": bool(deleted)}
@@ -397,6 +407,27 @@ class SwarmStore:
                 "INSERT INTO audit(created_at, actor, action, target, detail, ip) VALUES (?, ?, ?, ?, ?, ?)",
                 (time.time(), actor, action, target, json.dumps(detail or {}), ip),
             )
+
+    def issue_agent_token(self, agent_id: str, scopes: tuple[str, ...] = ("read", "write")) -> str:
+        token = "agt_" + secrets.token_urlsafe(32)
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO agent_tokens(token_hash, agent_id, scopes, created_at) VALUES (?, ?, ?, ?)",
+                (digest, agent_id, " ".join(scopes), time.time()),
+            )
+        return token
+
+    def token_scopes(self, token: str) -> set[str] | None:
+        if not token:
+            return None
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        row = self._one("SELECT scopes FROM agent_tokens WHERE token_hash=? AND revoked=0", (digest,))
+        return set(str(row["scopes"]).split()) if row else None
+
+    def revoke_agent_tokens(self, agent_id: str) -> None:
+        with self.lock:
+            self.conn.execute("UPDATE agent_tokens SET revoked=1 WHERE agent_id=?", (agent_id,))
 
     def audits(self, limit: int = 100, action: str = "", actor: str = "") -> list[dict[str, Any]]:
         where, params = "", []

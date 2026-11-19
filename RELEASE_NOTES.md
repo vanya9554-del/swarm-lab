@@ -1,3 +1,7 @@
+# swarm-lab v11.13.0
+
+Agent self-registration + per-agent tokens; 181 tests.
+
 # swarm-lab v11.12.0
 
 PG migration advisory lock; 177 tests.

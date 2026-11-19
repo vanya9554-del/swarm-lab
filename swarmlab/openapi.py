@@ -25,6 +25,7 @@ def spec() -> dict[str, Any]:
             "/v1/version": {"get": {"summary": "Version"}},
             "/v1/capabilities": {"get": {"summary": "Feature discovery"}},
             "/v1/openapi": {"get": {"summary": "This document"}},
+            "/v1/agents/register": {"post": {"summary": "Self-register agent (join code)"}},
             "/v1/agents": {
                 "get": {"summary": "Discover agents"},
                 "post": {"summary": "Register agent"},

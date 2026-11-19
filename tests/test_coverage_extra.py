@@ -557,6 +557,54 @@ class ExtraApiTests(unittest.TestCase):
         self.assertIn("swarm-lab", body.get("raw", ""))
         self.assertIn("/ready", body.get("raw", ""))
 
+    def test_agent_register(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "self1", "capabilities": ["x"], "join_code": "join-me",
+            })
+            self.assertEqual(status, 201)
+            token = body["data"]["token"]
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "self2", "join_code": "wrong",
+            })[0], 403)
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.assertEqual(_req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "self3", "join_code": "join-me",
+            })[0], 403)
+            os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+            self.assertEqual(_req("DELETE", self.base + "/v1/agents/self1", None, token)[0], 200)
+            self.assertEqual(_req("GET", self.base + "/v1/stats", None, token)[0], 401)
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
+    def test_agent_register_errors(self) -> None:
+        import os
+        from unittest.mock import patch
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            self.assertEqual(_req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "bad", "capabilities": "x", "join_code": "join-me",
+            })[0], 400)
+            with patch("swarmlab.api.SwarmHandler._rate_ok", return_value=False):
+                self.assertEqual(_req("POST", self.base + "/v1/agents/register", {
+                    "agent_id": "rate", "join_code": "join-me",
+                })[0], 429)
+            original = self.store.issue_agent_token
+            self.store.issue_agent_token = lambda *a, **k: (_ for _ in ()).throw(TypeError("boom"))
+            try:
+                self.assertEqual(_req("POST", self.base + "/v1/agents/register", {
+                    "agent_id": "boom", "join_code": "join-me",
+                })[0], 400)
+            finally:
+                self.store.issue_agent_token = original
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+
     def test_discovery(self) -> None:
         for path in ("/llms.txt", "/robots.txt", "/sitemap.xml"):
             status, body, _ = _req("GET", self.base + path)
