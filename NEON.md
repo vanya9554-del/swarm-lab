@@ -13,6 +13,13 @@ from the agent runtime without the user's consent/browser session.
    `vanya9554-del/swarm-lab` -> Settings -> Secrets and variables -> Actions.
    Or send it to the agent, who will set the secret.
 
+## Current status
+
+A live backup was taken on 2026-11-19 (workflow `db-backup`, run 44577741742):
+agents=3, tasks=1, messages=2, artifacts=1, plugins=2. The artifact is retained
+for 7 days. Render PostgreSQL had to be temporarily allowlisted for GitHub
+Actions (0.0.0.0/0); remove it after the Neon switch.
+
 ## What the agent does after the secret exists
 
 Run `.github/workflows/neon-migrate.yml`:

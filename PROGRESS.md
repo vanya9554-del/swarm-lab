@@ -204,3 +204,5 @@ python -m swarmlab serve --port 8788
 - **S155**: wasmtime in image; release 11.24.0.
 
 - **S156**: live end-to-end agent scenario passed (SCENARIO_OK); Neon migration prepared.
+
+- **S157**: live DB backup + temporary allowlist; Neon migration ready; waiting for NEON_DATABASE_URL.
