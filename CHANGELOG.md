@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.18.0] — 2026-11-19
+
+Coordination roles.
+
+### Добавлено
+- `POST /v1/roles/claim|renew|release`, `GET /v1/roles` — lease-based roles/election.
+- 197 тестов, 100% coverage.
+
 ## [11.17.0] — 2026-11-19
 
 Shared artifacts.

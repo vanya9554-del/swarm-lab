@@ -152,6 +152,10 @@ ROUTES = {
     ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
+    ("GET", "/v1/roles"),
+    ("POST", "/v1/roles/claim"),
+    ("POST", "/v1/roles/renew"),
+    ("POST", "/v1/roles/release"),
     ("GET", "/v1/artifacts"),
     ("GET", "/v1/artifacts/{name}"),
     ("POST", "/v1/artifacts"),
@@ -556,6 +560,8 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     int((query.get("after") or ["0"])[0]),
                     int((query.get("limit") or ["100"])[0]),
                 )})
+            elif path == "/v1/roles":
+                self._send(200, {"ok": True, "data": self.swarm.store.roles((query.get("scope") or [None])[0])})
             elif path == "/v1/artifacts":
                 self._send(200, {"ok": True, "data": self.swarm.store.list_artifacts(
                     (query.get("channel") or [None])[0],
@@ -705,6 +711,18 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 if not agent_id:
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
+                self._send(200, {"ok": True, "data": data})
+            elif path in ("/v1/roles/claim", "/v1/roles/renew", "/v1/roles/release"):
+                scope = str(body.get("scope") or "global")
+                name = str(body.get("name") or "")
+                actor = self.agent_id or str(body.get("agent_id") or "")
+                ttl = float(body.get("ttl_s") or 60)
+                if path.endswith("/claim"):
+                    data = self.swarm.store.claim_role(scope, name, actor, ttl)
+                elif path.endswith("/renew"):
+                    data = self.swarm.store.renew_role(scope, name, actor, ttl)
+                else:
+                    data = self.swarm.store.release_role(scope, name, actor)
                 self._send(200, {"ok": True, "data": data})
             elif path == "/v1/artifacts":
                 name = str(body.get("name") or "")

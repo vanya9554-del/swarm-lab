@@ -67,6 +67,20 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_roles(self) -> None:
+        r = self.store.claim_role("s", "leader", "a", 60)
+        self.assertEqual(r["epoch"], 1)
+        self.assertEqual(self.store.roles("s")[0]["agent_id"], "a")
+        self.assertTrue(self.store.roles())
+        self.store.renew_role("s", "leader", "a", 60)
+        with self.assertRaises(SwarmError):
+            self.store.claim_role("s", "leader", "b", 60)
+        with self.assertRaises(SwarmError):
+            self.store.renew_role("s", "leader", "b", 60)
+        self.assertTrue(self.store.release_role("s", "leader", "a")["released"])
+        with self.assertRaises(SwarmError):
+            self.store.claim_role("", "", "a")
+
     def test_artifacts(self) -> None:
         a = self.store.put_artifact("doc", "v1", "a", "room")
         self.assertEqual(a["version"], 1)
@@ -134,7 +148,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 15)
+        self.assertEqual(self.store.schema_version(), 16)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

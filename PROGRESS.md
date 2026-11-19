@@ -188,3 +188,5 @@ python -m swarmlab serve --port 8788
 - **S147**: channel membership; release 11.16.0.
 
 - **S148**: shared artifacts; release 11.17.0.
+
+- **S149**: coordination roles; release 11.18.0.

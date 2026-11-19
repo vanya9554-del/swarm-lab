@@ -383,6 +383,25 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_roles(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.claim_role("s", "leader", "a", 60)
+            with self.assertRaises(SwarmError):
+                s.claim_role("s", "leader", "b", 60)
+            s.renew_role("s", "leader", "a", 60)
+            s.roles("s")
+            self.assertTrue(s.roles())
+            self.assertTrue(s.release_role("s", "leader", "a")["released"])
+            with self.assertRaises(SwarmError):
+                s.renew_role("s", "leader", "b", 60)
+            with self.assertRaises(SwarmError):
+                s.claim_role("", "", "a")
+        finally:
+            s.close()
+
     def test_artifacts(self) -> None:
         from swarmlab.pg import PgSwarmStore
         from swarmlab.store import SwarmError
@@ -476,7 +495,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 15)
+            self.assertEqual(s.schema_version(), 16)
         finally:
             s.close()
 

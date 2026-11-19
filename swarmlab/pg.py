@@ -53,6 +53,14 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     created_at DOUBLE PRECISION NOT NULL,
     revoked INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS roles (
+    scope TEXT NOT NULL,
+    name TEXT NOT NULL,
+    agent_id TEXT NOT NULL,
+    lease_until DOUBLE PRECISION NOT NULL,
+    epoch INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (scope, name)
+);
 CREATE TABLE IF NOT EXISTS artifacts (
     name TEXT PRIMARY KEY,
     owner TEXT NOT NULL DEFAULT '',
@@ -148,7 +156,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 15) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 16) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -457,6 +465,44 @@ class PgSwarmStore:
         digest = hashlib.sha256(token.encode()).hexdigest()
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=%s AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
+
+    def claim_role(self, scope: str, name: str, agent_id: str, ttl_s: float = 60) -> dict[str, Any]:
+        if not str(scope).strip() or not str(name).strip() or not str(agent_id).strip():
+            raise SwarmError("BAD_REQUEST", "scope, name and agent_id are required")
+        now = time.time()
+        with self.lock:
+            row = self._one("SELECT * FROM roles WHERE scope=%s AND name=%s", (str(scope), str(name)))
+            if row and float(row["lease_until"]) > now and row["agent_id"] != str(agent_id):
+                raise SwarmError("CONFLICT", f"role held by {row['agent_id']}")
+            epoch = int(row["epoch"]) + 1 if row else 1
+            self.conn.execute(
+                "INSERT INTO roles(scope, name, agent_id, lease_until, epoch) VALUES (%s, %s, %s, %s, %s) "
+                "ON CONFLICT (scope, name) DO UPDATE SET agent_id=EXCLUDED.agent_id, lease_until=EXCLUDED.lease_until, epoch=EXCLUDED.epoch",
+                (str(scope), str(name), str(agent_id), now + max(1.0, float(ttl_s)), epoch),
+            )
+            self.conn.commit()
+        return self._one("SELECT * FROM roles WHERE scope=%s AND name=%s", (str(scope), str(name))) or {}
+
+    def renew_role(self, scope: str, name: str, agent_id: str, ttl_s: float = 60) -> dict[str, Any]:
+        now = time.time()
+        with self.lock:
+            row = self._one("SELECT * FROM roles WHERE scope=%s AND name=%s", (str(scope), str(name)))
+            if not row or row["agent_id"] != str(agent_id):
+                raise SwarmError("CONFLICT", "role not held by agent")
+            self.conn.execute("UPDATE roles SET lease_until=%s WHERE scope=%s AND name=%s", (now + max(1.0, float(ttl_s)), str(scope), str(name)))
+            self.conn.commit()
+        return self._one("SELECT * FROM roles WHERE scope=%s AND name=%s", (str(scope), str(name))) or {}
+
+    def release_role(self, scope: str, name: str, agent_id: str) -> dict[str, Any]:
+        with self.lock:
+            deleted = self.conn.execute("DELETE FROM roles WHERE scope=%s AND name=%s AND agent_id=%s", (str(scope), str(name), str(agent_id))).rowcount
+            self.conn.commit()
+        return {"scope": scope, "name": name, "released": bool(deleted)}
+
+    def roles(self, scope: str | None = None) -> list[dict[str, Any]]:
+        if scope:
+            return self._all("SELECT * FROM roles WHERE scope=%s ORDER BY name", (str(scope),))
+        return self._all("SELECT * FROM roles ORDER BY scope, name")
 
     def put_artifact(self, name: str, content: str, owner: str = "", channel: str | None = None, content_type: str = "text/plain") -> dict[str, Any]:
         if not str(name).strip():

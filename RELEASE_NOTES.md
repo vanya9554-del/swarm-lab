@@ -1,3 +1,7 @@
+# swarm-lab v11.18.0
+
+Lease-based coordination roles; 197 tests.
+
 # swarm-lab v11.17.0
 
 Shared artifacts/memory; 194 tests.

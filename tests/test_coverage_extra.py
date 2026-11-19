@@ -700,6 +700,29 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(_req("GET", self.base + "/v1/artifacts/nope")[0], 404)
         self.assertEqual(_req("DELETE", self.base + "/v1/artifacts/doc")[0], 200)
 
+    def test_roles_api(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            def reg(name):
+                status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                    "agent_id": name, "capabilities": ["coord"], "join_code": "join-me",
+                })
+                return body["data"]["token"]
+            t1 = reg("r1")
+            t2 = reg("r2")
+            self.assertEqual(_req("POST", self.base + "/v1/roles/claim", {"scope": "s", "name": "leader"}, t1)[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/roles/claim", {"scope": "s", "name": "leader"}, t2)[0], 409)
+            self.assertEqual(_req("POST", self.base + "/v1/roles/renew", {"scope": "s", "name": "leader"}, t1)[0], 200)
+            status, body, _ = _req("GET", self.base + "/v1/roles?scope=s", None, t2)
+            self.assertEqual(status, 200)
+            self.assertEqual(body["data"][0]["agent_id"], "r1")
+            self.assertEqual(_req("POST", self.base + "/v1/roles/release", {"scope": "s", "name": "leader"}, t1)[0], 200)
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
     def test_channel_actions(self) -> None:
         import os
         self.server.token = "admin"
