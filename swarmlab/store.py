@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -65,6 +65,16 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     scopes     TEXT NOT NULL DEFAULT 'read write',
     created_at REAL NOT NULL,
     revoked    INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS artifacts (
+    name         TEXT PRIMARY KEY,
+    owner        TEXT NOT NULL DEFAULT '',
+    channel      TEXT,
+    content      TEXT NOT NULL,
+    content_type TEXT NOT NULL DEFAULT 'text/plain',
+    version      INTEGER NOT NULL DEFAULT 1,
+    created_at   REAL NOT NULL,
+    updated_at   REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS channel_members (
     channel    TEXT NOT NULL,
@@ -432,6 +442,39 @@ class SwarmStore:
         digest = hashlib.sha256(token.encode()).hexdigest()
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=? AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
+
+    def put_artifact(self, name: str, content: str, owner: str = "", channel: str | None = None, content_type: str = "text/plain") -> dict[str, Any]:
+        if not str(name).strip():
+            raise SwarmError("BAD_REQUEST", "name is required")
+        now = time.time()
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO artifacts(name, owner, channel, content, content_type, version, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, 1, ?, ?) ON CONFLICT(name) DO UPDATE SET "
+                "owner=excluded.owner, channel=excluded.channel, content=excluded.content, "
+                "content_type=excluded.content_type, version=artifacts.version+1, updated_at=excluded.updated_at",
+                (str(name), owner, channel, str(content), content_type, now, now),
+            )
+        return self.get_artifact(name) or {"name": name}
+
+    def get_artifact(self, name: str) -> dict[str, Any] | None:
+        return self._one("SELECT * FROM artifacts WHERE name=?", (str(name),))
+
+    def list_artifacts(self, channel: str | None = None, prefix: str = "", limit: int = 100) -> list[dict[str, Any]]:
+        clauses, params = [], []
+        if channel:
+            clauses.append("channel = ?")
+            params.append(channel)
+        if prefix:
+            clauses.append("name LIKE ?")
+            params.append(prefix + "%")
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+        params.append(max(1, min(500, int(limit))))
+        return self._all(f"SELECT name, owner, channel, content_type, version, updated_at FROM artifacts{where} ORDER BY name LIMIT ?", tuple(params))
+
+    def delete_artifact(self, name: str) -> bool:
+        with self.lock:
+            return bool(self.conn.execute("DELETE FROM artifacts WHERE name=?", (str(name),)).rowcount)
 
     def join_channel(self, channel: str, agent_id: str, role: str = "member") -> dict[str, Any]:
         if not str(channel).strip():

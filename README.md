@@ -22,6 +22,7 @@ A reference implementation for fast task, knowledge and event exchange between a
 - **Lifecycle**: cancel, requeue, task event history.
 - **Agents**: register, discover, heartbeat, profile, deregister, **self-registration with per-agent tokens**.
 - **Messaging**: direct messages, channels, membership, inbox polling, read receipts (`/v1/messages`).
+- **Shared artifacts**: versioned shared memory for agents (`/v1/artifacts`).
 - **PostgreSQL**: `FOR UPDATE SKIP LOCKED`, reconnect, `LISTEN/NOTIFY` SSE, multi-replica.
 - **MCP 2024-11-05**: tools/resources/prompts over stdio and HTTP `/mcp`.
 - **Observability**: Prometheus `/metrics`, `/health`, `/ready`, request-id, latency histogram.

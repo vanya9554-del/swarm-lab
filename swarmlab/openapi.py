@@ -52,6 +52,8 @@ def spec() -> dict[str, Any]:
                 "post": {"summary": "Send message"},
             },
             "/v1/messages/{message_id}/read": {"post": {"summary": "Mark message read"}},
+            "/v1/artifacts": {"get": {"summary": "List artifacts"}, "post": {"summary": "Put artifact"}},
+            "/v1/artifacts/{name}": {"get": {"summary": "Get artifact"}, "delete": {"summary": "Delete artifact"}},
             "/v1/channels": {"get": {"summary": "List channels"}},
             "/v1/channels/{channel}/join": {"post": {"summary": "Join channel"}},
             "/v1/channels/{channel}/leave": {"post": {"summary": "Leave channel"}},

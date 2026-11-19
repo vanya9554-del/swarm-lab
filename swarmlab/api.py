@@ -152,6 +152,10 @@ ROUTES = {
     ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
+    ("GET", "/v1/artifacts"),
+    ("GET", "/v1/artifacts/{name}"),
+    ("POST", "/v1/artifacts"),
+    ("DELETE", "/v1/artifacts/{name}"),
     ("POST", "/v1/channels/{channel}/join"),
     ("POST", "/v1/channels/{channel}/leave"),
     ("GET", "/v1/channels/{channel}/members"),
@@ -167,6 +171,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
+ARTIFACT_RE = re.compile(r"^/v1/artifacts/([^/]+)$")
 CHANNEL_RE = re.compile(r"^/v1/channels/([^/]+)/(join|leave|members)$")
 MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel|requeue)$")
@@ -551,6 +556,18 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     int((query.get("after") or ["0"])[0]),
                     int((query.get("limit") or ["100"])[0]),
                 )})
+            elif path == "/v1/artifacts":
+                self._send(200, {"ok": True, "data": self.swarm.store.list_artifacts(
+                    (query.get("channel") or [None])[0],
+                    (query.get("prefix") or [""])[0],
+                    int((query.get("limit") or ["100"])[0]),
+                )})
+            elif path.startswith("/v1/artifacts/"):
+                artifact = self.swarm.store.get_artifact(path.rsplit("/", 1)[-1])
+                if artifact is None:
+                    self._error(404, "NOT_FOUND", "artifact not found")
+                else:
+                    self._send(200, {"ok": True, "data": artifact})
             elif path.startswith("/v1/channels/") and path.endswith("/members"):
                 channel = path.split("/")[3]
                 self._send(200, {"ok": True, "data": self.swarm.store.channel_members(channel)})
@@ -689,6 +706,14 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
                 self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/artifacts":
+                name = str(body.get("name") or "")
+                owner = self.agent_id or str(body.get("owner") or "")
+                data = self.swarm.store.put_artifact(
+                    name, str(body.get("content") or ""), owner,
+                    body.get("channel"), str(body.get("content_type") or "text/plain"),
+                )
+                self._send(201, {"ok": True, "data": data})
             elif path.startswith("/v1/channels/") and (path.endswith("/join") or path.endswith("/leave")):
                 parts = path.split("/")
                 channel, action = parts[3], parts[4]
@@ -786,6 +811,10 @@ class SwarmHandler(BaseHTTPRequestHandler):
             return
         if not self._rate_ok():
             self._send(429, {"ok": False, "error": {"code": "RATE_LIMIT", "message": "too many requests"}}, {"Retry-After": "1"})
+            return
+        if path.startswith("/v1/artifacts/"):
+            name = path.rsplit("/", 1)[-1]
+            self._send(200, {"ok": True, "data": {"name": name, "deleted": self.swarm.store.delete_artifact(name)}})
             return
         if not path.startswith("/v1/agents/"):
             self._error(404, "NOT_FOUND", f"no route {path}")

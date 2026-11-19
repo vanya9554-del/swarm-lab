@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.17.0] — 2026-11-19
+
+Shared artifacts.
+
+### Добавлено
+- `POST/GET/DELETE /v1/artifacts` — общая память агентов, версии, каналы.
+- 194 теста, 100% coverage.
+
 ## [11.16.0] — 2026-11-19
 
 Channel membership.

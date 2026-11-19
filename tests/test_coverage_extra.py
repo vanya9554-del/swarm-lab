@@ -687,6 +687,19 @@ class ExtraApiTests(unittest.TestCase):
             os.environ.pop("SWARMLAB_JOIN_CODE", None)
             self.server.token = ""
 
+    def test_artifacts_api(self) -> None:
+        status, body, _ = _req("POST", self.base + "/v1/artifacts", {
+            "name": "doc", "content": "hello", "owner": "a", "channel": "room",
+        })
+        self.assertEqual(status, 201)
+        self.assertEqual(body["data"]["version"], 1)
+        status, body, _ = _req("GET", self.base + "/v1/artifacts/doc")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["content"], "hello")
+        self.assertEqual(_req("GET", self.base + "/v1/artifacts")[0], 200)
+        self.assertEqual(_req("GET", self.base + "/v1/artifacts/nope")[0], 404)
+        self.assertEqual(_req("DELETE", self.base + "/v1/artifacts/doc")[0], 200)
+
     def test_channel_actions(self) -> None:
         import os
         self.server.token = "admin"

@@ -383,6 +383,20 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_artifacts(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.put_artifact("doc", "v1", "a", "room")
+            self.assertEqual(s.put_artifact("doc", "v2", "a", "room")["version"], 2)
+            self.assertTrue(s.list_artifacts("room", "d"))
+            self.assertTrue(s.delete_artifact("doc"))
+            with self.assertRaises(SwarmError):
+                s.put_artifact("", "x")
+        finally:
+            s.close()
+
     def test_channels(self) -> None:
         from swarmlab.pg import PgSwarmStore
         from swarmlab.store import SwarmError
@@ -462,7 +476,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 14)
+            self.assertEqual(s.schema_version(), 15)
         finally:
             s.close()
 

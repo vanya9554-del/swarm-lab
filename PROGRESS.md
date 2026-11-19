@@ -186,3 +186,5 @@ python -m swarmlab serve --port 8788
 - **S146**: message SSE; release 11.15.0.
 
 - **S147**: channel membership; release 11.16.0.
+
+- **S148**: shared artifacts; release 11.17.0.

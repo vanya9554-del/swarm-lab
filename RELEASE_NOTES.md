@@ -1,3 +1,7 @@
+# swarm-lab v11.17.0
+
+Shared artifacts/memory; 194 tests.
+
 # swarm-lab v11.16.0
 
 Channel membership/join/leave; 191 tests.

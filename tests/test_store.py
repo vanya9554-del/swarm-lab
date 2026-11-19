@@ -67,6 +67,18 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_artifacts(self) -> None:
+        a = self.store.put_artifact("doc", "v1", "a", "room")
+        self.assertEqual(a["version"], 1)
+        a = self.store.put_artifact("doc", "v2", "a", "room")
+        self.assertEqual(a["version"], 2)
+        self.assertEqual(self.store.get_artifact("doc")["content"], "v2")
+        self.assertTrue(self.store.list_artifacts("room", "d"))
+        self.assertTrue(self.store.delete_artifact("doc"))
+        self.assertFalse(self.store.delete_artifact("doc"))
+        with self.assertRaises(SwarmError):
+            self.store.put_artifact("", "x")
+
     def test_channels(self) -> None:
         self.store.join_channel("room", "a")
         self.assertEqual(self.store.channel_members("room")[0]["agent_id"], "a")
@@ -122,7 +134,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 14)
+        self.assertEqual(self.store.schema_version(), 15)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")
