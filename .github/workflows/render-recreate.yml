@@ -1,0 +1,58 @@
+name: render-recreate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recreate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recreate Render service
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          SWARMLAB_JOIN_CODE: ${{ secrets.SWARMLAB_JOIN_CODE }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          echo "old_service=$svc"
+          if [ -n "$svc" ]; then
+            code=$(curl -sS -o /tmp/del.json -w '%{http_code}' "${auth[@]}" -X DELETE "$api/services/$svc")
+            echo "delete_http=$code"
+            sleep 20
+          fi
+          db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          echo "db_id=$db"
+          internal=""
+          for i in $(seq 1 60); do
+            conn=$(curl -sS "${auth[@]}" "$api/postgres/$db/connection-info" || true)
+            internal=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).internalConnectionString // empty' 2>/dev/null || true)
+            [ -n "$internal" ] && break
+            sleep 5
+          done
+          payload=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.13.0" --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '{type:"web_service",name:"swarmlab",ownerId:$o,image:{ownerId:$o,imagePath:$img},autoDeploy:"no",serviceDetails:{env:"image",runtime:"image",plan:"free",region:"frankfurt",healthCheckPath:"/ready",numInstances:1,envVars:[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]}}')
+          code=$(curl -sS -o /tmp/create.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services" -d "$payload")
+          echo "create_http=$code"
+          cat /tmp/create.json
+          [ "$code" = "201" ] || exit 1
+          svc=$(jq -r '(.service // .).id' /tmp/create.json)
+          url=$(jq -r '(.service // .).serviceDetails.url' /tmp/create.json)
+          echo "SERVICE_URL=$url"
+          for i in $(seq 1 90); do
+            ready=$(curl -sS "$url/ready" || true)
+            backend=$(printf '%s' "$ready" | jq -r '.backend // empty' 2>/dev/null || true)
+            ver=$(curl -sS "$url/health" | jq -r '.version // empty' 2>/dev/null || true)
+            echo "STATE backend=$backend version=$ver"
+            if [ "$backend" = "postgres" ]; then echo "$ready"; break; fi
+            sleep 10
+          done
+          echo "LLMS:"; curl -sS "$url/llms.txt" | head -3 || true
+          reg=$(curl -sS -X POST -H 'Content-Type: application/json' -d "{\"agent_id\":\"ci-agent\",\"capabilities\":[\"echo\"],\"join_code\":\"$SWARMLAB_JOIN_CODE\"}" "$url/v1/agents/register")
+          echo "REGISTER:"; printf '%s' "$reg" | jq '{ok,agent:.data.agent.agent_id,has_token:(.data.token != null)}' || true
