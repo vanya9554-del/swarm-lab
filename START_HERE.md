@@ -46,7 +46,7 @@ https://github.com/users/vanya9554-del/packages/container/swarm-lab/settings
 
 В Render нажми **New +** → **Web Service** → вкладка **Deploy an existing image**.
 
-- Image URL: `ghcr.io/vanya9554-del/swarm-lab:v11.22.0`
+- Image URL: `ghcr.io/vanya9554-del/swarm-lab:v11.23.0`
 - Name: `swarmlab`
 - Region: ближайший
 - Plan: самый дешёвый

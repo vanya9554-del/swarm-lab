@@ -157,6 +157,7 @@ ROUTES = {
     ("POST", "/v1/plugins"),
     ("POST", "/v1/plugins/{name}/{version}/approve"),
     ("POST", "/v1/plugins/{name}/{version}/reject"),
+    ("POST", "/v1/plugins/{name}/{version}/run"),
     ("GET", "/v1/reputation"),
     ("GET", "/v1/reputation/{agent_id}"),
     ("POST", "/v1/reputation/feedback"),
@@ -184,7 +185,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
-PLUGIN_RE = re.compile(r"^/v1/plugins/([^/]+)/([^/]+)(?:/(approve|reject))?$")
+PLUGIN_RE = re.compile(r"^/v1/plugins/([^/]+)/([^/]+)(?:/(approve|reject|run))?$")
 ARTIFACT_RE = re.compile(r"^/v1/artifacts/([^/]+)$")
 CHANNEL_RE = re.compile(r"^/v1/channels/([^/]+)/(join|leave|members)$")
 MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
@@ -757,6 +758,20 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 match = PLUGIN_RE.match(path)
                 if not match or not match.group(3):
                     self._error(404, "NOT_FOUND", "no route")
+                    return
+                plugin = self.swarm.store.get_plugin(match.group(1), match.group(2))
+                if plugin is None:
+                    self._error(404, "NOT_FOUND", "plugin not found")
+                    return
+                if match.group(3) == "run":
+                    if plugin.get("status") != "approved":
+                        self._error(403, "FORBIDDEN", "plugin is not approved")
+                        return
+                    if plugin.get("runtime") != "wasm":
+                        self._error(400, "BAD_REQUEST", "only wasm plugins can run")
+                        return
+                    from .sandbox import run_wasm
+                    self._send(200, {"ok": True, "data": run_wasm(str(plugin.get("code") or ""))})
                     return
                 if not self.is_admin:
                     self._error(403, "FORBIDDEN", "admin approval required")

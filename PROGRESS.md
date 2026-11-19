@@ -198,3 +198,5 @@ python -m swarmlab serve --port 8788
 - **S152**: plugin checksum/runtime metadata; release 11.21.0.
 
 - **S153**: channel role assignment; release 11.22.0.
+
+- **S154**: WASM plugin sandbox; release 11.23.0.

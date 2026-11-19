@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.23.0] — 2026-11-19
+
+WASM plugin sandbox.
+
+### Добавлено
+- `POST /v1/plugins/{name}/{version}/run` — исполнение только approved WASM.
+- wasmtime: fuel limit, max stack, no WASI/imports/network/filesystem.
+- 204 теста, 100% coverage.
+
 ## [11.22.0] — 2026-11-19
 
 Channel role assignment.

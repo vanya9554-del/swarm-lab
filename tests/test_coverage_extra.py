@@ -700,6 +700,18 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(_req("GET", self.base + "/v1/artifacts/nope")[0], 404)
         self.assertEqual(_req("DELETE", self.base + "/v1/artifacts/doc")[0], 200)
 
+    def test_sandbox_run(self) -> None:
+        from swarmlab.sandbox import run_wasm
+        self.assertEqual(run_wasm('(module (func (export "run") (result i32) i32.const 7))')["result"], 7)
+        with self.assertRaises(Exception):
+            run_wasm("")
+        with self.assertRaises(Exception):
+            run_wasm("!!!")
+        with self.assertRaises(Exception):
+            run_wasm('(module (func (export "other") (result i32) i32.const 1))')
+        with self.assertRaises(Exception):
+            run_wasm('(module (import "x" "y" (func)) (func (export "run")))')
+
     def test_plugins_api(self) -> None:
         import os
         self.server.token = "admin"
@@ -721,6 +733,17 @@ class ExtraApiTests(unittest.TestCase):
             self.assertTrue(body["data"])
             self.assertEqual(_req("GET", self.base + "/v1/plugins/p/1", None, "admin")[0], 200)
             self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/reject", {}, "admin")[0], 200)
+            wat = '(module (func (export "run") (result i32) i32.const 42))'
+            self.assertEqual(_req("POST", self.base + "/v1/plugins", {"name": "runner", "version": "1", "code": wat}, token)[0], 201)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/runner/1/run", {}, token)[0], 403)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/runner/1/approve", {}, "admin")[0], 200)
+            status, body, _ = _req("POST", self.base + "/v1/plugins/runner/1/run", {}, token)
+            self.assertEqual(status, 200)
+            self.assertEqual(body["data"]["result"], 42)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins", {"name": "none", "version": "1", "code": "x", "runtime": "none"}, token)[0], 201)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/none/1/approve", {}, "admin")[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/none/1/run", {}, token)[0], 400)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/missing/9/run", {}, token)[0], 404)
             self.assertEqual(_req("GET", self.base + "/v1/plugins/bad", None, "admin")[0], 404)
             self.assertEqual(_req("GET", self.base + "/v1/plugins/p/99", None, "admin")[0], 404)
             self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1", {}, "admin")[0], 404)

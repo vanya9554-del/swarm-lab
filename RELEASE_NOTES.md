@@ -1,3 +1,7 @@
+# swarm-lab v11.23.0
+
+WASM plugin sandbox execution; 204 tests.
+
 # swarm-lab v11.22.0
 
 Channel role assignment; 203 tests.

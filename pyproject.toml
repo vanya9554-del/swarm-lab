@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarm-lab"
-version = "11.22.0"
+version = "11.23.0"
 description = "Agent-native swarm runtime: task market, discovery, SSE, MCP, PostgreSQL"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -12,6 +12,7 @@ readme = "README.md"
 dependencies = []
 
 [project.optional-dependencies]
+sandbox = ["wasmtime>=40"]
 pg = ["psycopg[binary]>=3.1"]
 oidc = ["cryptography>=42"]
 s3 = ["boto3>=1.34"]
