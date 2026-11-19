@@ -15,6 +15,7 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          SWARMLAB_JOIN_CODE: ${{ secrets.SWARMLAB_JOIN_CODE }}
         run: |
           set -euo pipefail
           api="https://api.render.com/v1"
@@ -27,8 +28,9 @@ jobs:
           if [ -z "$svc_id" ]; then
             payload=$(jq -n \
               --arg o "$owner" \
-              --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.12.0" \
+              --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.13.0" \
               --arg tok "$SWARMLAB_TOKEN" \
+              --arg join "$SWARMLAB_JOIN_CODE" \
               '{type:"web_service",name:"swarmlab",ownerId:$o,
                 image:{ownerId:$o,imagePath:$img},
                 autoDeploy:"no",
@@ -71,7 +73,7 @@ jobs:
             sleep 5
           done
           if [ -z "$internal" ]; then echo "no internal db"; exit 1; fi
-          envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok}]')
+          envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
           code=$(curl -sS -o /tmp/env.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc_id/env-vars" -d "$envs")
           echo "env_update_http=$code"
           cat /tmp/env.json
@@ -87,7 +89,7 @@ jobs:
             sleep 10
           done
 
-          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.12.0" '{image:{ownerId:$o,imagePath:$img}}')
+          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.13.0" '{image:{ownerId:$o,imagePath:$img}}')
           code=$(curl -sS -o /tmp/patch.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/services/$svc_id" -d "$patch")
           echo "image_patch_http=$code"
           cat /tmp/patch.json
@@ -143,4 +145,8 @@ jobs:
             if [ "$backend" != "postgres" ]; then echo "BACKEND=$backend"; echo "not postgres"; fi
             echo "LLMS:"; curl -sS "$url/llms.txt" | head -5 || true
             echo "AGENTS:"; curl -sS "$url/agents.json" | head -c 300 || true
+            reg=$(curl -sS -X POST -H 'Content-Type: application/json' -d "{\"agent_id\":\"ci-agent\",\"capabilities\":[\"echo\"],\"join_code\":\"$SWARMLAB_JOIN_CODE\"}" "$url/v1/agents/register")
+            echo "REGISTER:"; printf '%s' "$reg" | jq '{ok,agent:.data.agent.agent_id,has_token:(.data.token != null)}' || true
+            at=$(printf '%s' "$reg" | jq -r '.data.token // empty')
+            if [ -n "$at" ]; then echo "AUTH:"; curl -sS -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $at" "$url/v1/stats"; fi
           fi
