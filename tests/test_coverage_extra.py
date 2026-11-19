@@ -102,6 +102,21 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_MAX_PENDING", None)
 
+    def test_message_stream_keepalive(self) -> None:
+        resp = urllib.request.urlopen(self.base + "/v1/messages/stream?after=999999&limit=1&timeout_s=1.4", timeout=5)
+        body = resp.read()
+        self.assertIn(b"keepalive", body)
+
+    def test_message_stream_head(self) -> None:
+        import http.client
+        from urllib.parse import urlparse
+        parsed = urlparse(self.base)
+        conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=3)
+        conn.request("HEAD", "/v1/messages/stream?after=0&limit=1&timeout_s=0.2")
+        resp = conn.getresponse()
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.read(), b"")
+
     def test_stream_keepalive(self) -> None:
         resp = urllib.request.urlopen(self.base + "/v1/stream?after=999999&limit=1&timeout_s=1.4", timeout=5)
         try:
@@ -177,6 +192,35 @@ class ExtraApiTests(unittest.TestCase):
         matches = [r for r in records if r.get("path") == "/health" and r.get("status") == 200]
         self.assertTrue(matches)
         self.assertTrue(matches[0].get("request_id"))
+
+    def test_message_stream_disconnect(self) -> None:
+        import os
+        import socket
+        import time
+        from urllib.parse import urlparse
+        parsed = urlparse(self.base)
+        sock = socket.create_connection((parsed.hostname, parsed.port), timeout=2)
+        os.environ["SWARMLAB_STREAM_KEEPALIVE_S"] = "0.1"
+        try:
+            sock.sendall(b"GET /v1/messages/stream?after=999999&limit=1&timeout_s=2 HTTP/1.1\r\nHost: x\r\n\r\n")
+            sock.close()
+            time.sleep(1.2)
+        finally:
+            os.environ.pop("SWARMLAB_STREAM_KEEPALIVE_S", None)
+
+    def test_message_stream_broken_pipe(self) -> None:
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+        from swarmlab.api import SwarmHandler
+        h = object.__new__(SwarmHandler)
+        h.send_response = MagicMock()
+        h.send_header = MagicMock()
+        h.end_headers = MagicMock()
+        h.wfile = MagicMock()
+        h.wfile.write.side_effect = BrokenPipeError()
+        h._head = False
+        h.server = SimpleNamespace(store=SimpleNamespace(messages=lambda *a: [{"id": 1, "body": "x"}]))
+        h._messages_stream(0, "", None, 1, 1)
 
     def test_stream_disconnect(self) -> None:
         import socket
@@ -635,6 +679,10 @@ class ExtraApiTests(unittest.TestCase):
             self.assertTrue(body["data"])
             status, body, _ = _req("GET", self.base + "/v1/messages?channel=room", None, t2)
             self.assertEqual(body["data"][0]["channel"], "room")
+            req = urllib.request.Request(self.base + "/v1/messages/stream?agent_id=m2&limit=1&timeout_s=1")
+            req.add_header("Authorization", f"Bearer {t2}")
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                self.assertIn(b"hello", resp.read())
         finally:
             os.environ.pop("SWARMLAB_JOIN_CODE", None)
             self.server.token = ""

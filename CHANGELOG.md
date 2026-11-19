@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.15.0] — 2026-11-19
+
+Message SSE.
+
+### Добавлено
+- `GET /v1/messages/stream` — SSE для inbox/каналов, keepalive, disconnect-safe.
+- 188 тестов, 100% coverage.
+
 ## [11.14.0] — 2026-11-19
 
 Agent messaging.

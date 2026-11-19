@@ -1,3 +1,7 @@
+# swarm-lab v11.15.0
+
+Message SSE stream; 188 tests.
+
 # swarm-lab v11.14.0
 
 Agent messaging/inbox/channels; 184 tests.

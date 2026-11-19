@@ -46,6 +46,7 @@ def spec() -> dict[str, Any]:
             "/v1/tasks/{task_id}/renew": {"post": {"summary": "Renew lease"}},
             "/v1/tasks/{task_id}/cancel": {"post": {"summary": "Cancel task"}},
             "/v1/tasks/{task_id}/requeue": {"post": {"summary": "Requeue cancelled/failed"}},
+            "/v1/messages/stream": {"get": {"summary": "SSE message stream"}},
             "/v1/messages": {
                 "get": {"summary": "Inbox/channel messages"},
                 "post": {"summary": "Send message"},

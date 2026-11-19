@@ -149,6 +149,7 @@ ROUTES = {
     ("GET", "/v1/tasks"),
     ("POST", "/v1/messages"),
     ("GET", "/v1/messages"),
+    ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
     ("GET", "/v1/tasks/{task_id}"),
@@ -531,6 +532,14 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 })
             elif path in ("/", "/dashboard"):
                 self._send_html(DASHBOARD.replace("__VERSION__", __version__))
+            elif path == "/v1/messages/stream":
+                self._messages_stream(
+                    int((query.get("after") or ["0"])[0]),
+                    (query.get("agent_id") or [self.agent_id or ""])[0],
+                    (query.get("channel") or [None])[0],
+                    int((query.get("limit") or ["50"])[0]),
+                    float((query.get("timeout_s") or ["5"])[0]),
+                )
             elif path == "/v1/messages":
                 self._send(200, {"ok": True, "data": self.swarm.store.messages(
                     (query.get("agent_id") or [self.agent_id or ""])[0],
@@ -814,6 +823,37 @@ class SwarmHandler(BaseHTTPRequestHandler):
             except SwarmError as exc:
                 results.append({"index": index, "ok": False, "code": exc.code, "message": exc.message})
         return results
+
+    def _messages_stream(self, after: int, agent_id: str, channel: str | None, limit: int, timeout_s: float) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        if getattr(self, "_head", False):
+            self.close_connection = True
+            return
+        self.close_connection = True
+        deadline = time.time() + min(30.0, max(0.2, timeout_s))
+        keepalive_s = float(os.environ.get("SWARMLAB_STREAM_KEEPALIVE_S") or 1.0)
+        last_ping = time.time()
+        sent = 0
+        try:
+            while sent < limit and time.time() < deadline:
+                rows = self.swarm.store.messages(agent_id, channel, after, min(50, limit - sent))
+                for row in rows:
+                    self.wfile.write(f"id: {row['id']}\ndata: {json.dumps(row, ensure_ascii=False, default=str)}\n\n".encode())
+                    after = int(row["id"])
+                    sent += 1
+                self.wfile.flush()
+                if not rows and sent < limit:
+                    time.sleep(0.05)
+                    if time.time() - last_ping >= keepalive_s:
+                        self.wfile.write(b": keepalive\n\n")
+                        self.wfile.flush()
+                        last_ping = time.time()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _stream(self, after: int, limit: int, timeout_s: float) -> None:
         self.send_response(200)
