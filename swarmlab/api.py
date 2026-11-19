@@ -147,6 +147,10 @@ ROUTES = {
     ("POST", "/v1/tasks"),
     ("POST", "/v1/tasks/{task_id}/cancel"),
     ("GET", "/v1/tasks"),
+    ("POST", "/v1/messages"),
+    ("GET", "/v1/messages"),
+    ("POST", "/v1/messages/{message_id}/read"),
+    ("GET", "/v1/channels"),
     ("GET", "/v1/tasks/{task_id}"),
     ("GET", "/v1/tasks/{task_id}/events"),
     ("POST", "/v1/tasks/claim"),
@@ -159,6 +163,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
+MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel|requeue)$")
 
 
@@ -214,6 +219,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
     def handle_one_request(self) -> None:
         self.request_id = uuid.uuid4().hex[:12]
         self.audit_actor = ""
+        self.agent_id = ""
         self._started = time.perf_counter()
         super().handle_one_request()
 
@@ -412,6 +418,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         header = self.headers.get("Authorization", "")
         token = header[7:] if header.startswith("Bearer ") else ""
         self.audit_actor = f"token:{hashlib.sha256(token.encode()).hexdigest()[:12]}" if token else "anonymous"
+        self.agent_id = self.swarm.store.token_agent(token) or ""
         jwt_scopes = self._jwt_scopes(token)
         dynamic_scopes = self.swarm.store.token_scopes(token)
         scopes: set[str] | None = None
@@ -507,7 +514,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     "description": "Agent-native swarm runtime: task market, leases, SSE, MCP, OpenAPI.",
                     "url": base, "openapi": f"{base}/v1/openapi", "llms": f"{base}/llms.txt",
                     "mcp": {"transport": "http", "endpoint": f"{base}/mcp"},
-                    "capabilities": ["tasks", "agents", "events", "sse", "mcp", "audit", "postgres", "sqlite"],
+                    "capabilities": ["tasks", "agents", "messages", "channels", "events", "sse", "mcp", "audit", "postgres", "sqlite"],
                     "auth": ["bearer", "jwt"],
                 })
             elif path == "/.well-known/ai-plugin.json":
@@ -524,6 +531,15 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 })
             elif path in ("/", "/dashboard"):
                 self._send_html(DASHBOARD.replace("__VERSION__", __version__))
+            elif path == "/v1/messages":
+                self._send(200, {"ok": True, "data": self.swarm.store.messages(
+                    (query.get("agent_id") or [self.agent_id or ""])[0],
+                    (query.get("channel") or [None])[0],
+                    int((query.get("after") or ["0"])[0]),
+                    int((query.get("limit") or ["100"])[0]),
+                )})
+            elif path == "/v1/channels":
+                self._send(200, {"ok": True, "data": self.swarm.store.channels()})
             elif path == "/v1/audit":
                 self._send(200, {"ok": True, "data": self.swarm.store.audits(
                     int((query.get("limit") or ["100"])[0]),
@@ -657,6 +673,15 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
                 self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/messages":
+                from_agent = self.agent_id or str(body.get("from_agent") or "")
+                data = self.swarm.store.send_message(
+                    from_agent,
+                    body.get("to_agent"),
+                    body.get("channel"),
+                    str(body.get("body") or ""),
+                )
+                self._send(201, {"ok": True, "data": data})
             elif path == "/v1/tasks":
                 data = self.swarm.store.submit(
                     str(body.get("capability") or ""),
@@ -692,6 +717,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     raise SwarmError("BAD_REQUEST", "ops must be array")
                 self._send(200, {"ok": True, "data": self._batch(ops)})
             else:
+                msg_match = MSG_READ_RE.match(path)
+                if msg_match:
+                    self._send(200, {"ok": True, "data": self.swarm.store.mark_read(
+                        int(msg_match.group(1)),
+                        self.agent_id or str(body.get("agent_id") or ""),
+                    )})
+                    return
                 match = TASK_RE.match(path)
                 if not match:
                     self._error(404, "NOT_FOUND", f"no route {path}")

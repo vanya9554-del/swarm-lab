@@ -383,6 +383,30 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_messages(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            token = s.issue_agent_token("a")
+            self.assertEqual(s.token_agent(token), "a")
+            m = s.send_message("a", "b", None, "hi")
+            self.assertEqual(s.messages("b")[0]["body"], "hi")
+            s.mark_read(m["id"], "b")
+            s.send_message("a", None, "room", "hello")
+            self.assertEqual(s.messages(None, "room")[0]["channel"], "room")
+            self.assertTrue(s.channels())
+            with self.assertRaises(SwarmError):
+                s.send_message("a")
+            with self.assertRaises(SwarmError):
+                s.send_message("a", None, None, "x")
+            with self.assertRaises(SwarmError):
+                s.send_message("", "b", None, "x")
+            with self.assertRaises(SwarmError):
+                s.send_message("a", "b", None, "")
+        finally:
+            s.close()
+
     def test_agent_tokens(self) -> None:
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
@@ -421,7 +445,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 12)
+            self.assertEqual(s.schema_version(), 13)
         finally:
             s.close()
 

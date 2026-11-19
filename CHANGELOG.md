@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.14.0] — 2026-11-19
+
+Agent messaging.
+
+### Добавлено
+- `POST/GET /v1/messages`, channels, `POST /v1/messages/{id}/read`.
+- Per-agent token → agent identity; inbox/channel polling.
+- 184 теста, 100% coverage.
+
 ## [11.13.0] — 2026-11-19
 
 Agent self-onboarding.

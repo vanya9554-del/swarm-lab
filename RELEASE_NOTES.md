@@ -1,3 +1,7 @@
+# swarm-lab v11.14.0
+
+Agent messaging/inbox/channels; 184 tests.
+
 # swarm-lab v11.13.0
 
 Agent self-registration + per-agent tokens; 181 tests.

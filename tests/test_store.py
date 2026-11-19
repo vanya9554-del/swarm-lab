@@ -67,6 +67,22 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_messages(self) -> None:
+        m = self.store.send_message("a", "b", None, "hi")
+        self.assertEqual(m["to_agent"], "b")
+        self.assertEqual(self.store.messages("b")[0]["body"], "hi")
+        self.store.mark_read(m["id"], "b")
+        self.assertEqual(len(self.store.messages("a", "room", 0, 10)), 0)
+        self.store.send_message("a", None, "room", "hello")
+        self.assertEqual(self.store.messages(None, "room")[0]["channel"], "room")
+        self.assertEqual(len(self.store.channels()), 1)
+        with self.assertRaises(SwarmError):
+            self.store.send_message("", "b", None, "x")
+        with self.assertRaises(SwarmError):
+            self.store.send_message("a", "b", None, "")
+        with self.assertRaises(SwarmError):
+            self.store.send_message("a")
+
     def test_agent_tokens(self) -> None:
         token = self.store.issue_agent_token("a1")
         self.assertEqual(self.store.token_scopes(token), {"read", "write"})
@@ -95,7 +111,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 12)
+        self.assertEqual(self.store.schema_version(), 13)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

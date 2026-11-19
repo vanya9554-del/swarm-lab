@@ -9,6 +9,8 @@ import time
 import uuid
 from typing import Any
 
+from .store import SwarmError
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS schema_meta (
     id INTEGER PRIMARY KEY,
@@ -51,6 +53,17 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     created_at DOUBLE PRECISION NOT NULL,
     revoked INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS messages (
+    id BIGSERIAL PRIMARY KEY,
+    from_agent TEXT NOT NULL,
+    to_agent TEXT,
+    channel TEXT,
+    body TEXT NOT NULL,
+    created_at DOUBLE PRECISION NOT NULL,
+    read_at DOUBLE PRECISION
+);
+CREATE INDEX IF NOT EXISTS idx_messages_to ON messages(to_agent, id);
+CREATE INDEX IF NOT EXISTS idx_messages_channel ON messages(channel, id);
 CREATE TABLE IF NOT EXISTS audit (
     id BIGSERIAL PRIMARY KEY,
     created_at DOUBLE PRECISION NOT NULL,
@@ -118,7 +131,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 12) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 13) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -420,6 +433,48 @@ class PgSwarmStore:
                 (time.time(), actor, action, target, json.dumps(detail or {}), ip),
             )
             self.conn.commit()
+
+    def token_agent(self, token: str) -> str | None:
+        if not token:
+            return None
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=%s AND revoked=0", (digest,))
+        return str(row["agent_id"]) if row else None
+
+    def send_message(self, from_agent: str, to_agent: str | None = None, channel: str | None = None, body: str = "") -> dict[str, Any]:
+        if not str(from_agent).strip():
+            raise SwarmError("BAD_REQUEST", "from_agent is required")
+        if not str(body).strip():
+            raise SwarmError("BAD_REQUEST", "body is required")
+        if not to_agent and not channel:
+            raise SwarmError("BAD_REQUEST", "to_agent or channel is required")
+        with self.lock:
+            row = self._one(
+                "INSERT INTO messages(from_agent, to_agent, channel, body, created_at) VALUES (%s, %s, %s, %s, %s) RETURNING *",
+                (str(from_agent), to_agent, channel, str(body), time.time()),
+            )
+        return row or {"from_agent": from_agent}
+
+    def messages(self, agent_id: str | None = None, channel: str | None = None, after: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+        clauses = ["id > %s"]
+        params: list[Any] = [int(after)]
+        if channel:
+            clauses.append("channel = %s")
+            params.append(channel)
+        elif agent_id:
+            clauses.append("(to_agent = %s OR from_agent = %s)")
+            params.extend([agent_id, agent_id])
+        params.append(max(1, min(500, int(limit))))
+        return self._all(f"SELECT * FROM messages WHERE {' AND '.join(clauses)} ORDER BY id LIMIT %s", tuple(params))
+
+    def mark_read(self, message_id: int, agent_id: str) -> dict[str, Any]:
+        with self.lock:
+            self.conn.execute("UPDATE messages SET read_at=%s WHERE id=%s AND to_agent=%s", (time.time(), int(message_id), agent_id))
+            self.conn.commit()
+        return {"id": int(message_id), "read": True}
+
+    def channels(self) -> list[dict[str, Any]]:
+        return self._all("SELECT channel, COUNT(*) AS n FROM messages WHERE channel IS NOT NULL GROUP BY channel ORDER BY channel")
 
     def issue_agent_token(self, agent_id: str, scopes: tuple[str, ...] = ("read", "write")) -> str:
         token = "agt_" + secrets.token_urlsafe(32)

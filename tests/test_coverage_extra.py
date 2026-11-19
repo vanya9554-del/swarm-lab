@@ -605,6 +605,40 @@ class ExtraApiTests(unittest.TestCase):
         finally:
             os.environ.pop("SWARMLAB_JOIN_CODE", None)
 
+    def test_messaging(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            def reg(name):
+                status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                    "agent_id": name, "capabilities": ["chat"], "join_code": "join-me",
+                })
+                self.assertEqual(status, 201)
+                return body["data"]["token"]
+            t1 = reg("m1")
+            t2 = reg("m2")
+            status, body, _ = _req("POST", self.base + "/v1/messages", {
+                "to_agent": "m2", "body": "hello",
+            }, t1)
+            self.assertEqual(status, 201)
+            msg_id = body["data"]["id"]
+            status, body, _ = _req("GET", self.base + "/v1/messages", None, t2)
+            self.assertEqual(status, 200)
+            self.assertEqual(body["data"][0]["body"], "hello")
+            self.assertEqual(_req("POST", self.base + "/v1/messages", {"body": "x"}, t1)[0], 400)
+            self.assertEqual(_req("POST", self.base + "/v1/messages", {"to_agent": "m2"}, t1)[0], 400)
+            self.assertEqual(_req("POST", self.base + f"/v1/messages/{msg_id}/read", {}, t2)[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/messages", {"channel": "room", "body": "hi"}, t1)[0], 201)
+            status, body, _ = _req("GET", self.base + "/v1/channels", None, t2)
+            self.assertEqual(status, 200)
+            self.assertTrue(body["data"])
+            status, body, _ = _req("GET", self.base + "/v1/messages?channel=room", None, t2)
+            self.assertEqual(body["data"][0]["channel"], "room")
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
     def test_discovery(self) -> None:
         for path in ("/llms.txt", "/robots.txt", "/sitemap.xml"):
             status, body, _ = _req("GET", self.base + path)
