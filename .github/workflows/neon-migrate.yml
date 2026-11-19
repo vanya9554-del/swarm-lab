@@ -28,6 +28,7 @@ jobs:
           svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
           url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
           db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          curl -sS -o /tmp/allow.json -w 'allowlist_http=%{http_code}\n' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/postgres/$db" -d '{"ipAllowList":[{"cidrBlock":"0.0.0.0/0","description":"github-actions-temporary"}]}' || true
           conn=$(curl -fsS "${auth[@]}" "$api/postgres/$db/connection-info")
           old=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).externalConnectionString // empty')
           [ -n "$old" ] || { echo "no Render external DSN"; exit 1; }

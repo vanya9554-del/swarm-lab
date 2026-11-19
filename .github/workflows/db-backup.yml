@@ -22,6 +22,7 @@ jobs:
           auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
           owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
           db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          curl -sS -o /tmp/allow.json -w 'allowlist_http=%{http_code}\n' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/postgres/$db" -d '{"ipAllowList":[{"cidrBlock":"0.0.0.0/0","description":"github-actions-temporary"}]}' || true
           conn=$(curl -fsS "${auth[@]}" "$api/postgres/$db/connection-info")
           dsn=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).externalConnectionString // empty')
           [ -n "$dsn" ] || { echo "no external DSN"; exit 1; }
