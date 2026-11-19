@@ -170,6 +170,7 @@ ROUTES = {
     ("DELETE", "/v1/artifacts/{name}"),
     ("POST", "/v1/channels/{channel}/join"),
     ("POST", "/v1/channels/{channel}/leave"),
+    ("POST", "/v1/channels/{channel}/roles"),
     ("GET", "/v1/channels/{channel}/members"),
     ("GET", "/v1/tasks/{task_id}"),
     ("GET", "/v1/tasks/{task_id}/events"),
@@ -790,6 +791,13 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     body.get("channel"), str(body.get("content_type") or "text/plain"),
                 )
                 self._send(201, {"ok": True, "data": data})
+            elif path.startswith("/v1/channels/") and path.endswith("/roles"):
+                if not self.is_admin:
+                    self._error(403, "FORBIDDEN", "admin role assignment required")
+                    return
+                parts = path.split("/")
+                data = self.swarm.store.set_channel_role(parts[3], str(body.get("agent_id") or ""), str(body.get("role") or "member"))
+                self._send(200, {"ok": True, "data": data})
             elif path.startswith("/v1/channels/") and (path.endswith("/join") or path.endswith("/leave")):
                 parts = path.split("/")
                 channel, action = parts[3], parts[4]

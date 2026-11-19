@@ -638,6 +638,19 @@ class SwarmStore:
             deleted = self.conn.execute("DELETE FROM channel_members WHERE channel=? AND agent_id=?", (str(channel), str(agent_id))).rowcount
         return {"channel": channel, "agent_id": agent_id, "deleted": bool(deleted)}
 
+    def set_channel_role(self, channel: str, agent_id: str, role: str = "member") -> dict[str, Any]:
+        if role not in ("member", "admin", "owner"):
+            raise SwarmError("BAD_REQUEST", "invalid role")
+        if not str(channel).strip() or not str(agent_id).strip():
+            raise SwarmError("BAD_REQUEST", "channel and agent_id are required")
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO channel_members(channel, agent_id, role, joined_at) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(channel, agent_id) DO UPDATE SET role=excluded.role",
+                (str(channel), str(agent_id), str(role), time.time()),
+            )
+        return self._one("SELECT * FROM channel_members WHERE channel=? AND agent_id=?", (str(channel), str(agent_id))) or {}
+
     def channel_members(self, channel: str) -> list[dict[str, Any]]:
         return self._all("SELECT * FROM channel_members WHERE channel=? ORDER BY joined_at", (str(channel),))
 

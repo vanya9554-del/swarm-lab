@@ -68,6 +68,7 @@ def spec() -> dict[str, Any]:
             "/v1/channels": {"get": {"summary": "List channels"}},
             "/v1/channels/{channel}/join": {"post": {"summary": "Join channel"}},
             "/v1/channels/{channel}/leave": {"post": {"summary": "Leave channel"}},
+            "/v1/channels/{channel}/roles": {"post": {"summary": "Assign channel role"}},
             "/v1/channels/{channel}/members": {"get": {"summary": "Channel members"}},
             "/v1/events": {"get": {"summary": "Event log"}},
             "/v1/stream": {"get": {"summary": "SSE stream"}},

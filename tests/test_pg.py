@@ -463,7 +463,12 @@ class PgTests(unittest.TestCase):
             self.assertEqual(s.channel_members("room")[0]["agent_id"], "a")
             s.send_message("b", None, "room", "hi")
             self.assertEqual(len(s.channel_members("room")), 2)
+            self.assertEqual(s.set_channel_role("room", "b", "admin")["role"], "admin")
             self.assertTrue(s.leave_channel("room", "a")["deleted"])
+            with self.assertRaises(SwarmError):
+                s.set_channel_role("room", "b", "bad")
+            with self.assertRaises(SwarmError):
+                s.set_channel_role("", "b")
         finally:
             s.close()
 

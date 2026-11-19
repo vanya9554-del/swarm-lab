@@ -1,3 +1,7 @@
+# swarm-lab v11.22.0
+
+Channel role assignment; 203 tests.
+
 # swarm-lab v11.21.0
 
 Plugin checksum/runtime metadata, execution disabled; 203 tests.

@@ -788,6 +788,8 @@ class ExtraApiTests(unittest.TestCase):
             status, body, _ = _req("GET", self.base + "/v1/channels/room/members", None, token)
             self.assertEqual(status, 200)
             self.assertEqual(body["data"][0]["agent_id"], "ch1")
+            self.assertEqual(_req("POST", self.base + "/v1/channels/room/roles", {"agent_id": "ch1", "role": "admin"}, "admin")[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/channels/room/roles", {"agent_id": "ch1", "role": "admin"}, token)[0], 403)
             self.assertEqual(_req("POST", self.base + "/v1/channels/room/leave", {}, token)[0], 200)
         finally:
             os.environ.pop("SWARMLAB_JOIN_CODE", None)

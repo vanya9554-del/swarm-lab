@@ -196,3 +196,5 @@ python -m swarmlab serve --port 8788
 - **S151**: plugin proposals/approval; release 11.20.0.
 
 - **S152**: plugin checksum/runtime metadata; release 11.21.0.
+
+- **S153**: channel role assignment; release 11.22.0.

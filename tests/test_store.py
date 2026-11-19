@@ -124,7 +124,12 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.channel_members("room")[0]["agent_id"], "a")
         self.store.send_message("b", None, "room", "hi")
         self.assertEqual(len(self.store.channel_members("room")), 2)
+        self.assertEqual(self.store.set_channel_role("room", "b", "admin")["role"], "admin")
         self.assertTrue(self.store.leave_channel("room", "a")["deleted"])
+        with self.assertRaises(SwarmError):
+            self.store.set_channel_role("room", "b", "bad")
+        with self.assertRaises(SwarmError):
+            self.store.set_channel_role("", "b")
         with self.assertRaises(SwarmError):
             self.store.join_channel("", "a")
         with self.assertRaises(SwarmError):

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.22.0] — 2026-11-19
+
+Channel role assignment.
+
+### Добавлено
+- `POST /v1/channels/{channel}/roles` — owner/admin/member, только admin.
+- 203 теста, 100% coverage.
+
 ## [11.21.0] — 2026-11-19
 
 Plugin sandbox metadata.

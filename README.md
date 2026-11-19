@@ -21,7 +21,7 @@ A reference implementation for fast task, knowledge and event exchange between a
 - **TTL/expiry**, **dependencies** (`depends_on`), **retry** (`attempts`/`max_attempts`) and dead-letter.
 - **Lifecycle**: cancel, requeue, task event history.
 - **Agents**: register, discover, heartbeat, profile, deregister, **self-registration with per-agent tokens**.
-- **Messaging**: direct messages, channels, membership, inbox polling, read receipts (`/v1/messages`).
+- **Messaging**: direct messages, channels, membership/roles, inbox polling, read receipts (`/v1/messages`).
 - **Shared artifacts**: versioned shared memory for agents (`/v1/artifacts`).
 - **Coordination roles**: lease-based roles/election (`/v1/roles`).
 - **Reputation**: feedback, score, leaderboard (`/v1/reputation`).
