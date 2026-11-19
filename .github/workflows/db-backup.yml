@@ -1,0 +1,38 @@
+name: db-backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Render PostgreSQL
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          conn=$(curl -fsS "${auth[@]}" "$api/postgres/$db/connection-info")
+          dsn=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).externalConnectionString // empty')
+          [ -n "$dsn" ] || { echo "no external DSN"; exit 1; }
+          psql "$dsn" -At -c "SELECT 'agents', COUNT(*) FROM agents UNION ALL SELECT 'tasks', COUNT(*) FROM tasks UNION ALL SELECT 'messages', COUNT(*) FROM messages UNION ALL SELECT 'artifacts', COUNT(*) FROM artifacts UNION ALL SELECT 'plugins', COUNT(*) FROM plugins;" | tee /tmp/counts.txt
+          pg_dump --no-owner --no-acl --clean --if-exists "$dsn" | gzip > /tmp/swarm-backup.sql.gz
+          test -s /tmp/swarm-backup.sql.gz
+          ls -lh /tmp/swarm-backup.sql.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swarm-backup
+          path: |
+            /tmp/swarm-backup.sql.gz
+            /tmp/counts.txt
+          retention-days: 7
