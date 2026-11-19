@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 19
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS plugins (
     name         TEXT NOT NULL,
     version      TEXT NOT NULL,
     code         TEXT NOT NULL,
+    checksum     TEXT NOT NULL DEFAULT '',
+    runtime      TEXT NOT NULL DEFAULT 'wasm',
     description  TEXT NOT NULL DEFAULT '',
     status       TEXT NOT NULL DEFAULT 'pending',
     submitted_by TEXT NOT NULL DEFAULT '',
@@ -169,6 +171,14 @@ class SwarmStore:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0")
             if "max_attempts" not in cols:
                 self.conn.execute("ALTER TABLE tasks ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3")
+            for ddl in (
+                "ALTER TABLE plugins ADD COLUMN checksum TEXT NOT NULL DEFAULT ''",
+                "ALTER TABLE plugins ADD COLUMN runtime TEXT NOT NULL DEFAULT 'wasm'",
+            ):
+                try:
+                    self.conn.execute(ddl)
+                except sqlite3.OperationalError:
+                    pass
             self.conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
 
     def close(self) -> None:
@@ -472,17 +482,20 @@ class SwarmStore:
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=? AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
 
-    def propose_plugin(self, name: str, version: str, code: str, submitted_by: str = "", description: str = "") -> dict[str, Any]:
+    def propose_plugin(self, name: str, version: str, code: str, submitted_by: str = "", description: str = "", runtime: str = "wasm") -> dict[str, Any]:
         if not str(name).strip() or not str(version).strip() or not str(code).strip():
             raise SwarmError("BAD_REQUEST", "name, version and code are required")
+        if runtime not in ("wasm", "none"):
+            raise SwarmError("BAD_REQUEST", "runtime must be wasm or none")
+        checksum = hashlib.sha256(str(code).encode()).hexdigest()
         now = time.time()
         with self.lock:
             self.conn.execute(
-                "INSERT INTO plugins(name, version, code, description, status, submitted_by, created_at, updated_at) "
-                "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?) ON CONFLICT(name, version) DO UPDATE SET "
-                "code=excluded.code, description=excluded.description, status='pending', "
+                "INSERT INTO plugins(name, version, code, checksum, runtime, description, status, submitted_by, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?) ON CONFLICT(name, version) DO UPDATE SET "
+                "code=excluded.code, checksum=excluded.checksum, runtime=excluded.runtime, description=excluded.description, status='pending', "
                 "submitted_by=excluded.submitted_by, updated_at=excluded.updated_at",
-                (str(name), str(version), str(code), str(description), str(submitted_by), now, now),
+                (str(name), str(version), str(code), checksum, str(runtime), str(description), str(submitted_by), now, now),
             )
         return self.get_plugin(name, version) or {}
 
@@ -491,8 +504,8 @@ class SwarmStore:
 
     def list_plugins(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         if status:
-            return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins WHERE status=? ORDER BY updated_at DESC LIMIT ?", (str(status), max(1, min(500, int(limit)))))
-        return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT ?", (max(1, min(500, int(limit))),))
+            return self._all("SELECT name, version, checksum, runtime, description, status, submitted_by, approved_by, updated_at FROM plugins WHERE status=? ORDER BY updated_at DESC LIMIT ?", (str(status), max(1, min(500, int(limit)))))
+        return self._all("SELECT name, version, checksum, runtime, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT ?", (max(1, min(500, int(limit))),))
 
     def set_plugin_status(self, name: str, version: str, status: str, approved_by: str = "") -> dict[str, Any]:
         if status not in ("approved", "rejected", "pending"):

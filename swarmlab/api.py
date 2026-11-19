@@ -749,6 +749,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     str(body.get("name") or ""), str(body.get("version") or ""),
                     str(body.get("code") or ""), self.agent_id or str(body.get("submitted_by") or ""),
                     str(body.get("description") or ""),
+                    str(body.get("runtime") or "wasm"),
                 )
                 self._send(201, {"ok": True, "data": data})
             elif path.startswith("/v1/plugins/"):

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.21.0] — 2026-11-19
+
+Plugin sandbox metadata.
+
+### Добавлено
+- Plugin checksum + runtime validation (`wasm`/`none`), execution disabled.
+- 203 теста, 100% coverage.
+
 ## [11.20.0] — 2026-11-19
 
 Plugin governance.

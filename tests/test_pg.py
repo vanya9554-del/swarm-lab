@@ -395,6 +395,8 @@ class PgTests(unittest.TestCase):
             with self.assertRaises(SwarmError):
                 s.propose_plugin("", "1", "x")
             with self.assertRaises(SwarmError):
+                s.propose_plugin("x", "1", "code", runtime="python")
+            with self.assertRaises(SwarmError):
                 s.set_plugin_status("p", "1", "bad")
         finally:
             s.close()
@@ -527,7 +529,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 18)
+            self.assertEqual(s.schema_version(), 19)
         finally:
             s.close()
 

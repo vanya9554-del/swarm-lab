@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS plugins (
     name TEXT NOT NULL,
     version TEXT NOT NULL,
     code TEXT NOT NULL,
+    checksum TEXT NOT NULL DEFAULT '',
+    runtime TEXT NOT NULL DEFAULT 'wasm',
     description TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'pending',
     submitted_by TEXT NOT NULL DEFAULT '',
@@ -170,6 +172,8 @@ class PgSwarmStore:
                 self.conn.execute("SELECT pg_advisory_xact_lock(20261119)")
                 self.conn.execute(SCHEMA)
                 for migration in (
+                    "ALTER TABLE plugins ADD COLUMN IF NOT EXISTS checksum TEXT NOT NULL DEFAULT ''",
+                    "ALTER TABLE plugins ADD COLUMN IF NOT EXISTS runtime TEXT NOT NULL DEFAULT 'wasm'",
                     "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS expires_at DOUBLE PRECISION",
                     "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS depends_on TEXT",
                     "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0",
@@ -177,7 +181,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 18) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 19) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -487,17 +491,20 @@ class PgSwarmStore:
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=%s AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
 
-    def propose_plugin(self, name: str, version: str, code: str, submitted_by: str = "", description: str = "") -> dict[str, Any]:
+    def propose_plugin(self, name: str, version: str, code: str, submitted_by: str = "", description: str = "", runtime: str = "wasm") -> dict[str, Any]:
         if not str(name).strip() or not str(version).strip() or not str(code).strip():
             raise SwarmError("BAD_REQUEST", "name, version and code are required")
+        if runtime not in ("wasm", "none"):
+            raise SwarmError("BAD_REQUEST", "runtime must be wasm or none")
+        checksum = hashlib.sha256(str(code).encode()).hexdigest()
         now = time.time()
         with self.lock:
             self.conn.execute(
-                "INSERT INTO plugins(name, version, code, description, status, submitted_by, created_at, updated_at) "
-                "VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s) ON CONFLICT (name, version) DO UPDATE SET "
-                "code=EXCLUDED.code, description=EXCLUDED.description, status='pending', "
+                "INSERT INTO plugins(name, version, code, checksum, runtime, description, status, submitted_by, created_at, updated_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, 'pending', %s, %s, %s) ON CONFLICT (name, version) DO UPDATE SET "
+                "code=EXCLUDED.code, checksum=EXCLUDED.checksum, runtime=EXCLUDED.runtime, description=EXCLUDED.description, status='pending', "
                 "submitted_by=EXCLUDED.submitted_by, updated_at=EXCLUDED.updated_at",
-                (str(name), str(version), str(code), str(description), str(submitted_by), now, now),
+                (str(name), str(version), str(code), checksum, str(runtime), str(description), str(submitted_by), now, now),
             )
             self.conn.commit()
         return self.get_plugin(name, version) or {}
@@ -507,8 +514,8 @@ class PgSwarmStore:
 
     def list_plugins(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         if status:
-            return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins WHERE status=%s ORDER BY updated_at DESC LIMIT %s", (str(status), max(1, min(500, int(limit)))))
-        return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT %s", (max(1, min(500, int(limit))),))
+            return self._all("SELECT name, version, checksum, runtime, description, status, submitted_by, approved_by, updated_at FROM plugins WHERE status=%s ORDER BY updated_at DESC LIMIT %s", (str(status), max(1, min(500, int(limit)))))
+        return self._all("SELECT name, version, checksum, runtime, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT %s", (max(1, min(500, int(limit))),))
 
     def set_plugin_status(self, name: str, version: str, status: str, approved_by: str = "") -> dict[str, Any]:
         if status not in ("approved", "rejected", "pending"):

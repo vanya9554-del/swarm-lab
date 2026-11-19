@@ -194,3 +194,5 @@ python -m swarmlab serve --port 8788
 - **S150**: reputation/trust; release 11.19.0.
 
 - **S151**: plugin proposals/approval; release 11.20.0.
+
+- **S152**: plugin checksum/runtime metadata; release 11.21.0.

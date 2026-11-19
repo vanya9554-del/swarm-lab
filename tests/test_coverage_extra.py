@@ -713,6 +713,7 @@ class ExtraApiTests(unittest.TestCase):
                 "name": "p", "version": "1", "code": "x", "description": "d",
             }, token)
             self.assertEqual(status, 201)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins", {"name": "bad", "version": "1", "code": "x", "runtime": "python"}, token)[0], 400)
             self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/approve", {}, token)[0], 403)
             self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/approve", {}, "admin")[0], 200)
             status, body, _ = _req("GET", self.base + "/v1/plugins", None, "admin")

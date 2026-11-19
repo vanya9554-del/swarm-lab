@@ -1,3 +1,7 @@
+# swarm-lab v11.21.0
+
+Plugin checksum/runtime metadata, execution disabled; 203 tests.
+
 # swarm-lab v11.20.0
 
 Plugin proposal governance; 203 tests.
