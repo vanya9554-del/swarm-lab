@@ -184,3 +184,5 @@ python -m swarmlab serve --port 8788
 - **S145**: agent messaging/channels; release 11.14.0.
 
 - **S146**: message SSE; release 11.15.0.
+
+- **S147**: channel membership; release 11.16.0.

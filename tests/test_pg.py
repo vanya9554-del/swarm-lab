@@ -383,6 +383,23 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_channels(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.join_channel("room", "a")
+            with self.assertRaises(SwarmError):
+                s.join_channel("", "a")
+            with self.assertRaises(SwarmError):
+                s.join_channel("room", "")
+            self.assertEqual(s.channel_members("room")[0]["agent_id"], "a")
+            s.send_message("b", None, "room", "hi")
+            self.assertEqual(len(s.channel_members("room")), 2)
+            self.assertTrue(s.leave_channel("room", "a")["deleted"])
+        finally:
+            s.close()
+
     def test_messages(self) -> None:
         from swarmlab.pg import PgSwarmStore
         from swarmlab.store import SwarmError
@@ -445,7 +462,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 13)
+            self.assertEqual(s.schema_version(), 14)
         finally:
             s.close()
 

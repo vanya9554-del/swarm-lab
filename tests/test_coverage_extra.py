@@ -687,6 +687,24 @@ class ExtraApiTests(unittest.TestCase):
             os.environ.pop("SWARMLAB_JOIN_CODE", None)
             self.server.token = ""
 
+    def test_channel_actions(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "ch1", "capabilities": ["chat"], "join_code": "join-me",
+            })
+            token = body["data"]["token"]
+            self.assertEqual(_req("POST", self.base + "/v1/channels/room/join", {}, token)[0], 200)
+            status, body, _ = _req("GET", self.base + "/v1/channels/room/members", None, token)
+            self.assertEqual(status, 200)
+            self.assertEqual(body["data"][0]["agent_id"], "ch1")
+            self.assertEqual(_req("POST", self.base + "/v1/channels/room/leave", {}, token)[0], 200)
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
     def test_discovery(self) -> None:
         for path in ("/llms.txt", "/robots.txt", "/sitemap.xml"):
             status, body, _ = _req("GET", self.base + path)

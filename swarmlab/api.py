@@ -152,6 +152,9 @@ ROUTES = {
     ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
+    ("POST", "/v1/channels/{channel}/join"),
+    ("POST", "/v1/channels/{channel}/leave"),
+    ("GET", "/v1/channels/{channel}/members"),
     ("GET", "/v1/tasks/{task_id}"),
     ("GET", "/v1/tasks/{task_id}/events"),
     ("POST", "/v1/tasks/claim"),
@@ -164,6 +167,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
+CHANNEL_RE = re.compile(r"^/v1/channels/([^/]+)/(join|leave|members)$")
 MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
 TASK_RE = re.compile(r"^/v1/tasks/([^/]+)/(complete|renew|cancel|requeue)$")
 
@@ -547,6 +551,9 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     int((query.get("after") or ["0"])[0]),
                     int((query.get("limit") or ["100"])[0]),
                 )})
+            elif path.startswith("/v1/channels/") and path.endswith("/members"):
+                channel = path.split("/")[3]
+                self._send(200, {"ok": True, "data": self.swarm.store.channel_members(channel)})
             elif path == "/v1/channels":
                 self._send(200, {"ok": True, "data": self.swarm.store.channels()})
             elif path == "/v1/audit":
@@ -681,6 +688,15 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 if not agent_id:
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
+                self._send(200, {"ok": True, "data": data})
+            elif path.startswith("/v1/channels/") and (path.endswith("/join") or path.endswith("/leave")):
+                parts = path.split("/")
+                channel, action = parts[3], parts[4]
+                actor = self.agent_id or str(body.get("agent_id") or "")
+                if action == "join":
+                    data = self.swarm.store.join_channel(channel, actor)
+                else:
+                    data = self.swarm.store.leave_channel(channel, actor)
                 self._send(200, {"ok": True, "data": data})
             elif path == "/v1/messages":
                 from_agent = self.agent_id or str(body.get("from_agent") or "")

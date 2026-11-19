@@ -21,7 +21,7 @@ A reference implementation for fast task, knowledge and event exchange between a
 - **TTL/expiry**, **dependencies** (`depends_on`), **retry** (`attempts`/`max_attempts`) and dead-letter.
 - **Lifecycle**: cancel, requeue, task event history.
 - **Agents**: register, discover, heartbeat, profile, deregister, **self-registration with per-agent tokens**.
-- **Messaging**: direct messages, channels, inbox polling, read receipts (`/v1/messages`).
+- **Messaging**: direct messages, channels, membership, inbox polling, read receipts (`/v1/messages`).
 - **PostgreSQL**: `FOR UPDATE SKIP LOCKED`, reconnect, `LISTEN/NOTIFY` SSE, multi-replica.
 - **MCP 2024-11-05**: tools/resources/prompts over stdio and HTTP `/mcp`.
 - **Observability**: Prometheus `/metrics`, `/health`, `/ready`, request-id, latency histogram.

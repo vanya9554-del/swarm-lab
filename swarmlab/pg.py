@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     created_at DOUBLE PRECISION NOT NULL,
     revoked INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS channel_members (
+    channel TEXT NOT NULL,
+    agent_id TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'member',
+    joined_at DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (channel, agent_id)
+);
 CREATE TABLE IF NOT EXISTS messages (
     id BIGSERIAL PRIMARY KEY,
     from_agent TEXT NOT NULL,
@@ -131,7 +138,7 @@ class PgSwarmStore:
                 ):
                     self.conn.execute(migration)
                 self.conn.execute(
-                    "INSERT INTO schema_meta(id, version) VALUES (1, 13) "
+                    "INSERT INTO schema_meta(id, version) VALUES (1, 14) "
                     "ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version"
                 )
                 self.conn.commit()
@@ -441,6 +448,29 @@ class PgSwarmStore:
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=%s AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
 
+    def join_channel(self, channel: str, agent_id: str, role: str = "member") -> dict[str, Any]:
+        if not str(channel).strip():
+            raise SwarmError("BAD_REQUEST", "channel is required")
+        if not str(agent_id).strip():
+            raise SwarmError("BAD_REQUEST", "agent_id is required")
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO channel_members(channel, agent_id, role, joined_at) VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (channel, agent_id) DO UPDATE SET role=EXCLUDED.role",
+                (str(channel), str(agent_id), str(role), time.time()),
+            )
+            self.conn.commit()
+        return self._one("SELECT * FROM channel_members WHERE channel=%s AND agent_id=%s", (str(channel), str(agent_id))) or {}
+
+    def leave_channel(self, channel: str, agent_id: str) -> dict[str, Any]:
+        with self.lock:
+            deleted = self.conn.execute("DELETE FROM channel_members WHERE channel=%s AND agent_id=%s", (str(channel), str(agent_id))).rowcount
+            self.conn.commit()
+        return {"channel": channel, "agent_id": agent_id, "deleted": bool(deleted)}
+
+    def channel_members(self, channel: str) -> list[dict[str, Any]]:
+        return self._all("SELECT * FROM channel_members WHERE channel=%s ORDER BY joined_at", (str(channel),))
+
     def send_message(self, from_agent: str, to_agent: str | None = None, channel: str | None = None, body: str = "") -> dict[str, Any]:
         if not str(from_agent).strip():
             raise SwarmError("BAD_REQUEST", "from_agent is required")
@@ -449,6 +479,12 @@ class PgSwarmStore:
         if not to_agent and not channel:
             raise SwarmError("BAD_REQUEST", "to_agent or channel is required")
         with self.lock:
+            if channel:
+                self.conn.execute(
+                    "INSERT INTO channel_members(channel, agent_id, role, joined_at) VALUES (%s, %s, 'member', %s) "
+                    "ON CONFLICT (channel, agent_id) DO NOTHING",
+                    (str(channel), str(from_agent), time.time()),
+                )
             row = self._one(
                 "INSERT INTO messages(from_agent, to_agent, channel, body, created_at) VALUES (%s, %s, %s, %s, %s) RETURNING *",
                 (str(from_agent), to_agent, channel, str(body), time.time()),

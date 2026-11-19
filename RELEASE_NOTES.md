@@ -1,3 +1,7 @@
+# swarm-lab v11.16.0
+
+Channel membership/join/leave; 191 tests.
+
 # swarm-lab v11.15.0
 
 Message SSE stream; 188 tests.

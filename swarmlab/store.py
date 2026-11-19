@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -65,6 +65,13 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     scopes     TEXT NOT NULL DEFAULT 'read write',
     created_at REAL NOT NULL,
     revoked    INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS channel_members (
+    channel    TEXT NOT NULL,
+    agent_id   TEXT NOT NULL,
+    role       TEXT NOT NULL DEFAULT 'member',
+    joined_at  REAL NOT NULL,
+    PRIMARY KEY (channel, agent_id)
 );
 CREATE TABLE IF NOT EXISTS messages (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -426,6 +433,27 @@ class SwarmStore:
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=? AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
 
+    def join_channel(self, channel: str, agent_id: str, role: str = "member") -> dict[str, Any]:
+        if not str(channel).strip():
+            raise SwarmError("BAD_REQUEST", "channel is required")
+        if not str(agent_id).strip():
+            raise SwarmError("BAD_REQUEST", "agent_id is required")
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO channel_members(channel, agent_id, role, joined_at) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(channel, agent_id) DO UPDATE SET role=excluded.role",
+                (str(channel), str(agent_id), str(role), time.time()),
+            )
+        return self._one("SELECT * FROM channel_members WHERE channel=? AND agent_id=?", (str(channel), str(agent_id))) or {}
+
+    def leave_channel(self, channel: str, agent_id: str) -> dict[str, Any]:
+        with self.lock:
+            deleted = self.conn.execute("DELETE FROM channel_members WHERE channel=? AND agent_id=?", (str(channel), str(agent_id))).rowcount
+        return {"channel": channel, "agent_id": agent_id, "deleted": bool(deleted)}
+
+    def channel_members(self, channel: str) -> list[dict[str, Any]]:
+        return self._all("SELECT * FROM channel_members WHERE channel=? ORDER BY joined_at", (str(channel),))
+
     def send_message(self, from_agent: str, to_agent: str | None = None, channel: str | None = None, body: str = "") -> dict[str, Any]:
         if not str(from_agent).strip():
             raise SwarmError("BAD_REQUEST", "from_agent is required")
@@ -434,6 +462,12 @@ class SwarmStore:
         if not to_agent and not channel:
             raise SwarmError("BAD_REQUEST", "to_agent or channel is required")
         with self.lock:
+            if channel:
+                self.conn.execute(
+                    "INSERT INTO channel_members(channel, agent_id, role, joined_at) VALUES (?, ?, 'member', ?) "
+                    "ON CONFLICT(channel, agent_id) DO NOTHING",
+                    (str(channel), str(from_agent), time.time()),
+                )
             cur = self.conn.execute(
                 "INSERT INTO messages(from_agent, to_agent, channel, body, created_at) VALUES (?, ?, ?, ?, ?)",
                 (str(from_agent), to_agent, channel, str(body), time.time()),

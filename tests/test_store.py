@@ -67,6 +67,17 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_channels(self) -> None:
+        self.store.join_channel("room", "a")
+        self.assertEqual(self.store.channel_members("room")[0]["agent_id"], "a")
+        self.store.send_message("b", None, "room", "hi")
+        self.assertEqual(len(self.store.channel_members("room")), 2)
+        self.assertTrue(self.store.leave_channel("room", "a")["deleted"])
+        with self.assertRaises(SwarmError):
+            self.store.join_channel("", "a")
+        with self.assertRaises(SwarmError):
+            self.store.join_channel("room", "")
+
     def test_messages(self) -> None:
         m = self.store.send_message("a", "b", None, "hi")
         self.assertEqual(m["to_agent"], "b")
@@ -111,7 +122,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 13)
+        self.assertEqual(self.store.schema_version(), 14)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

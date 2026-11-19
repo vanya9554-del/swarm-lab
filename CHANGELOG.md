@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.16.0] — 2026-11-19
+
+Channel membership.
+
+### Добавлено
+- `POST /v1/channels/{c}/join|leave`, `GET /v1/channels/{c}/members`.
+- Auto-join при отправке в канал; роли member.
+- 191 тест, 100% coverage.
+
 ## [11.15.0] — 2026-11-19
 
 Message SSE.
