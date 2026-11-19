@@ -37,7 +37,7 @@ jobs:
             [ -n "$internal" ] && break
             sleep 5
           done
-          payload=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.14.0" --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '{type:"web_service",name:"swarmlab",ownerId:$o,image:{ownerId:$o,imagePath:$img},autoDeploy:"no",serviceDetails:{env:"image",runtime:"image",plan:"free",region:"frankfurt",healthCheckPath:"/ready",numInstances:1,envVars:[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]}}')
+          payload=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.16.0" --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '{type:"web_service",name:"swarmlab",ownerId:$o,image:{ownerId:$o,imagePath:$img},autoDeploy:"no",serviceDetails:{env:"image",runtime:"image",plan:"free",region:"frankfurt",healthCheckPath:"/ready",numInstances:1,envVars:[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]}}')
           code=$(curl -sS -o /tmp/create.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services" -d "$payload")
           echo "create_http=$code"
           cat /tmp/create.json
