@@ -34,8 +34,15 @@ jobs:
           envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
           code=$(curl -sS -o /tmp/env.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs")
           echo "env_http=$code"; cat /tmp/env.json
-          code=$(curl -sS -o /tmp/restart.json -w '%{http_code}' "${auth[@]}" -X POST "$api/services/$svc/restart")
-          echo "restart_http=$code"; cat /tmp/restart.json
+          code=$(curl -sS -o /tmp/deploy.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc/deploys" -d '{}')
+          echo "deploy_http=$code"; cat /tmp/deploy.json
+          for i in $(seq 1 60); do
+            ds=$(curl -sS "${auth[@]}" "$api/services/$svc/deploys?limit=1" | jq -r '.[0]? | (.deploy // .) | .status // empty' 2>/dev/null || true)
+            echo "DEPLOY_STATUS=$ds"
+            if [ "$ds" = "live" ]; then break; fi
+            if [ "$ds" = "build_failed" ] || [ "$ds" = "update_failed" ]; then exit 1; fi
+            sleep 10
+          done
           url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
           echo "URL=$url"
           for i in $(seq 1 90); do
