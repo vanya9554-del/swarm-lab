@@ -1,0 +1,29 @@
+name: plugin-smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          echo "URL=$url"
+          h=(-H "Authorization: Bearer $SWARMLAB_TOKEN" -H 'Content-Type: application/json')
+          wat='(module (func (export "run") (result i32) i32.const 42))'
+          curl -sS "${h[@]}" -X POST "$url/v1/plugins" -d "$(jq -n --arg c "$wat" '{name:"smoke",version:"1",code:$c,runtime:"wasm"}')" | jq '{ok,status:.data.status,checksum:.data.checksum}'
+          curl -sS "${h[@]}" -X POST "$url/v1/plugins/smoke/1/approve" -d '{}' | jq '{ok,status:.data.status}'
+          curl -sS "${h[@]}" -X POST "$url/v1/plugins/smoke/1/run" -d '{}' | jq '{ok,result:.data.result,fuel_left:.data.fuel_left}'
