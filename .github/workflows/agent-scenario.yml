@@ -1,0 +1,94 @@
+name: agent-scenario
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scenario:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run autonomous agent scenario
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          SWARMLAB_JOIN_CODE: ${{ secrets.SWARMLAB_JOIN_CODE }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          echo "URL=$url"
+
+          post() { curl -sS -X POST -H 'Content-Type: application/json' -H "Authorization: Bearer $1" "$url$2" -d "$3"; }
+          get()  { curl -sS -H "Authorization: Bearer $1" "$url$2"; }
+          fail() { echo "FAIL: $1"; exit 1; }
+          check() { echo "OK: $1"; }
+
+          a=$(post "" "/v1/agents/register" "{\"agent_id\":\"scenario-a\",\"capabilities\":[\"scenario\"],\"join_code\":\"$SWARMLAB_JOIN_CODE\"}")
+          ta=$(printf '%s' "$a" | jq -r '.data.token // empty')
+          b=$(post "" "/v1/agents/register" "{\"agent_id\":\"scenario-b\",\"capabilities\":[\"scenario\"],\"join_code\":\"$SWARMLAB_JOIN_CODE\"}")
+          tb=$(printf '%s' "$b" | jq -r '.data.token // empty')
+          [ -n "$ta" ] && [ -n "$tb" ] || fail "registration"
+          check "two agents registered"
+
+          m=$(post "$ta" "/v1/messages" '{"to_agent":"scenario-b","body":"hello from A"}')
+          mid=$(printf '%s' "$m" | jq -r '.data.id')
+          inbox=$(get "$tb" "/v1/messages")
+          printf '%s' "$inbox" | jq -e '.data[] | select(.body=="hello from A")' >/dev/null || fail "DM inbox"
+          post "$tb" "/v1/messages/$mid/read" '{}' >/dev/null
+          check "direct message + read receipt"
+
+          post "$ta" "/v1/channels/swarm-demo/join" '{}' >/dev/null
+          post "$tb" "/v1/channels/swarm-demo/join" '{}' >/dev/null
+          post "$ta" "/v1/messages" '{"channel":"swarm-demo","body":"hello channel"}' >/dev/null
+          chan=$(get "$tb" "/v1/messages?channel=swarm-demo")
+          printf '%s' "$chan" | jq -e '.data[] | select(.body=="hello channel")' >/dev/null || fail "channel"
+          members=$(get "$tb" "/v1/channels/swarm-demo/members")
+          [ "$(printf '%s' "$members" | jq '.data | length')" -ge 2 ] || fail "channel members"
+          check "channel + membership"
+
+          sse=$(curl -sS -N --max-time 2 -H "Authorization: Bearer $tb" "$url/v1/messages/stream?channel=swarm-demo&limit=1&timeout_s=1" || true)
+          printf '%s' "$sse" | grep -q 'data:' || fail "SSE stream"
+          check "SSE message stream"
+
+          t=$(post "$ta" "/v1/tasks" '{"capability":"scenario","payload":{"x":1},"dedup_key":"scenario-1"}')
+          tid=$(printf '%s' "$t" | jq -r '.data.task_id')
+          c=$(post "$ta" "/v1/tasks/claim" "{\"agent_id\":\"scenario-a\",\"capability\":\"scenario\",\"lease_s\":30}")
+          fence=$(printf '%s' "$c" | jq -r '.data.lease_epoch')
+          [ "$(printf '%s' "$c" | jq -r '.data.task_id')" = "$tid" ] || fail "claim"
+          post "$ta" "/v1/tasks/$tid/complete" "{\"agent_id\":\"scenario-a\",\"fence\":$fence,\"result\":{\"done\":true}}" >/dev/null
+          task=$(get "$tb" "/v1/tasks/$tid")
+          printf '%s' "$task" | jq -e '.data.status=="completed"' >/dev/null || fail "complete"
+          check "task submit/claim/complete"
+
+          post "$ta" "/v1/artifacts" '{"name":"scenario-note","content":"shared memory","channel":"swarm-demo"}' >/dev/null
+          art=$(get "$tb" "/v1/artifacts/scenario-note")
+          printf '%s' "$art" | jq -e '.data.content=="shared memory"' >/dev/null || fail "artifact"
+          check "shared artifact"
+
+          post "$ta" "/v1/roles/claim" '{"scope":"swarm-demo","name":"leader","ttl_s":60}' >/dev/null
+          code=$(curl -sS -o /tmp/role.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H "Authorization: Bearer $tb" "$url/v1/roles/claim" -d '{"scope":"swarm-demo","name":"leader"}')
+          [ "$code" = "409" ] || fail "role conflict ($code)"
+          post "$ta" "/v1/roles/renew" '{"scope":"swarm-demo","name":"leader"}' >/dev/null
+          post "$ta" "/v1/roles/release" '{"scope":"swarm-demo","name":"leader"}' >/dev/null
+          check "role election/lease"
+
+          post "$ta" "/v1/reputation/feedback" '{"to_agent":"scenario-b","score":1,"comment":"good"}' >/dev/null
+          rep=$(get "$tb" "/v1/reputation/scenario-b")
+          printf '%s' "$rep" | jq -e '.data.feedback_count>=1' >/dev/null || fail "reputation"
+          check "reputation/feedback"
+
+          wat='(module (func (export "run") (result i32) i32.const 42))'
+          post "$ta" "/v1/plugins" "$(jq -n --arg c "$wat" '{name:"scenario-plugin",version:"1",code:$c,runtime:"wasm"}')" >/dev/null
+          post "$SWARMLAB_TOKEN" "/v1/plugins/scenario-plugin/1/approve" '{}' >/dev/null
+          run=$(post "$ta" "/v1/plugins/scenario-plugin/1/run" '{}')
+          printf '%s' "$run" | jq -e '.data.result==42' >/dev/null || fail "plugin run"
+          check "approved WASM plugin run"
+
+          echo "SCENARIO_OK"
