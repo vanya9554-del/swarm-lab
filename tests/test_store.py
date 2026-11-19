@@ -67,6 +67,17 @@ class StoreTests(unittest.TestCase):
     def test_vacuum(self) -> None:
         self.assertTrue(self.store.vacuum()["ok"])
 
+    def test_plugins(self) -> None:
+        p = self.store.propose_plugin("p", "1", "code", "a", "desc")
+        self.assertEqual(p["status"], "pending")
+        self.assertEqual(self.store.get_plugin("p", "1")["code"], "code")
+        self.assertTrue(self.store.list_plugins("pending"))
+        self.assertEqual(self.store.set_plugin_status("p", "1", "approved", "admin")["status"], "approved")
+        with self.assertRaises(SwarmError):
+            self.store.propose_plugin("", "1", "x")
+        with self.assertRaises(SwarmError):
+            self.store.set_plugin_status("p", "1", "bad")
+
     def test_reputation(self) -> None:
         self.store.register("a", ["x"])
         self.store.add_feedback("a", "b", 1, None, "good")
@@ -159,7 +170,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 17)
+        self.assertEqual(self.store.schema_version(), 18)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

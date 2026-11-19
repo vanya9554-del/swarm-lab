@@ -152,6 +152,11 @@ ROUTES = {
     ("GET", "/v1/messages/stream"),
     ("POST", "/v1/messages/{message_id}/read"),
     ("GET", "/v1/channels"),
+    ("GET", "/v1/plugins"),
+    ("GET", "/v1/plugins/{name}/{version}"),
+    ("POST", "/v1/plugins"),
+    ("POST", "/v1/plugins/{name}/{version}/approve"),
+    ("POST", "/v1/plugins/{name}/{version}/reject"),
     ("GET", "/v1/reputation"),
     ("GET", "/v1/reputation/{agent_id}"),
     ("POST", "/v1/reputation/feedback"),
@@ -178,6 +183,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
+PLUGIN_RE = re.compile(r"^/v1/plugins/([^/]+)/([^/]+)(?:/(approve|reject))?$")
 ARTIFACT_RE = re.compile(r"^/v1/artifacts/([^/]+)$")
 CHANNEL_RE = re.compile(r"^/v1/channels/([^/]+)/(join|leave|members)$")
 MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
@@ -237,6 +243,7 @@ class SwarmHandler(BaseHTTPRequestHandler):
         self.request_id = uuid.uuid4().hex[:12]
         self.audit_actor = ""
         self.agent_id = ""
+        self.is_admin = False
         self._started = time.perf_counter()
         super().handle_one_request()
 
@@ -436,6 +443,12 @@ class SwarmHandler(BaseHTTPRequestHandler):
         token = header[7:] if header.startswith("Bearer ") else ""
         self.audit_actor = f"token:{hashlib.sha256(token.encode()).hexdigest()[:12]}" if token else "anonymous"
         self.agent_id = self.swarm.store.token_agent(token) or ""
+        if not self.swarm.tokens and not self.swarm.token:
+            self.is_admin = True
+        elif self.swarm.tokens:
+            self.is_admin = token in self.swarm.tokens
+        else:
+            self.is_admin = header == f"Bearer {self.swarm.token}"
         jwt_scopes = self._jwt_scopes(token)
         dynamic_scopes = self.swarm.store.token_scopes(token)
         scopes: set[str] | None = None
@@ -569,6 +582,18 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 self._send(200, {"ok": True, "data": self.swarm.store.reputation(path.rsplit("/", 1)[-1])})
             elif path == "/v1/roles":
                 self._send(200, {"ok": True, "data": self.swarm.store.roles((query.get("scope") or [None])[0])})
+            elif path == "/v1/plugins":
+                self._send(200, {"ok": True, "data": self.swarm.store.list_plugins((query.get("status") or [None])[0], int((query.get("limit") or ["100"])[0]))})
+            elif path.startswith("/v1/plugins/"):
+                match = PLUGIN_RE.match(path)
+                if not match:
+                    self._error(404, "NOT_FOUND", "plugin not found")
+                else:
+                    plugin = self.swarm.store.get_plugin(match.group(1), match.group(2))
+                    if plugin is None:
+                        self._error(404, "NOT_FOUND", "plugin not found")
+                    else:
+                        self._send(200, {"ok": True, "data": plugin})
             elif path == "/v1/artifacts":
                 self._send(200, {"ok": True, "data": self.swarm.store.list_artifacts(
                     (query.get("channel") or [None])[0],
@@ -718,6 +743,24 @@ class SwarmHandler(BaseHTTPRequestHandler):
                 if not agent_id:
                     raise SwarmError("BAD_REQUEST", "agent_id required")
                 data = self.swarm.store.heartbeat(agent_id, str(body.get("status") or "idle"))
+                self._send(200, {"ok": True, "data": data})
+            elif path == "/v1/plugins":
+                data = self.swarm.store.propose_plugin(
+                    str(body.get("name") or ""), str(body.get("version") or ""),
+                    str(body.get("code") or ""), self.agent_id or str(body.get("submitted_by") or ""),
+                    str(body.get("description") or ""),
+                )
+                self._send(201, {"ok": True, "data": data})
+            elif path.startswith("/v1/plugins/"):
+                match = PLUGIN_RE.match(path)
+                if not match or not match.group(3):
+                    self._error(404, "NOT_FOUND", "no route")
+                    return
+                if not self.is_admin:
+                    self._error(403, "FORBIDDEN", "admin approval required")
+                    return
+                status = "approved" if match.group(3) == "approve" else "rejected"
+                data = self.swarm.store.set_plugin_status(match.group(1), match.group(2), status, self.audit_actor)
                 self._send(200, {"ok": True, "data": data})
             elif path == "/v1/reputation/feedback":
                 from_agent = self.agent_id or str(body.get("from_agent") or "")

@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 17
+SCHEMA_VERSION = 18
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -65,6 +65,18 @@ CREATE TABLE IF NOT EXISTS agent_tokens (
     scopes     TEXT NOT NULL DEFAULT 'read write',
     created_at REAL NOT NULL,
     revoked    INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS plugins (
+    name         TEXT NOT NULL,
+    version      TEXT NOT NULL,
+    code         TEXT NOT NULL,
+    description  TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'pending',
+    submitted_by TEXT NOT NULL DEFAULT '',
+    approved_by  TEXT NOT NULL DEFAULT '',
+    created_at   REAL NOT NULL,
+    updated_at   REAL NOT NULL,
+    PRIMARY KEY (name, version)
 );
 CREATE TABLE IF NOT EXISTS feedback (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -459,6 +471,35 @@ class SwarmStore:
         digest = hashlib.sha256(token.encode()).hexdigest()
         row = self._one("SELECT agent_id FROM agent_tokens WHERE token_hash=? AND revoked=0", (digest,))
         return str(row["agent_id"]) if row else None
+
+    def propose_plugin(self, name: str, version: str, code: str, submitted_by: str = "", description: str = "") -> dict[str, Any]:
+        if not str(name).strip() or not str(version).strip() or not str(code).strip():
+            raise SwarmError("BAD_REQUEST", "name, version and code are required")
+        now = time.time()
+        with self.lock:
+            self.conn.execute(
+                "INSERT INTO plugins(name, version, code, description, status, submitted_by, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, 'pending', ?, ?, ?) ON CONFLICT(name, version) DO UPDATE SET "
+                "code=excluded.code, description=excluded.description, status='pending', "
+                "submitted_by=excluded.submitted_by, updated_at=excluded.updated_at",
+                (str(name), str(version), str(code), str(description), str(submitted_by), now, now),
+            )
+        return self.get_plugin(name, version) or {}
+
+    def get_plugin(self, name: str, version: str) -> dict[str, Any] | None:
+        return self._one("SELECT * FROM plugins WHERE name=? AND version=?", (str(name), str(version)))
+
+    def list_plugins(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+        if status:
+            return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins WHERE status=? ORDER BY updated_at DESC LIMIT ?", (str(status), max(1, min(500, int(limit)))))
+        return self._all("SELECT name, version, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT ?", (max(1, min(500, int(limit))),))
+
+    def set_plugin_status(self, name: str, version: str, status: str, approved_by: str = "") -> dict[str, Any]:
+        if status not in ("approved", "rejected", "pending"):
+            raise SwarmError("BAD_REQUEST", "invalid status")
+        with self.lock:
+            self.conn.execute("UPDATE plugins SET status=?, approved_by=?, updated_at=? WHERE name=? AND version=?", (status, str(approved_by), time.time(), str(name), str(version)))
+        return self.get_plugin(name, version) or {}
 
     def add_feedback(self, from_agent: str, to_agent: str, score: int = 1, task_id: str | None = None, comment: str = "") -> dict[str, Any]:
         if not str(from_agent).strip() or not str(to_agent).strip():

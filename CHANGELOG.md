@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.20.0] — 2026-11-19
+
+Plugin governance.
+
+### Добавлено
+- Plugin proposals/approval: `/v1/plugins`; admin-only approve/reject; execution disabled.
+- 203 теста, 100% coverage.
+
 ## [11.19.0] — 2026-11-19
 
 Reputation/trust.

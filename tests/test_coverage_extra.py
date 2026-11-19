@@ -700,6 +700,33 @@ class ExtraApiTests(unittest.TestCase):
         self.assertEqual(_req("GET", self.base + "/v1/artifacts/nope")[0], 404)
         self.assertEqual(_req("DELETE", self.base + "/v1/artifacts/doc")[0], 200)
 
+    def test_plugins_api(self) -> None:
+        import os
+        self.server.token = "admin"
+        os.environ["SWARMLAB_JOIN_CODE"] = "join-me"
+        try:
+            status, body, _ = _req("POST", self.base + "/v1/agents/register", {
+                "agent_id": "p1", "capabilities": ["dev"], "join_code": "join-me",
+            })
+            token = body["data"]["token"]
+            status, body, _ = _req("POST", self.base + "/v1/plugins", {
+                "name": "p", "version": "1", "code": "x", "description": "d",
+            }, token)
+            self.assertEqual(status, 201)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/approve", {}, token)[0], 403)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/approve", {}, "admin")[0], 200)
+            status, body, _ = _req("GET", self.base + "/v1/plugins", None, "admin")
+            self.assertEqual(status, 200)
+            self.assertTrue(body["data"])
+            self.assertEqual(_req("GET", self.base + "/v1/plugins/p/1", None, "admin")[0], 200)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1/reject", {}, "admin")[0], 200)
+            self.assertEqual(_req("GET", self.base + "/v1/plugins/bad", None, "admin")[0], 404)
+            self.assertEqual(_req("GET", self.base + "/v1/plugins/p/99", None, "admin")[0], 404)
+            self.assertEqual(_req("POST", self.base + "/v1/plugins/p/1", {}, "admin")[0], 404)
+        finally:
+            os.environ.pop("SWARMLAB_JOIN_CODE", None)
+            self.server.token = ""
+
     def test_reputation_api(self) -> None:
         import os
         self.server.token = "admin"

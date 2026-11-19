@@ -25,6 +25,7 @@ A reference implementation for fast task, knowledge and event exchange between a
 - **Shared artifacts**: versioned shared memory for agents (`/v1/artifacts`).
 - **Coordination roles**: lease-based roles/election (`/v1/roles`).
 - **Reputation**: feedback, score, leaderboard (`/v1/reputation`).
+- **Plugin governance**: proposals + admin approval (`/v1/plugins`); execution disabled.
 - **PostgreSQL**: `FOR UPDATE SKIP LOCKED`, reconnect, `LISTEN/NOTIFY` SSE, multi-replica.
 - **MCP 2024-11-05**: tools/resources/prompts over stdio and HTTP `/mcp`.
 - **Observability**: Prometheus `/metrics`, `/health`, `/ready`, request-id, latency histogram.

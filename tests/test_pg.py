@@ -383,6 +383,22 @@ class PgTests(unittest.TestCase):
         finally:
             s.close()
 
+    def test_plugins(self) -> None:
+        from swarmlab.pg import PgSwarmStore
+        from swarmlab.store import SwarmError
+        s = PgSwarmStore(self.dsn)
+        try:
+            s.propose_plugin("p", "1", "code", "a", "desc")
+            self.assertTrue(s.list_plugins("pending"))
+            self.assertTrue(s.list_plugins())
+            self.assertEqual(s.set_plugin_status("p", "1", "approved", "admin")["status"], "approved")
+            with self.assertRaises(SwarmError):
+                s.propose_plugin("", "1", "x")
+            with self.assertRaises(SwarmError):
+                s.set_plugin_status("p", "1", "bad")
+        finally:
+            s.close()
+
     def test_reputation(self) -> None:
         from swarmlab.pg import PgSwarmStore
         from swarmlab.store import SwarmError
@@ -511,7 +527,7 @@ class PgTests(unittest.TestCase):
         from swarmlab.pg import PgSwarmStore
         s = PgSwarmStore(self.dsn)
         try:
-            self.assertEqual(s.schema_version(), 17)
+            self.assertEqual(s.schema_version(), 18)
         finally:
             s.close()
 

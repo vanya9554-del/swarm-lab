@@ -1,3 +1,7 @@
+# swarm-lab v11.20.0
+
+Plugin proposal governance; 203 tests.
+
 # swarm-lab v11.19.0
 
 Reputation/trust + leaderboard; 200 tests.
