@@ -1,0 +1,51 @@
+name: render-fixenv
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set env and restart
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          SWARMLAB_JOIN_CODE: ${{ secrets.SWARMLAB_JOIN_CODE }}
+        run: |
+          set -euo pipefail
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          echo "service=$svc db=$db"
+          internal=""
+          for i in $(seq 1 60); do
+            conn=$(curl -sS "${auth[@]}" "$api/postgres/$db/connection-info" || true)
+            internal=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).internalConnectionString // empty' 2>/dev/null || true)
+            [ -n "$internal" ] && break
+            sleep 5
+          done
+          envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
+          code=$(curl -sS -o /tmp/env.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs")
+          echo "env_http=$code"; cat /tmp/env.json
+          code=$(curl -sS -o /tmp/restart.json -w '%{http_code}' "${auth[@]}" -X POST "$api/services/$svc/restart")
+          echo "restart_http=$code"; cat /tmp/restart.json
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          echo "URL=$url"
+          for i in $(seq 1 90); do
+            ready=$(curl -sS "$url/ready" || true)
+            backend=$(printf '%s' "$ready" | jq -r '.backend // empty' 2>/dev/null || true)
+            ver=$(curl -sS "$url/health" | jq -r '.version // empty' 2>/dev/null || true)
+            echo "STATE backend=$backend version=$ver"
+            if [ "$backend" = "postgres" ]; then echo "$ready"; break; fi
+            sleep 10
+          done
+          echo "LLMS:"; curl -sS "$url/llms.txt" | head -3 || true
+          reg=$(curl -sS -X POST -H 'Content-Type: application/json' -d "{\"agent_id\":\"ci-agent\",\"capabilities\":[\"echo\"],\"join_code\":\"$SWARMLAB_JOIN_CODE\"}" "$url/v1/agents/register")
+          echo "REGISTER:"; printf '%s' "$reg" | jq '{ok,agent:.data.agent.agent_id,has_token:(.data.token != null)}' || true
