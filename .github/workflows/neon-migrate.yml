@@ -1,0 +1,58 @@
+name: neon-migrate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Migrate Render PostgreSQL to Neon and switch env
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SWARMLAB_TOKEN: ${{ secrets.SWARMLAB_TOKEN }}
+          SWARMLAB_JOIN_CODE: ${{ secrets.SWARMLAB_JOIN_CODE }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          [ -n "$NEON_DATABASE_URL" ] || { echo "NEON_DATABASE_URL secret is missing"; exit 1; }
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          api="https://api.render.com/v1"
+          auth=(-H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json")
+          owner=$(curl -fsS "${auth[@]}" "$api/owners" | jq -r '.[0].owner.id')
+          svc=$(curl -fsS "${auth[@]}" "$api/services?ownerId=$owner" | jq -r '.[]? | (.service // .) | select(.name=="swarmlab") | .id' | head -1)
+          url=$(curl -fsS "${auth[@]}" "$api/services/$svc" | jq -r '.serviceDetails.url')
+          db=$(curl -fsS "${auth[@]}" "$api/postgres?ownerId=$owner" | jq -r '.[]? | (.postgres // .) | select(.name=="swarmlab-db") | .id' | head -1)
+          conn=$(curl -fsS "${auth[@]}" "$api/postgres/$db/connection-info")
+          old=$(printf '%s' "$conn" | jq -r '(.connectionInfo // .).externalConnectionString // empty')
+          [ -n "$old" ] || { echo "no Render external DSN"; exit 1; }
+          echo "source=render target=neon"
+          pg_dump --no-owner --no-acl --clean --if-exists "$old" > /tmp/swarm.sql
+          psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -c 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;' >/dev/null
+          psql "$NEON_DATABASE_URL" -v ON_ERROR_STOP=1 -f /tmp/swarm.sql >/dev/null
+          echo "restore_ok"
+          envs=$(jq -n --arg db "$NEON_DATABASE_URL" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
+          curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs"
+          curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc/deploys" -d '{}'
+          ok=""
+          for i in $(seq 1 90); do
+            ready=$(curl -sS "$url/ready" || true)
+            backend=$(printf '%s' "$ready" | jq -r '.backend // empty' 2>/dev/null || true)
+            ver=$(curl -sS "$url/health" | jq -r '.version // empty' 2>/dev/null || true)
+            echo "STATE backend=$backend version=$ver"
+            if [ "$backend" = "postgres" ]; then ok=1; echo "$ready"; break; fi
+            sleep 10
+          done
+          if [ -z "$ok" ]; then
+            echo "Neon switch failed; rolling back to Render PG"
+            envs=$(jq -n --arg db "$old" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
+            curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs"
+            curl -fsS -o /dev/null "${auth[@]}" -H 'Content-Type: application/json' -X POST "$api/services/$svc/deploys" -d '{}'
+            exit 1
+          fi
+          echo "NEON_OK"
