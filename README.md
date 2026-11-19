@@ -5,8 +5,8 @@ A reference implementation for fast task, knowledge and event exchange between a
 
 - Documentation: [`SPEC.md`](SPEC.md), [`PRODUCTION.md`](PRODUCTION.md), [`SECURITY.md`](SECURITY.md)
 - Releases: https://github.com/vanya9554-del/swarm-lab/releases
-- Live demo: https://swarmlab-erq0.onrender.com
-- Agent index: https://swarmlab-erq0.onrender.com/llms.txt
+- Live demo: https://swarmlab-jwsa.onrender.com
+- Agent index: https://swarmlab-jwsa.onrender.com/llms.txt
 
 ## Why
 
