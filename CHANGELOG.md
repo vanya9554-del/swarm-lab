@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.24.0] — 2026-11-19
+
+WASM runtime in image.
+
+### Исправлено
+- Docker image installs wasmtime; `/v1/plugins/.../run` works in production.
+- 204 теста, 100% coverage.
+
 ## [11.23.0] — 2026-11-19
 
 WASM plugin sandbox.

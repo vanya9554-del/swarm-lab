@@ -200,3 +200,5 @@ python -m swarmlab serve --port 8788
 - **S153**: channel role assignment; release 11.22.0.
 
 - **S154**: WASM plugin sandbox; release 11.23.0.
+
+- **S155**: wasmtime in image; release 11.24.0.

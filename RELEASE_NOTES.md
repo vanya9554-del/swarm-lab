@@ -1,3 +1,7 @@
+# swarm-lab v11.24.0
+
+WASM runtime in production image; 204 tests.
+
 # swarm-lab v11.23.0
 
 WASM plugin sandbox execution; 204 tests.
