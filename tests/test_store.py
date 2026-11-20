@@ -82,6 +82,16 @@ class StoreTests(unittest.TestCase):
             self.store.propose_plugin("x", "1", "code", runtime="python")
         with self.assertRaises(SwarmError):
             self.store.set_plugin_status("p", "1", "bad")
+        import os
+        os.environ["SWARMLAB_PLUGIN_SECRET"] = "s"
+        try:
+            with self.assertRaises(SwarmError):
+                self.store.propose_plugin("signed", "1", "x")
+            import hashlib, hmac
+            sig = hmac.new(b"s", b"x", hashlib.sha256).hexdigest()
+            self.assertEqual(self.store.propose_plugin("signed", "1", "x", signature=sig)["signature"], sig)
+        finally:
+            os.environ.pop("SWARMLAB_PLUGIN_SECRET", None)
 
     def test_reputation(self) -> None:
         self.store.register("a", ["x"])
@@ -180,7 +190,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.stats()["audit"], 1)
 
     def test_schema_version(self) -> None:
-        self.assertEqual(self.store.schema_version(), 19)
+        self.assertEqual(self.store.schema_version(), 20)
 
     def test_check(self) -> None:
         self.assertEqual(self.store.check()["quick_check"], "ok")

@@ -208,3 +208,5 @@ python -m swarmlab serve --port 8788
 - **S157**: live DB backup + temporary allowlist; Neon migration ready; waiting for NEON_DATABASE_URL.
 
 - **S159**: plugin kill switch; release 11.25.0.
+
+- **S160**: optional plugin HMAC signatures; release 11.26.0.

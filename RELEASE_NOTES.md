@@ -1,3 +1,7 @@
+# swarm-lab v11.26.0
+
+Plugin HMAC signatures.
+
 # swarm-lab v11.25.0
 
 Plugin kill switch; tests.

@@ -1,5 +1,14 @@
 # Changelog — swarm-lab
 
+## [11.26.0] — 2026-11-20
+
+Plugin HMAC signatures.
+
+### Добавлено
+- Optional `SWARMLAB_PLUGIN_SECRET`; propose requires matching `signature` when set.
+- Signature stored/returned alongside SHA-256 checksum.
+- 159 tests OK; API/store 100%.
+
 ## [11.25.0] — 2026-11-20
 
 Plugin kill switch.
