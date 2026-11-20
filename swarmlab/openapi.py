@@ -57,6 +57,8 @@ def spec() -> dict[str, Any]:
             "/v1/plugins/{name}/{version}/approve": {"post": {"summary": "Approve plugin"}},
             "/v1/plugins/{name}/{version}/reject": {"post": {"summary": "Reject plugin"}},
             "/v1/plugins/{name}/{version}/run": {"post": {"summary": "Run approved WASM plugin"}},
+            "/v1/plugins/{name}/{version}/disable": {"post": {"summary": "Kill switch: disable plugin"}},
+            "/v1/plugins/{name}/{version}/enable": {"post": {"summary": "Enable plugin"}},
             "/v1/reputation": {"get": {"summary": "Leaderboard"}},
             "/v1/reputation/{agent_id}": {"get": {"summary": "Agent reputation"}},
             "/v1/reputation/feedback": {"post": {"summary": "Give feedback"}},

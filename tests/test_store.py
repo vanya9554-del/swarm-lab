@@ -75,6 +75,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.get_plugin("p", "1")["code"], "code")
         self.assertTrue(self.store.list_plugins("pending"))
         self.assertEqual(self.store.set_plugin_status("p", "1", "approved", "admin")["status"], "approved")
+        self.assertEqual(self.store.set_plugin_status("p", "1", "disabled", "admin")["status"], "disabled")
         with self.assertRaises(SwarmError):
             self.store.propose_plugin("", "1", "x")
         with self.assertRaises(SwarmError):

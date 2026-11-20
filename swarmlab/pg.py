@@ -518,7 +518,7 @@ class PgSwarmStore:
         return self._all("SELECT name, version, checksum, runtime, description, status, submitted_by, approved_by, updated_at FROM plugins ORDER BY updated_at DESC LIMIT %s", (max(1, min(500, int(limit))),))
 
     def set_plugin_status(self, name: str, version: str, status: str, approved_by: str = "") -> dict[str, Any]:
-        if status not in ("approved", "rejected", "pending"):
+        if status not in ("approved", "rejected", "pending", "disabled"):
             raise SwarmError("BAD_REQUEST", "invalid status")
         with self.lock:
             self.conn.execute("UPDATE plugins SET status=%s, approved_by=%s, updated_at=%s WHERE name=%s AND version=%s", (status, str(approved_by), time.time(), str(name), str(version)))

@@ -185,7 +185,7 @@ ROUTES = {
     ("POST", "/mcp"),
     ("GET", "/metrics"),
 }
-PLUGIN_RE = re.compile(r"^/v1/plugins/([^/]+)/([^/]+)(?:/(approve|reject|run))?$")
+PLUGIN_RE = re.compile(r"^/v1/plugins/([^/]+)/([^/]+)(?:/(approve|reject|run|disable|enable))?$")
 ARTIFACT_RE = re.compile(r"^/v1/artifacts/([^/]+)$")
 CHANNEL_RE = re.compile(r"^/v1/channels/([^/]+)/(join|leave|members)$")
 MSG_READ_RE = re.compile(r"^/v1/messages/([0-9]+)/read$")
@@ -775,6 +775,12 @@ class SwarmHandler(BaseHTTPRequestHandler):
                     return
                 if not self.is_admin:
                     self._error(403, "FORBIDDEN", "admin approval required")
+                    return
+                if match.group(3) == "disable":
+                    self._send(200, {"ok": True, "data": self.swarm.store.set_plugin_status(match.group(1), match.group(2), "disabled", self.audit_actor)})
+                    return
+                if match.group(3) == "enable":
+                    self._send(200, {"ok": True, "data": self.swarm.store.set_plugin_status(match.group(1), match.group(2), "approved", self.audit_actor)})
                     return
                 status = "approved" if match.group(3) == "approve" else "rejected"
                 data = self.swarm.store.set_plugin_status(match.group(1), match.group(2), status, self.audit_actor)
