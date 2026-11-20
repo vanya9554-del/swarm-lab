@@ -32,7 +32,7 @@ jobs:
             sleep 5
           done
           envs=$(jq -n --arg db "$internal" --arg tok "$SWARMLAB_TOKEN" --arg join "$SWARMLAB_JOIN_CODE" '[{key:"SWARMLAB_DB",value:$db},{key:"SWARMLAB_TOKEN",value:$tok},{key:"SWARMLAB_JOIN_CODE",value:$join}]')
-          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.24.0" '{image:{ownerId:$o,imagePath:$img}}')
+          patch=$(jq -n --arg o "$owner" --arg img "ghcr.io/vanya9554-del/swarm-lab:v11.25.0" '{image:{ownerId:$o,imagePath:$img}}')
           icode=$(curl -sS -o /tmp/patch.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PATCH "$api/services/$svc" -d "$patch")
           echo "image_patch_http=$icode"; cat /tmp/patch.json
           code=$(curl -sS -o /tmp/env.json -w '%{http_code}' "${auth[@]}" -H 'Content-Type: application/json' -X PUT "$api/services/$svc/env-vars" -d "$envs")
