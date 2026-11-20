@@ -1,3 +1,7 @@
+# swarm-lab v11.25.0
+
+Plugin kill switch; tests.
+
 # swarm-lab v11.24.0
 
 WASM runtime in production image; 204 tests.

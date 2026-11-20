@@ -206,3 +206,5 @@ python -m swarmlab serve --port 8788
 - **S156**: live end-to-end agent scenario passed (SCENARIO_OK); Neon migration prepared.
 
 - **S157**: live DB backup + temporary allowlist; Neon migration ready; waiting for NEON_DATABASE_URL.
+
+- **S159**: plugin kill switch; release 11.25.0.

@@ -1,5 +1,13 @@
 # Changelog — swarm-lab
 
+## [11.25.0] — 2026-11-20
+
+Plugin kill switch.
+
+### Добавлено
+- `POST /v1/plugins/{name}/{version}/disable|enable` — admin kill switch.
+- 204 tests, 100% coverage target.
+
 ## [11.24.0] — 2026-11-19
 
 WASM runtime in image.
